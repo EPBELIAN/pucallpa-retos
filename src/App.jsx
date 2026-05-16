@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import yapeQr from "./assets/yape-qr.jpg";
-import logoPucallpa from "./assets/logo-pucallpa.png";
+import { supabase } from "./supabaseClient";
 import { motion } from "framer-motion";
 import {
   Trophy,
@@ -33,7 +33,6 @@ export default function App() {
   const [nombre, setNombre] = useState("");
   const [nickName, setNickName] = useState("");
   const [celular, setCelular] = useState("");
-  const [distrito, setDistrito] = useState("");
   const [deporte, setDeporte] = useState("");
   const [nivel, setNivel] = useState("");
   const [usuarios, setUsuarios] = useState([]);
@@ -54,6 +53,68 @@ export default function App() {
     }
   }, []);
 
+
+  useEffect(() => {
+    const cargarUsuarioGoogle = async () => {
+      const { data } = await supabase.auth.getSession();
+      const googleUser = data.session?.user;
+
+      if (googleUser) {
+        const userGoogle = {
+          id: googleUser.id,
+          nombre: googleUser.user_metadata?.full_name || googleUser.email,
+          nickName: googleUser.user_metadata?.name || googleUser.email?.split("@")[0],
+          celular: "",
+          email: googleUser.email,
+          password: "google",
+          deporte: "Pendiente",
+          nivel: "Pendiente",
+          partidas: 0,
+          ganadas: 0,
+          perdidas: 0,
+          puntos: 0,
+          medalla: "Calibrando",
+          createdAt: new Date().toLocaleString(),
+        };
+
+        setUsuarioActivo(userGoogle);
+        localStorage.setItem("usuario_activo", JSON.stringify(userGoogle));
+      }
+    };
+
+    cargarUsuarioGoogle();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const googleUser = session?.user;
+
+      if (googleUser) {
+        const userGoogle = {
+          id: googleUser.id,
+          nombre: googleUser.user_metadata?.full_name || googleUser.email,
+          nickName: googleUser.user_metadata?.name || googleUser.email?.split("@")[0],
+          celular: "",
+          email: googleUser.email,
+          password: "google",
+          deporte: "Pendiente",
+          nivel: "Pendiente",
+          partidas: 0,
+          ganadas: 0,
+          perdidas: 0,
+          puntos: 0,
+          medalla: "Calibrando",
+          createdAt: new Date().toLocaleString(),
+        };
+
+        setUsuarioActivo(userGoogle);
+        localStorage.setItem("usuario_activo", JSON.stringify(userGoogle));
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   useEffect(() => {
     localStorage.setItem("pucallpa_rooms", JSON.stringify(roomTeams));
   }, [roomTeams]);
@@ -72,7 +133,7 @@ export default function App() {
   };
 
   const createUser = () => {
-    if (!nombre || !nickName || !celular || !password || !distrito || !deporte || !nivel) {
+    if (!nombre || !nickName || !celular || !password || !deporte || !nivel) {
       alert("Completa todos los datos del usuario");
       return;
     }
@@ -99,7 +160,6 @@ export default function App() {
       nickName: nickName.trim(),
       celular,
       password,
-      distrito,
       deporte,
       nivel,
       partidas: 0,
@@ -124,9 +184,21 @@ export default function App() {
     setNickName("");
     setCelular("");
     setPassword("");
-    setDistrito("");
     setDeporte("");
     setNivel("");
+  };
+
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      alert("No se pudo iniciar sesión con Google.");
+    }
   };
 
   const iniciarSesion = () => {
@@ -152,9 +224,10 @@ export default function App() {
   setLoginPassword("");
 };
 
-  const cerrarSesion = () => {
+  const cerrarSesion = async () => {
     setUsuarioActivo(null);
     localStorage.removeItem("usuario_activo");
+    await supabase.auth.signOut();
   };
 
   const updatePlayerStats = (id, resultado) => {
@@ -419,40 +492,20 @@ export default function App() {
     <div style={styles.page}>
       <div style={styles.pattern}>
         <nav style={styles.navbar}>
-<div style={styles.logo}>
-  <img
-    src={logoPucallpa}
-    alt="PUCALLPA RETOS"
-    style={styles.logoImage}
-  />
-
-  <div style={styles.logoText}>
-    <span style={styles.logoTitle}>PUCALLPA RETOS</span>
-    <small style={styles.logoSub}>Retos deportivos en vivo</small>
-  </div>
-</div>
+          <div style={styles.logo}>
+            <div style={styles.logoIcon}>
+              <Flame size={26} />
+            </div>
+            <span>PUCALLPA RETOS</span>
+          </div>
 
           <div style={styles.navLinks}>
-  <motion.a whileHover={{ y: -2, scale: 1.04 }} style={styles.navLink} href="#retos">
-    Retos
-  </motion.a>
-
-  <motion.a whileHover={{ y: -2, scale: 1.04 }} style={styles.navLink} href="#ranking">
-    Ranking
-  </motion.a>
-
-  <motion.a whileHover={{ y: -2, scale: 1.04 }} style={styles.navLink} href="#envivo">
-    En vivo
-  </motion.a>
-
-  <motion.a whileHover={{ y: -2, scale: 1.04 }} style={styles.navLink} href="#registro">
-    Registro
-  </motion.a>
-
-  <motion.a whileHover={{ y: -2, scale: 1.04 }} style={styles.navLink} href="#players">
-    Players
-  </motion.a>
-</div>
+            <a style={styles.navLink} href="#retos">Retos</a>
+            <a style={styles.navLink} href="#ranking">Ranking</a>
+            <a style={styles.navLink} href="#envivo">En vivo</a>
+            <a style={styles.navLink} href="#registro">Registro</a>
+            <a style={styles.navLink} href="#players">Players</a>
+          </div>
         </nav>
 
         <main style={styles.container}>
@@ -644,7 +697,7 @@ export default function App() {
                   <div style={styles.userLoggedBox}>
                     <strong>{usuarioActivo.nickName || usuarioActivo.nombre}</strong>
                     <span>Nombre: {usuarioActivo.nombre}</span>
-                    <span>{usuarioActivo.distrito} · {usuarioActivo.deporte}</span>
+                    <span>{usuarioActivo.deporte} · {usuarioActivo.nivel}</span>
                     <span>{usuarioActivo.partidas || 0}/10 partidas · {usuarioActivo.medalla}</span>
 
                     <button style={styles.cancelBtn} onClick={cerrarSesion}>
@@ -663,6 +716,17 @@ export default function App() {
                   </div>
 
                   <div style={styles.form}>
+                    <button style={styles.googleBtn} onClick={signInWithGoogle}>
+                      <span style={styles.googleIcon}>G</span>
+                      Continuar con Google
+                    </button>
+
+                    <div style={styles.loginDivider}>
+                      <span style={styles.loginDividerLine}></span>
+                      <small>o ingresa con celular</small>
+                      <span style={styles.loginDividerLine}></span>
+                    </div>
+
                     <input
   style={styles.input}
   placeholder="Celular registrado para iniciar sesión"
@@ -807,7 +871,7 @@ export default function App() {
                         <div>
                           <h3>{user.nickName || user.nombre}</h3>
                           <p>{user.nombre}</p>
-                          <p>{user.distrito} · {user.deporte} · {user.nivel}</p>
+                          <p>{user.deporte} · {user.nivel}</p>
                         </div>
                         <span style={styles.playerMedal}>{user.medalla}</span>
                       </div>
@@ -1150,32 +1214,13 @@ leaveBtnActive: {
     boxSizing: "border-box",
   },
 
- logoImage: {
-  width: "82px",
-  height: "82px",
-  objectFit: "cover",
-  borderRadius: "22px",
-  boxShadow: "0 14px 35px rgba(0,0,0,0.28)",
-  filter: "drop-shadow(0 0 18px rgba(57,255,102,0.25))",
-},
-
-logoText: {
-  display: "flex",
-  flexDirection: "column",
-},
-
-logoTitle: {
-  fontSize: "28px",
-  fontWeight: "950",
-  color: "#ffffff",
-  letterSpacing: "1px",
-},
-
-logoSub: {
-  color: "rgba(255,255,255,0.70)",
-  fontWeight: "700",
-  marginTop: "2px",
-},
+  logo: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+    fontWeight: "950",
+    letterSpacing: "1px",
+  },
 
   logoIcon: {
     width: "48px",
@@ -1195,18 +1240,10 @@ logoSub: {
   },
 
   navLink: {
-  padding: "12px 18px",
-  borderRadius: "16px",
-  color: "rgba(255,255,255,0.88)",
-  fontWeight: "900",
-  fontSize: "15px",
-  letterSpacing: "0.3px",
-  textDecoration: "none",
-  background: "rgba(255,255,255,0.06)",
-  border: "1px solid rgba(255,255,255,0.10)",
-  backdropFilter: "blur(10px)",
-  boxShadow: "0 8px 24px rgba(0,0,0,0.16)",
-},
+    color: "#f4fff2",
+    textDecoration: "none",
+    fontWeight: "900",
+  },
 
   container: {
     width: "100%",
@@ -1605,6 +1642,49 @@ logoSub: {
     display: "flex",
     flexDirection: "column",
     gap: "14px",
+  },
+
+
+  googleBtn: {
+    width: "100%",
+    padding: "15px 18px",
+    borderRadius: "18px",
+    border: "1px solid #d1d5db",
+    background: "#ffffff",
+    color: "#0f172a",
+    fontWeight: "950",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "12px",
+    boxShadow: "0 12px 30px rgba(15,23,42,0.08)",
+  },
+
+  googleIcon: {
+    width: "28px",
+    height: "28px",
+    borderRadius: "50%",
+    display: "grid",
+    placeItems: "center",
+    background: "linear-gradient(135deg, #4285F4, #34A853, #FBBC05, #EA4335)",
+    color: "#ffffff",
+    fontWeight: "950",
+  },
+
+  loginDivider: {
+    display: "grid",
+    gridTemplateColumns: "1fr auto 1fr",
+    alignItems: "center",
+    gap: "12px",
+    color: "#64748b",
+    fontWeight: "800",
+    margin: "2px 0",
+  },
+
+  loginDividerLine: {
+    height: "1px",
+    background: "#e5e7eb",
   },
 
   input: {
