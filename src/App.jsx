@@ -1,0 +1,2080 @@
+import React, { useEffect, useState } from "react";
+import yapeQr from "./assets/yape-qr.jpg";
+import logoPucallpa from "./assets/logo-pucallpa.png";
+import { motion } from "framer-motion";
+import {
+  Trophy,
+  Radio,
+  CalendarDays,
+  ShieldCheck,
+  Star,
+  UserPlus,
+  Flame,
+  Users,
+  X,
+} from "lucide-react";
+
+export default function App() {
+  const [activeSport, setActiveSport] = useState("futbol");
+  const [openRoom, setOpenRoom] = useState(false);
+  const [selectedMatch, setSelectedMatch] = useState(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [roomTeams, setRoomTeams] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("pucallpa_rooms")) || {};
+    } catch {
+      return {};
+    }
+  });
+  const [greenTeam, setGreenTeam] = useState([]);
+  const [redTeam, setRedTeam] = useState([]);
+  const [playerName, setPlayerName] = useState("");
+
+  const [nombre, setNombre] = useState("");
+  const [nickName, setNickName] = useState("");
+  const [celular, setCelular] = useState("");
+  const [distrito, setDistrito] = useState("");
+  const [deporte, setDeporte] = useState("");
+  const [nivel, setNivel] = useState("");
+  const [usuarios, setUsuarios] = useState([]);
+
+  const [usuarioActivo, setUsuarioActivo] = useState(null);
+  const [loginCelular, setLoginCelular] = useState("");
+  const [password, setPassword] = useState("");
+    const [loginPassword, setLoginPassword] = useState("");
+
+  useEffect(() => {
+    const savedUsers = JSON.parse(localStorage.getItem("pucallpa_users")) || [];
+    const savedActiveUser = JSON.parse(localStorage.getItem("usuario_activo"));
+
+    setUsuarios(savedUsers);
+
+    if (savedActiveUser) {
+      setUsuarioActivo(savedActiveUser);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("pucallpa_rooms", JSON.stringify(roomTeams));
+  }, [roomTeams]);
+
+  const getMedalla = (ganadas, partidas) => {
+    if (partidas < 10) return "Calibrando";
+
+    const rendimiento = ganadas / partidas;
+
+    if (rendimiento >= 0.85) return "Inmortal Pucallpino";
+    if (rendimiento >= 0.7) return "Leyenda";
+    if (rendimiento >= 0.55) return "Arconte";
+    if (rendimiento >= 0.4) return "Cruzado";
+    if (rendimiento >= 0.25) return "Guardián";
+    return "Heraldo";
+  };
+
+  const createUser = () => {
+    if (!nombre || !nickName || !celular || !password || !distrito || !deporte || !nivel) {
+      alert("Completa todos los datos del usuario");
+      return;
+    }
+
+    const existe = usuarios.find((user) => user.celular === celular);
+
+    if (existe) {
+      alert("Este celular ya está registrado. Inicia sesión.");
+      return;
+    }
+
+    const existeNick = usuarios.find(
+      (user) => (user.nickName || "").toLowerCase() === nickName.trim().toLowerCase()
+    );
+
+    if (existeNick) {
+      alert("Este nickname ya está registrado. Elige otro.");
+      return;
+    }
+
+    const newUser = {
+      id: Date.now(),
+      nombre,
+      nickName: nickName.trim(),
+      celular,
+      password,
+      distrito,
+      deporte,
+      nivel,
+      partidas: 0,
+      ganadas: 0,
+      perdidas: 0,
+      puntos: 0,
+      medalla: "Calibrando",
+      createdAt: new Date().toLocaleString(),
+    };
+
+    const updatedUsers = [...usuarios, newUser];
+
+    localStorage.setItem("pucallpa_users", JSON.stringify(updatedUsers));
+    localStorage.setItem("usuario_activo", JSON.stringify(newUser));
+
+    setUsuarios(updatedUsers);
+    setUsuarioActivo(newUser);
+
+    alert("Usuario creado correctamente. Sesión iniciada.");
+
+    setNombre("");
+    setNickName("");
+    setCelular("");
+    setPassword("");
+    setDistrito("");
+    setDeporte("");
+    setNivel("");
+  };
+
+  const iniciarSesion = () => {
+  const user = usuarios.find(
+    (u) =>
+      u.celular === loginCelular.trim() &&
+      u.password === loginPassword
+  );
+
+  if (!user) {
+    alert("Celular o contraseña incorrecta");
+    return;
+  }
+
+  setUsuarioActivo(user);
+
+  localStorage.setItem(
+    "usuario_activo",
+    JSON.stringify(user)
+  );
+
+  setLoginCelular("");
+  setLoginPassword("");
+};
+
+  const cerrarSesion = () => {
+    setUsuarioActivo(null);
+    localStorage.removeItem("usuario_activo");
+  };
+
+  const updatePlayerStats = (id, resultado) => {
+    const updatedUsers = usuarios.map((user) => {
+      if (user.id !== id) return user;
+
+      const partidas = (user.partidas || 0) + 1;
+      const ganadas =
+        resultado === "win" ? (user.ganadas || 0) + 1 : user.ganadas || 0;
+      const perdidas =
+        resultado === "lose" ? (user.perdidas || 0) + 1 : user.perdidas || 0;
+
+      const puntos = ganadas * 100 - perdidas * 25;
+      const medalla = getMedalla(ganadas, partidas);
+
+      return {
+        ...user,
+        partidas,
+        ganadas,
+        perdidas,
+        puntos,
+        medalla,
+      };
+    });
+
+    setUsuarios(updatedUsers);
+    localStorage.setItem("pucallpa_users", JSON.stringify(updatedUsers));
+
+    if (usuarioActivo && usuarioActivo.id === id) {
+      const actualizado = updatedUsers.find((u) => u.id === id);
+      setUsuarioActivo(actualizado);
+      localStorage.setItem("usuario_activo", JSON.stringify(actualizado));
+    }
+  };
+
+  const deletePlayer = (id) => {
+    const updatedUsers = usuarios.filter((user) => user.id !== id);
+
+    setUsuarios(updatedUsers);
+    localStorage.setItem("pucallpa_users", JSON.stringify(updatedUsers));
+
+    if (usuarioActivo && usuarioActivo.id === id) {
+      cerrarSesion();
+    }
+  };
+
+  const [slots] = useState([
+    { id: 1, sport: "futbol", time: "2:00 pm", status: "available" },
+    { id: 2, sport: "futbol", time: "3:00 pm", status: "available" },
+    { id: 3, sport: "futbol", time: "4:00 pm", status: "available" },
+    { id: 4, sport: "futbol", time: "5:00 pm", status: "available" },
+    { id: 5, sport: "futbol", time: "6:00 pm", status: "available" },
+    { id: 6, sport: "futbol", time: "7:00 pm", status: "available" },
+    { id: 7, sport: "futbol", time: "8:00 pm", status: "available" },
+    { id: 8, sport: "futbol", time: "9:00 pm", status: "available" },
+    { id: 9, sport: "futbol", time: "10:00 pm", status: "available" },
+    { id: 10, sport: "futbol", time: "11:00 pm", status: "available" },
+    { id: 11, sport: "futbol", time: "12:00 am", status: "available" },
+    { id: 12, sport: "futbol", time: "1:00 am", status: "available" },
+    { id: 13, sport: "futbol", time: "2:00 am", status: "available" },
+    { id: 14, sport: "voley", time: "2:00 pm", status: "available" },
+    { id: 15, sport: "voley", time: "3:00 pm", status: "available" },
+    { id: 16, sport: "voley", time: "4:00 pm", status: "available" },
+    { id: 17, sport: "voley", time: "5:00 pm", status: "available" },
+    { id: 18, sport: "voley", time: "6:00 pm", status: "available" },
+    { id: 19, sport: "voley", time: "7:00 pm", status: "available" },
+    { id: 20, sport: "voley", time: "8:00 pm", status: "available" },
+    { id: 21, sport: "voley", time: "9:00 pm", status: "available" },
+    { id: 22, sport: "voley", time: "10:00 pm", status: "available" },
+    { id: 23, sport: "voley", time: "11:00 pm", status: "available" },
+    { id: 24, sport: "voley", time: "12:00 am", status: "available" },
+    { id: 25, sport: "voley", time: "1:00 am", status: "available" },
+    { id: 26, sport: "voley", time: "2:00 am", status: "available" },
+  ]);
+
+  const filteredSlots = slots.filter((slot) => slot.sport === activeSport);
+
+  const rankingDinamico = [...usuarios]
+    .filter((user) => (user.partidas || 0) >= 10)
+    .sort((a, b) => {
+      if ((b.puntos || 0) !== (a.puntos || 0)) {
+        return (b.puntos || 0) - (a.puntos || 0);
+      }
+
+      if ((b.ganadas || 0) !== (a.ganadas || 0)) {
+        return (b.ganadas || 0) - (a.ganadas || 0);
+      }
+
+      const rendimientoA = (a.ganadas || 0) / Math.max(a.partidas || 1, 1);
+      const rendimientoB = (b.ganadas || 0) / Math.max(b.partidas || 1, 1);
+
+      return rendimientoB - rendimientoA;
+    })
+    .slice(0, 10);
+
+  const openMatchRoom = (slot) => {
+    const totalPlayers = getSlotTotal(slot);
+    const maxPlayers = getMaxPlayersBySport(slot.sport);
+
+    if (slot.status === "reserved" || totalPlayers >= maxPlayers) {
+      alert("Esta sala ya está llena. Elige otro horario disponible.");
+      return;
+    }
+
+    setSelectedMatch(slot);
+    setOpenRoom(true);
+  };
+
+  const getMaxPlayersBySport = (sport) => {
+    return sport === "futbol" ? 12 : 10;
+  };
+
+  const getMaxPerTeamBySport = (sport) => {
+    return sport === "futbol" ? 6 : 5;
+  };
+
+  const getMaxPlayers = () => {
+    if (!selectedMatch) return 0;
+    return getMaxPlayersBySport(selectedMatch.sport);
+  };
+
+  const getMaxPerTeam = () => {
+    if (!selectedMatch) return 0;
+    return getMaxPerTeamBySport(selectedMatch.sport);
+  };
+
+  const getTeamsForSlot = (slotId) => {
+    const teams = roomTeams[slotId] || { green: [], red: [], confirmed: [] };
+
+    return {
+      green: teams.green || [],
+      red: teams.red || [],
+      confirmed: teams.confirmed || [],
+    };
+  };
+
+  const getSelectedTeams = () => {
+    if (!selectedMatch) return { green: [], red: [] };
+    return getTeamsForSlot(selectedMatch.id);
+  };
+
+  const getSlotTotal = (slot) => {
+    const teams = getTeamsForSlot(slot.id);
+    return teams.green.length + teams.red.length;
+  };
+
+  const getCurrentPlayerName = () => {
+    if (!usuarioActivo) return "";
+    return usuarioActivo.nickName || usuarioActivo.nombre;
+  };
+
+  const isCurrentUserInSelectedRoom = () => {
+    if (!selectedMatch || !usuarioActivo) return false;
+
+    const name = getCurrentPlayerName();
+    const teams = getSelectedTeams();
+
+    return teams.green.includes(name) || teams.red.includes(name);
+  };
+
+  const joinTeam = (team) => {
+    if (!selectedMatch) return;
+
+    if (!usuarioActivo) {
+      alert("Primero inicia sesión o crea tu cuenta para unirte a una sala.");
+      return;
+    }
+
+    const name = getCurrentPlayerName();
+    const maxPerTeam = getMaxPerTeam();
+    const currentTeams = getTeamsForSlot(selectedMatch.id);
+    const totalPlayers = currentTeams.green.length + currentTeams.red.length;
+
+    if (totalPlayers >= getMaxPlayers()) {
+      alert("La sala ya está llena. Elige otro horario disponible.");
+      return;
+    }
+
+    if (currentTeams.green.includes(name) || currentTeams.red.includes(name)) {
+      alert("Ya estás en un equipo");
+      return;
+    }
+
+    if (team === "green" && currentTeams.green.length >= maxPerTeam) {
+      alert("El Equipo Verde ya está lleno");
+      return;
+    }
+
+    if (team === "red" && currentTeams.red.length >= maxPerTeam) {
+      alert("El Equipo Rojo ya está lleno");
+      return;
+    }
+
+    setRoomTeams((prev) => {
+      const previousTeams = prev[selectedMatch.id] || { green: [], red: [], confirmed: [] };
+
+      return {
+        ...prev,
+        [selectedMatch.id]: {
+          green: team === "green" ? [...(previousTeams.green || []), name] : previousTeams.green || [],
+          red: team === "red" ? [...(previousTeams.red || []), name] : previousTeams.red || [],
+          confirmed: previousTeams.confirmed || [],
+        },
+      };
+    });
+  };
+
+  const leaveCurrentRoom = () => {
+    if (!selectedMatch || !usuarioActivo) return;
+
+    const name = getCurrentPlayerName();
+    const currentTeams = getSelectedTeams();
+
+    if (!currentTeams.green.includes(name) && !currentTeams.red.includes(name)) {
+      alert("Todavía no estás inscrito en esta sala.");
+      return;
+    }
+
+    setRoomTeams((prev) => ({
+      ...prev,
+      [selectedMatch.id]: {
+        green: currentTeams.green.filter((player) => player !== name),
+        red: currentTeams.red.filter((player) => player !== name),
+        confirmed: currentTeams.confirmed.filter((player) => player !== name),
+      },
+    }));
+  };
+
+  const confirmParticipation = () => {
+    if (!selectedMatch) return;
+
+    if (!usuarioActivo) {
+      alert("Primero inicia sesión para confirmar tu participación.");
+      return;
+    }
+
+    const name = getCurrentPlayerName();
+    const currentTeams = getSelectedTeams();
+    const isInRoom =
+      currentTeams.green.includes(name) || currentTeams.red.includes(name);
+
+    if (!isInRoom) {
+      alert("Primero elige Equipo Verde o Equipo Rojo.");
+      return;
+    }
+
+    if (!currentTeams.confirmed.includes(name)) {
+      setRoomTeams((prev) => ({
+        ...prev,
+        [selectedMatch.id]: {
+          green: currentTeams.green,
+          red: currentTeams.red,
+          confirmed: [...currentTeams.confirmed, name],
+        },
+      }));
+    }
+
+    setShowPaymentModal(true);
+  };
+
+  return (
+    <div style={styles.page}>
+      <div style={styles.pattern}>
+        <nav style={styles.navbar}>
+<div style={styles.logo}>
+  <img
+    src={logoPucallpa}
+    alt="PUCALLPA RETOS"
+    style={styles.logoImage}
+  />
+
+  <div style={styles.logoText}>
+    <span style={styles.logoTitle}>PUCALLPA RETOS</span>
+    <small style={styles.logoSub}>Retos deportivos en vivo</small>
+  </div>
+</div>
+
+          <div style={styles.navLinks}>
+  <motion.a whileHover={{ y: -2, scale: 1.04 }} style={styles.navLink} href="#retos">
+    Retos
+  </motion.a>
+
+  <motion.a whileHover={{ y: -2, scale: 1.04 }} style={styles.navLink} href="#ranking">
+    Ranking
+  </motion.a>
+
+  <motion.a whileHover={{ y: -2, scale: 1.04 }} style={styles.navLink} href="#envivo">
+    En vivo
+  </motion.a>
+
+  <motion.a whileHover={{ y: -2, scale: 1.04 }} style={styles.navLink} href="#registro">
+    Registro
+  </motion.a>
+
+  <motion.a whileHover={{ y: -2, scale: 1.04 }} style={styles.navLink} href="#players">
+    Players
+  </motion.a>
+</div>
+        </nav>
+
+        <main style={styles.container}>
+          <motion.section
+            style={styles.hero}
+            initial={{ opacity: 0, y: 35 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7 }}
+          >
+            <span style={styles.badge}>Arena deportiva digital de Pucallpa</span>
+
+            <h1 style={styles.title}>
+              Pucallpa Retos: fútbol y vóley competitivo
+            </h1>
+
+            <p style={styles.subtitle}>
+              Reserva tu slot, elige tu equipo, compite en la sala y sube de rango en las arenas deportivas de Pucallpa.
+            </p>
+
+            <div style={styles.paymentNotice}>
+              💸 Para confirmar tu participación, solicita tu slot en Retos disponibles,yapea envia captura y listo.
+            </div>
+
+            {usuarioActivo && (
+              <div style={styles.sessionBanner}>
+                Sesión activa: <strong>{usuarioActivo.nombre}</strong> · {usuarioActivo.medalla}
+              </div>
+            )}
+
+            <div style={styles.heroButtons}>
+              <a style={styles.primaryBtn} href="#retos">Reservar slot</a>
+              <a style={styles.secondaryBtn} href="#players">Ver players</a>
+            </div>
+          </motion.section>
+
+          <section id="retos" style={styles.gridPrincipal}>
+            <motion.div style={styles.cardGrande} whileHover={{ y: -6 }}>
+              <div style={styles.cardHeader}>
+                <div>
+                  <h2 style={styles.sectionTitle}>Retos disponibles</h2>
+                  <p style={styles.muted}>
+                    Haz clic en un horario disponible para abrir la sala y elegir equipo.
+                  </p>
+                </div>
+                <CalendarDays color="#39ff66" size={32} />
+              </div>
+
+              <div style={styles.sportTabs}>
+                <button
+                  style={activeSport === "futbol" ? styles.activeTab : styles.tab}
+                  onClick={() => setActiveSport("futbol")}
+                >
+                  ⚽ Fútbol 7
+                </button>
+
+                <button
+                  style={activeSport === "voley" ? styles.activeTab : styles.tab}
+                  onClick={() => setActiveSport("voley")}
+                >
+                  🏐 Vóley mixto
+                </button>
+              </div>
+
+              <div style={styles.slotGrid}>
+                {filteredSlots.map((slot) => {
+                  const totalPlayers = getSlotTotal(slot);
+                  const maxPlayers = getMaxPlayersBySport(slot.sport);
+                  const progress = Math.min((totalPlayers / maxPlayers) * 100, 100);
+                  const isFull = totalPlayers >= maxPlayers || slot.status === "reserved";
+
+                  return (
+                    <motion.div
+                      key={slot.id}
+                      whileHover={!isFull ? { scale: 1.03, y: -4 } : {}}
+                      style={{
+                        ...styles.slot,
+                        ...(isFull && styles.reserved),
+                      }}
+                      onClick={() => openMatchRoom(slot)}
+                    >
+                      <div style={styles.slotTop}>
+                        <strong>{slot.time}</strong>
+                        <span style={isFull ? styles.statusReserved : styles.statusAvailable}>
+                          {isFull ? "Lleno" : "Disponible"}
+                        </span>
+                      </div>
+
+                      <div style={styles.slotCapacityBox}>
+                        <div style={styles.slotCapacityText}>
+                          <Users size={16} />
+                          <strong>{totalPlayers}/{maxPlayers}</strong>
+                          <span>{slot.sport === "futbol" ? "" : ""}</span>
+                        </div>
+
+                        <div style={styles.slotMiniProgress}>
+                          <span style={{ width: `${progress}%`, height: "100%", display: "block", background: "linear-gradient(90deg, #39ff66, #f97316)" }} />
+                        </div>
+                      </div>
+
+                      <div style={styles.slotBottom}>
+                        <Users size={15} />
+                        <span>{isFull ? "Sala llena" : "Abrir sala"}</span>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+
+            <motion.div style={styles.liveCard} whileHover={{ y: -6 }} id="envivo">
+              <div style={styles.liveTop}>
+                <Radio />
+                <span>EN VIVO</span>
+              </div>
+
+              <h2 style={styles.liveTitle}>Reto Fútbol 7</h2>
+              <p style={styles.mutedLight}>Campo 9 de Octubre · Pucallpa</p>
+
+              <div style={styles.scoreBox}>
+                <div>
+                  <strong>Los Tigres</strong>
+                  <h3>3</h3>
+                </div>
+                <span>VS</span>
+                <div>
+                  <strong>Barrio Unido</strong>
+                  <h3>2</h3>
+                </div>
+              </div>
+
+              <div style={styles.liveFeed}>
+                <p>🔥 Min 42: Golazo de Los Tigres.</p>
+                <p>⚽ Partido intenso en la tierra colorada.</p>
+                <p>🏆 El ganador suma puntos para el ranking.</p>
+              </div>
+            </motion.div>
+          </section>
+
+          <section style={styles.gridInferior}>
+            <section id="ranking" style={styles.card}>
+              <div style={styles.cardHeader}>
+                <div>
+                  <h2 style={styles.sectionTitle}>TOP 10 GENERAL</h2>
+                  <p style={styles.muted}>
+                    Aquí aparecerán automáticamente los 10 mejores players de fútbol y vóley cuando completen 10 partidas.
+                  </p>
+                </div>
+                <Trophy color="#f59e0b" size={32} />
+              </div>
+
+              {rankingDinamico.length === 0 ? (
+                <div style={styles.emptyRanking}>
+                  <Trophy size={42} color="#f59e0b" />
+                  <h3>Ranking en calibración</h3>
+                  <p>Aún no hay players con 10 partidas completadas.</p>
+                </div>
+              ) : (
+                <div style={styles.rankingList}>
+                  {rankingDinamico.map((player, index) => (
+                    <div key={player.id} style={styles.rankingItem}>
+                      <div style={styles.position}>{index + 1}</div>
+                      <div style={{ flex: 1 }}>
+                        <strong>{player.nickName || player.nombre}</strong>
+                        <p>
+                          {player.deporte} · {player.ganadas || 0}G / {player.perdidas || 0}P
+                        </p>
+                      </div>
+                      <div style={styles.rankBadge}>
+                        <Star size={15} /> {player.medalla}
+                      </div>
+                      <strong>{player.puntos || 0} pts</strong>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section id="registro" style={styles.card}>
+              {usuarioActivo ? (
+                <>
+                  <div style={styles.cardHeader}>
+                    <div>
+                      <h2 style={styles.sectionTitle}>Sesión activa</h2>
+                      <p style={styles.muted}>Ya estás dentro de Pucallpa Retos.</p>
+                    </div>
+                    <UserPlus color="#39ff66" size={32} />
+                  </div>
+
+                  <div style={styles.userLoggedBox}>
+                    <strong>{usuarioActivo.nickName || usuarioActivo.nombre}</strong>
+                    <span>Nombre: {usuarioActivo.nombre}</span>
+                    <span>{usuarioActivo.distrito} · {usuarioActivo.deporte}</span>
+                    <span>{usuarioActivo.partidas || 0}/10 partidas · {usuarioActivo.medalla}</span>
+
+                    <button style={styles.cancelBtn} onClick={cerrarSesion}>
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div style={styles.cardHeader}>
+                    <div>
+                      <h2 style={styles.sectionTitle}>Crear usuario</h2>
+                      <p style={styles.muted}>Crea tu cuenta o inicia sesión con tu celular.</p>
+                    </div>
+                    <UserPlus color="#39ff66" size={32} />
+                  </div>
+
+                  <div style={styles.form}>
+                    <input
+  style={styles.input}
+  placeholder="Celular registrado para iniciar sesión"
+  value={loginCelular}
+  onChange={(e) => setLoginCelular(e.target.value)}
+/>
+
+<input
+  type="password"
+  style={styles.input}
+  placeholder="Contraseña"
+  value={loginPassword}
+  onChange={(e) => setLoginPassword(e.target.value)}
+/>
+
+<button style={styles.fullBtn} onClick={iniciarSesion}>
+  Iniciar sesión
+</button>
+
+                    <hr style={styles.divider} />
+
+                    <input
+                      style={styles.input}
+                      placeholder="Nombre completo"
+                      value={nombre}
+                      onChange={(e) => setNombre(e.target.value)}
+                    />
+
+                    <input
+                      style={styles.input}
+                      placeholder="Nick name / Nombre de jugador"
+                      value={nickName}
+                      onChange={(e) => setNickName(e.target.value)}
+                    />
+
+                    <input
+                      style={styles.input}
+                      placeholder="Celular / WhatsApp"
+                      value={celular}
+                      onChange={(e) => setCelular(e.target.value)}
+                    />
+                
+
+                    <input
+                      style={styles.input}
+                      placeholder="Distrito: Pucallpa, Manantay, Yarinacocha"
+                      value={distrito}
+                      onChange={(e) => setDistrito(e.target.value)}
+                    />
+                    
+                    <input
+                      type="password"
+                      style={styles.input}
+                      placeholder="Crear contraseña"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+
+
+                    <select
+                      style={styles.input}
+                      value={deporte}
+                      onChange={(e) => setDeporte(e.target.value)}
+                    >
+                      <option value="">Deporte favorito</option>
+                      <option>Fútbol</option>
+                      <option>Vóley</option>
+                      <option>Ambos</option>
+                    </select>
+
+                    <select
+                      style={styles.input}
+                      value={nivel}
+                      onChange={(e) => setNivel(e.target.value)}
+                    >
+                      <option value="">Nivel competitivo</option>
+                      <option>Principiante</option>
+                      <option>Intermedio</option>
+                      <option>Competitivo</option>
+                    </select>
+
+                    <button style={styles.fullBtn} onClick={createUser}>
+                      Crear cuenta
+                    </button>
+                  </div>
+                </>
+              )}
+            </section>
+
+            <section style={styles.cardDark}>
+              <ShieldCheck size={36} color="#39ff66" />
+              <h2>Reglamento de retos</h2>
+
+              <ul style={styles.rules}>
+                <li>Se jugarán 10 retos de calibración.</li>
+                <li>Al completar 10 juegos se calificará tu rendimiento.</li>
+                <li>Según tu rendimiento sabrás tu medalla.</li>
+                <li>Respeto obligatorio entre jugadores.</li>
+                <li>El slot se cierra antes del inicio del reto.</li>
+                <li>El equipo ganador suma puntos.</li>
+                <li>Prohibida la violencia física o verbal.</li>
+                <li>Los retos pueden transmitirse en vivo.</li>
+              </ul>
+
+              <div style={styles.medals}>
+                {["Heraldo", "Guardián", "Cruzado", "Arconte", "Leyenda", "Inmortal Pucallpino"].map(
+                  (medal) => (
+                    <span key={medal} style={styles.medal}>
+                      {medal}
+                    </span>
+                  )
+                )}
+              </div>
+            </section>
+          </section>
+
+          <section id="players" style={styles.playersSection}>
+            <div style={styles.cardHeader}>
+              <div>
+                <h2 style={styles.playersTitle}>Players registrados</h2>
+                <p style={styles.playersText}>
+                  Aquí podrás controlar partidas, victorias, derrotas y medallas para formar equipos más equilibrados.
+                </p>
+              </div>
+              <Users color="#39ff66" size={34} />
+            </div>
+
+            {usuarios.length === 0 ? (
+              <p style={styles.playersText}>Aún no hay jugadores registrados.</p>
+            ) : (
+              <div style={styles.playersGrid}>
+                {usuarios.map((user) => {
+                  const partidas = user.partidas || 0;
+                  const ganadas = user.ganadas || 0;
+                  const perdidas = user.perdidas || 0;
+                  const rendimiento = partidas > 0 ? Math.round((ganadas / partidas) * 100) : 0;
+                  const avance = Math.min((partidas / 10) * 100, 100);
+
+                  return (
+                    <div key={user.id} style={styles.playerCard}>
+                      <div style={styles.playerHeader}>
+                        <div>
+                          <h3>{user.nickName || user.nombre}</h3>
+                          <p>{user.nombre}</p>
+                          <p>{user.distrito} · {user.deporte} · {user.nivel}</p>
+                        </div>
+                        <span style={styles.playerMedal}>{user.medalla}</span>
+                      </div>
+
+                      <div style={styles.playerStats}>
+                        <div>
+                          <strong>{partidas}/10</strong>
+                          <span>Partidas</span>
+                        </div>
+                        <div>
+                          <strong>{ganadas}</strong>
+                          <span>Ganadas</span>
+                        </div>
+                        <div>
+                          <strong>{perdidas}</strong>
+                          <span>Perdidas</span>
+                        </div>
+                        <div>
+                          <strong>{rendimiento}%</strong>
+                          <span>Rendimiento</span>
+                        </div>
+                      </div>
+
+                      <div style={styles.progressBar}>
+                        <span
+                          style={{
+                            width: `${avance}%`,
+                            height: "100%",
+                            display: "block",
+                            background: "linear-gradient(90deg, #39ff66, #f97316)",
+                          }}
+                        />
+                      </div>
+
+                      <div style={styles.playerActions}>
+                        <button style={styles.winBtn} onClick={() => updatePlayerStats(user.id, "win")}>
+                          + Victoria
+                        </button>
+                        <button style={styles.loseBtn} onClick={() => updatePlayerStats(user.id, "lose")}>
+                          + Derrota
+                        </button>
+                      </div>
+
+                      <button style={styles.deleteBtn} onClick={() => deletePlayer(user.id)}>
+                        Eliminar player
+                      </button>
+
+                      {partidas < 10 ? (
+                        <small style={styles.calibrando}>
+                          Faltan {10 - partidas} partidas para definir medalla.
+                        </small>
+                      ) : (
+                        <small style={styles.medallaLista}>
+                          Medalla asignada según rendimiento.
+                        </small>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </main>
+      </div>
+
+      {openRoom && selectedMatch && (
+        <div style={styles.modalOverlay}>
+          <motion.div
+            style={styles.roomModal}
+            initial={{ scale: 0.92, opacity: 0, y: 40 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+          >
+            <button style={styles.closeRoom} onClick={() => setOpenRoom(false)}>
+              <X size={20} />
+            </button>
+
+            <div style={styles.roomHeader}>
+              <div>
+                <h2>SALA DE RETO</h2>
+                <p>{selectedMatch.time}</p>
+              </div>
+
+              <span style={styles.roomBadge}>ID SALA: 784512</span>
+            </div>
+
+            <div style={styles.roomInfo}>
+              <div>
+                <strong>{selectedMatch.sport === "futbol" ? "⚽ Reto Fútbol" : "🏐 Reto Vóley Mixto"}</strong>
+                <p>Modo competitivo · Elige tu equipo antes del inicio</p>
+              </div>
+
+              <div>
+                <strong>
+                  {getSelectedTeams().green.length + getSelectedTeams().red.length}/{getMaxPlayers()}
+                </strong>
+                <p>jugadores en sala</p>
+              </div>
+            </div>
+
+            <div style={styles.teamsRoom}>
+              <div style={styles.teamGreen}>
+                <div style={styles.teamHeader}>
+                  <div>
+                    <h3>🟢 Equipo Verde</h3>
+                    <p>{getSelectedTeams().green.length}/{getMaxPerTeam()} jugadores</p>
+                  </div>
+                  <strong>{getSelectedTeams().green.length >= getMaxPerTeam() ? "FULL" : "OPEN"}</strong>
+                </div>
+
+                <div style={styles.teamProgress}>
+                  <span style={{ width: `${Math.min((getSelectedTeams().green.length / getMaxPerTeam()) * 100, 100)}%`, height: "100%", display: "block", background: "linear-gradient(90deg, #39ff66, #16a34a)" }} />
+                </div>
+
+                <button
+                  style={{
+                    ...styles.joinGreen,
+                    opacity: getSelectedTeams().green.length >= getMaxPerTeam() ? 0.5 : 1,
+                    cursor: getSelectedTeams().green.length >= getMaxPerTeam() ? "not-allowed" : "pointer",
+                  }}
+                  disabled={getSelectedTeams().green.length >= getMaxPerTeam()}
+                  onClick={() => joinTeam("green")}
+                >
+                  {getSelectedTeams().green.length >= getMaxPerTeam() ? "Equipo Verde lleno" : "Elegir Equipo Verde"}
+                </button>
+
+                <div style={styles.playersList}>
+                  {getSelectedTeams().green.length === 0 ? (
+                    <div style={styles.emptyTeam}>Esperando jugadores...</div>
+                  ) : (
+                    getSelectedTeams().green.map((player, index) => (
+                      <div key={index} style={styles.playerItem}>
+                        👤 {player}
+                        <span>
+                          {getSelectedTeams().confirmed.includes(player) ? "CONFIRMADO" : "LISTO"}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div style={styles.teamRed}>
+                <div style={styles.teamHeader}>
+                  <div>
+                    <h3>🔴 Equipo Rojo</h3>
+                    <p>{getSelectedTeams().red.length}/{getMaxPerTeam()} jugadores</p>
+                  </div>
+                  <strong>{getSelectedTeams().red.length >= getMaxPerTeam() ? "FULL" : "OPEN"}</strong>
+                </div>
+
+                <div style={styles.teamProgress}>
+                  <span style={{ width: `${Math.min((getSelectedTeams().red.length / getMaxPerTeam()) * 100, 100)}%`, height: "100%", display: "block", background: "linear-gradient(90deg, #f97316, #dc2626)" }} />
+                </div>
+
+                <button
+                  style={{
+                    ...styles.joinRed,
+                    opacity: getSelectedTeams().red.length >= getMaxPerTeam() ? 0.5 : 1,
+                    cursor: getSelectedTeams().red.length >= getMaxPerTeam() ? "not-allowed" : "pointer",
+                  }}
+                  disabled={getSelectedTeams().red.length >= getMaxPerTeam()}
+                  onClick={() => joinTeam("red")}
+                >
+                  {getSelectedTeams().red.length >= getMaxPerTeam() ? "Equipo Rojo lleno" : "Elegir Equipo Rojo"}
+                </button>
+
+                <div style={styles.playersList}>
+                  {getSelectedTeams().red.length === 0 ? (
+                    <div style={styles.emptyTeam}>Esperando jugadores...</div>
+                  ) : (
+                    getSelectedTeams().red.map((player, index) => (
+                      <div key={index} style={styles.playerItem}>
+                        👤 {player}
+                        <span>
+                          {getSelectedTeams().confirmed.includes(player) ? "CONFIRMADO" : "LISTO"}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div style={styles.roomActions}>
+              <button style={styles.cancelBtn} onClick={() => setOpenRoom(false)}>
+                Cerrar ventana
+              </button>
+
+              <button
+  style={{
+    ...styles.leaveBtn,
+    ...(isCurrentUserInSelectedRoom()
+      ? styles.leaveBtnActive
+      : styles.leaveBtnInactive),
+  }}
+  disabled={!isCurrentUserInSelectedRoom()}
+  onClick={leaveCurrentRoom}
+>
+  Retirarme del equipo
+</button>
+
+              <button style={styles.startBtn} onClick={confirmParticipation}>
+                Confirmar participación
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {showPaymentModal && selectedMatch && usuarioActivo && (
+        <div style={styles.paymentOverlay}>
+          <motion.div
+            style={styles.paymentModal}
+            initial={{ scale: 0.92, opacity: 0, y: 30 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+          >
+            <button
+              style={styles.paymentClose}
+              onClick={() => setShowPaymentModal(false)}
+            >
+              <X size={20} />
+            </button>
+
+            <div style={styles.paymentHeader}>
+              <div style={styles.paymentIcon}>💸</div>
+              <h2>Confirma tu slot con Yape</h2>
+              <p>
+                Escanea el QR, realiza el pago y envía la captura al WhatsApp
+                para validar tu participación.
+              </p>
+            </div>
+
+            <div style={styles.paymentContent}>
+              <div style={styles.qrBox}>
+                <img
+                  src={yapeQr}
+                  alt="QR de pago Yape"
+                  style={styles.yapeQr}
+                />
+              </div>
+
+              <div style={styles.paymentInfo}>
+                <div style={styles.paymentInfoBox}>
+                  <span>Jugador</span>
+                  <strong>{usuarioActivo.nickName || usuarioActivo.nombre}</strong>
+                </div>
+
+                <div style={styles.paymentInfoBox}>
+                  <span>Nombre completo</span>
+                  <strong>{usuarioActivo.nombre}</strong>
+                </div>
+
+                <div style={styles.paymentInfoBox}>
+                  <span>Reto</span>
+                  <strong>
+                    {selectedMatch.sport === "futbol" ? "Fútbol" : "Vóley"} · {selectedMatch.time}
+                  </strong>
+                </div>
+
+                <div style={styles.paymentInfoBox}>
+                  <span>WhatsApp para enviar captura</span>
+                  <strong>912 494 278</strong>
+                </div>
+
+                <a
+                  href="https://wa.me/51912494278"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={styles.whatsappBtn}
+                >
+                  Enviar captura por WhatsApp
+                </a>
+
+                <button
+                  style={styles.paymentDoneBtn}
+                  onClick={() => setShowPaymentModal(false)}
+                >
+                  Ya realicé el pago
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+const styles = {
+  leaveBtn: {
+  padding: "15px 24px",
+  borderRadius: "18px",
+  fontWeight: "900",
+  transition: "all 0.25s ease",
+},
+
+leaveBtnInactive: {
+  opacity: 1,
+  background: "rgba(15,23,42,0.04)",
+  color: "#64748b",
+  border: "1px solid rgba(100,116,139,0.18)",
+  cursor: "not-allowed",
+  backdropFilter: "blur(10px)",
+},
+
+leaveBtnActive: {
+  opacity: 1,
+  background: "linear-gradient(135deg, #f97316, #fb923c)",
+  color: "#ffffff",
+  border: "none",
+  cursor: "pointer",
+  boxShadow: "0 12px 28px rgba(249,115,22,0.28)",
+  transform: "translateY(-1px)",
+},
+  page: {
+    minHeight: "100vh",
+    width: "100vw",
+    overflowX: "hidden",
+    background:
+      "linear-gradient(135deg, #020b08 0%, #022c22 35%, #064e3b 65%, #7c2d12 100%)",
+    color: "#f4fff2",
+    fontFamily: "Inter, system-ui, sans-serif",
+  },
+
+  pattern: {
+    minHeight: "100vh",
+    width: "100%",
+    backgroundImage:
+      "radial-gradient(circle at 20% 20%, rgba(57,255,102,0.14), transparent 24%), radial-gradient(circle at 80% 10%, rgba(249,115,22,0.16), transparent 25%), repeating-linear-gradient(45deg, rgba(255,255,255,0.04) 0 2px, transparent 2px 24px)",
+  },
+
+  navbar: {
+    width: "100%",
+    maxWidth: "1500px",
+    margin: "0 auto",
+    padding: "24px 36px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    boxSizing: "border-box",
+  },
+
+ logoImage: {
+  width: "82px",
+  height: "82px",
+  objectFit: "cover",
+  borderRadius: "22px",
+  boxShadow: "0 14px 35px rgba(0,0,0,0.28)",
+  filter: "drop-shadow(0 0 18px rgba(57,255,102,0.25))",
+},
+
+logoText: {
+  display: "flex",
+  flexDirection: "column",
+},
+
+logoTitle: {
+  fontSize: "28px",
+  fontWeight: "950",
+  color: "#ffffff",
+  letterSpacing: "1px",
+},
+
+logoSub: {
+  color: "rgba(255,255,255,0.70)",
+  fontWeight: "700",
+  marginTop: "2px",
+},
+
+  logoIcon: {
+    width: "48px",
+    height: "48px",
+    borderRadius: "16px",
+    background: "linear-gradient(135deg, #39ff66, #f97316)",
+    color: "#022c22",
+    display: "grid",
+    placeItems: "center",
+  },
+
+  navLinks: {
+    display: "flex",
+    gap: "26px",
+    fontWeight: "800",
+    flexWrap: "wrap",
+  },
+
+  navLink: {
+  padding: "12px 18px",
+  borderRadius: "16px",
+  color: "rgba(255,255,255,0.88)",
+  fontWeight: "900",
+  fontSize: "15px",
+  letterSpacing: "0.3px",
+  textDecoration: "none",
+  background: "rgba(255,255,255,0.06)",
+  border: "1px solid rgba(255,255,255,0.10)",
+  backdropFilter: "blur(10px)",
+  boxShadow: "0 8px 24px rgba(0,0,0,0.16)",
+},
+
+  container: {
+    width: "100%",
+    maxWidth: "1500px",
+    margin: "0 auto",
+    padding: "20px 36px 70px",
+    boxSizing: "border-box",
+  },
+
+  hero: {
+    textAlign: "center",
+    padding: "80px 0 70px",
+  },
+
+  badge: {
+    padding: "10px 20px",
+    borderRadius: "999px",
+    background: "rgba(255,255,255,0.14)",
+    border: "1px solid rgba(255,255,255,0.24)",
+    fontWeight: "800",
+  },
+
+  title: {
+    fontSize: "clamp(44px, 5.4vw, 82px)",
+    lineHeight: "0.95",
+    margin: "30px auto 20px",
+    maxWidth: "1100px",
+    fontWeight: "950",
+    letterSpacing: "-2.5px",
+    color: "#f4fff2",
+    textShadow: "0 10px 35px rgba(0,0,0,0.65)",
+  },
+
+  subtitle: {
+    maxWidth: "850px",
+    margin: "0 auto",
+    fontSize: "21px",
+    color: "rgba(255,255,255,0.88)",
+    lineHeight: "1.6",
+  },
+
+  paymentNotice: {
+    maxWidth: "720px",
+    margin: "24px auto 0",
+    padding: "14px 20px",
+    borderRadius: "18px",
+    background: "rgba(249,115,22,0.16)",
+    border: "1px solid rgba(249,115,22,0.35)",
+    color: "#ffedd5",
+    fontWeight: "850",
+    fontSize: "17px",
+  },
+
+  sessionBanner: {
+    maxWidth: "620px",
+    margin: "18px auto 0",
+    padding: "12px 18px",
+    borderRadius: "999px",
+    background: "rgba(57,255,102,0.13)",
+    border: "1px solid rgba(57,255,102,0.35)",
+    color: "#dcfce7",
+    fontWeight: "850",
+  },
+
+  heroButtons: {
+    marginTop: "38px",
+    display: "flex",
+    justifyContent: "center",
+    gap: "18px",
+    flexWrap: "wrap",
+  },
+
+  primaryBtn: {
+    padding: "16px 32px",
+    borderRadius: "18px",
+    border: "none",
+    background: "linear-gradient(90deg, #39ff66, #f97316)",
+    color: "#022c22",
+    fontWeight: "950",
+    cursor: "pointer",
+    textDecoration: "none",
+  },
+
+  secondaryBtn: {
+    padding: "16px 32px",
+    borderRadius: "18px",
+    border: "1px solid rgba(255,255,255,0.3)",
+    background: "rgba(255,255,255,0.1)",
+    color: "white",
+    fontWeight: "900",
+    cursor: "pointer",
+    textDecoration: "none",
+  },
+
+  gridPrincipal: {
+    display: "grid",
+    gridTemplateColumns: "1.4fr 0.8fr",
+    gap: "30px",
+    marginBottom: "30px",
+  },
+
+  gridInferior: {
+    display: "grid",
+    gridTemplateColumns: "1.1fr 0.9fr 0.9fr",
+    gap: "30px",
+  },
+
+  cardGrande: {
+    background: "rgba(255,255,255,0.96)",
+    color: "#0f172a",
+    borderRadius: "30px",
+    padding: "34px",
+    boxShadow: "0 28px 80px rgba(0,0,0,0.35)",
+  },
+
+  card: {
+    background: "rgba(255,255,255,0.96)",
+    color: "#0f172a",
+    borderRadius: "30px",
+    padding: "30px",
+    boxShadow: "0 28px 80px rgba(0,0,0,0.28)",
+  },
+
+  cardDark: {
+    background: "linear-gradient(145deg, rgba(2,44,34,0.95), rgba(7,89,60,0.88))",
+    border: "1px solid rgba(255,255,255,0.16)",
+    borderRadius: "30px",
+    padding: "30px",
+    boxShadow: "0 28px 80px rgba(0,0,0,0.28)",
+  },
+
+  cardHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: "16px",
+    marginBottom: "24px",
+  },
+
+  sectionTitle: {
+    margin: 0,
+    fontSize: "32px",
+    fontWeight: "950",
+    color: "#064e3b",
+  },
+
+  muted: {
+    margin: "6px 0 0",
+    color: "#64748b",
+    lineHeight: "1.5",
+  },
+
+  mutedLight: {
+    color: "rgba(255,255,255,0.78)",
+  },
+
+  emptyRanking: {
+    minHeight: "220px",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center",
+    textAlign: "center",
+    gap: "10px",
+    padding: "30px",
+    borderRadius: "22px",
+    background: "#ecfdf5",
+    color: "#064e3b",
+    border: "1px dashed rgba(16,185,129,0.45)",
+  },
+
+  sportTabs: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "14px",
+    marginBottom: "24px",
+    background: "#ecfdf5",
+    padding: "8px",
+    borderRadius: "22px",
+  },
+
+  tab: {
+    padding: "15px",
+    borderRadius: "16px",
+    border: "none",
+    background: "transparent",
+    fontWeight: "900",
+    cursor: "pointer",
+    color: "#064e3b",
+  },
+
+  activeTab: {
+    padding: "15px",
+    borderRadius: "16px",
+    border: "none",
+    background: "linear-gradient(90deg, #064e3b, #10b981)",
+    color: "white",
+    fontWeight: "950",
+    cursor: "pointer",
+  },
+
+  slotGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
+    gap: "20px",
+  },
+
+  slot: {
+    minHeight: "190px",
+    padding: "22px",
+    borderRadius: "24px",
+    background: "linear-gradient(180deg, #ffffff, #ecfdf5)",
+    border: "2px solid rgba(16,185,129,0.18)",
+    cursor: "pointer",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between",
+    gap: "16px",
+    boxShadow: "0 16px 38px rgba(2,44,34,0.10)",
+  },
+
+  slotTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: "12px",
+  },
+
+  statusAvailable: {
+    padding: "6px 11px",
+    borderRadius: "999px",
+    background: "#dcfce7",
+    color: "#15803d",
+    fontWeight: "900",
+    fontSize: "13px",
+  },
+
+  statusReserved: {
+    padding: "6px 11px",
+    borderRadius: "999px",
+    background: "#fee2e2",
+    color: "#dc2626",
+    fontWeight: "900",
+    fontSize: "13px",
+  },
+
+  slotCapacityBox: {
+    padding: "14px",
+    borderRadius: "18px",
+    background: "rgba(6,78,59,0.06)",
+    border: "1px solid rgba(6,78,59,0.10)",
+  },
+
+  slotCapacityText: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    color: "#064e3b",
+    fontWeight: "850",
+    marginBottom: "10px",
+  },
+
+  slotMiniProgress: {
+    width: "100%",
+    height: "8px",
+    borderRadius: "999px",
+    overflow: "hidden",
+    background: "rgba(15,23,42,0.10)",
+  },
+
+  slotMiniProgressSpan: {},
+
+  slotBottom: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "8px",
+    color: "#064e3b",
+    fontWeight: "950",
+    borderTop: "1px solid rgba(6,78,59,0.12)",
+    paddingTop: "13px",
+  },
+
+  reserved: {
+    background: "linear-gradient(180deg, #fff7f7, #ffedd5)",
+    color: "#991b1b",
+    cursor: "pointer",
+    border: "2px solid rgba(239,68,68,0.25)",
+  },
+
+  fullBtn: {
+    padding: "16px 24px",
+    border: "none",
+    borderRadius: "17px",
+    background: "linear-gradient(90deg, #065f46, #10b981)",
+    color: "white",
+    fontWeight: "950",
+    cursor: "pointer",
+  },
+
+  userLoggedBox: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+    padding: "18px",
+    borderRadius: "18px",
+    background: "#ecfdf5",
+    color: "#064e3b",
+    fontWeight: "850",
+  },
+
+  divider: {
+    width: "100%",
+    border: "none",
+    borderTop: "1px solid #d1d5db",
+    margin: "8px 0",
+  },
+
+  liveCard: {
+    background: "linear-gradient(145deg, rgba(15,23,42,0.96), rgba(6,95,70,0.94), rgba(124,45,18,0.85))",
+    border: "1px solid rgba(255,255,255,0.16)",
+    borderRadius: "30px",
+    padding: "34px",
+    boxShadow: "0 28px 80px rgba(0,0,0,0.3)",
+  },
+
+  liveTop: {
+    display: "flex",
+    gap: "10px",
+    alignItems: "center",
+    color: "#f97316",
+    fontWeight: "950",
+  },
+
+  liveTitle: {
+    fontSize: "38px",
+    marginBottom: "6px",
+  },
+
+  scoreBox: {
+    display: "grid",
+    gridTemplateColumns: "1fr auto 1fr",
+    alignItems: "center",
+    gap: "16px",
+    textAlign: "center",
+    background: "rgba(255,255,255,0.12)",
+    padding: "28px",
+    borderRadius: "24px",
+    marginTop: "24px",
+  },
+
+  liveFeed: {
+    marginTop: "22px",
+    lineHeight: "1.8",
+    color: "#ffedd5",
+  },
+
+  rankingList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "14px",
+  },
+
+  rankingItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: "16px",
+    padding: "16px",
+    borderRadius: "18px",
+    background: "#ecfdf5",
+  },
+
+  position: {
+    width: "40px",
+    height: "40px",
+    borderRadius: "14px",
+    background: "linear-gradient(135deg, #064e3b, #10b981)",
+    color: "white",
+    display: "grid",
+    placeItems: "center",
+    fontWeight: "950",
+  },
+
+  rankBadge: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    background: "#fef3c7",
+    color: "#92400e",
+    padding: "8px 12px",
+    borderRadius: "999px",
+    fontWeight: "850",
+  },
+
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "14px",
+  },
+
+  input: {
+    padding: "16px",
+    borderRadius: "16px",
+    border: "1px solid #d1d5db",
+    fontSize: "15px",
+  },
+
+  rules: {
+    lineHeight: "1.9",
+    paddingLeft: "20px",
+    color: "#ffedd5",
+  },
+
+  medals: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "10px",
+    marginTop: "22px",
+  },
+
+  medal: {
+    padding: "9px 13px",
+    borderRadius: "999px",
+    background: "rgba(255,255,255,0.12)",
+    border: "1px solid rgba(255,255,255,0.18)",
+    color: "#fed7aa",
+    fontWeight: "850",
+  },
+
+  playersSection: {
+    marginTop: "30px",
+    background: "linear-gradient(145deg, rgba(2,44,34,0.96), rgba(15,23,42,0.94))",
+    border: "1px solid rgba(57,255,102,0.24)",
+    borderRadius: "30px",
+    padding: "34px",
+    boxShadow: "0 28px 80px rgba(0,0,0,0.35)",
+  },
+
+  playersTitle: {
+    margin: 0,
+    fontSize: "34px",
+    fontWeight: "950",
+    color: "#f4fff2",
+  },
+
+  playersText: {
+    color: "#d1fae5",
+    lineHeight: "1.6",
+  },
+
+  playersGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+    gap: "20px",
+    marginTop: "24px",
+  },
+
+  playerCard: {
+    background: "rgba(255,255,255,0.08)",
+    border: "1px solid rgba(57,255,102,0.22)",
+    borderRadius: "24px",
+    padding: "22px",
+  },
+
+  playerHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: "14px",
+    alignItems: "flex-start",
+  },
+
+  playerMedal: {
+    padding: "8px 12px",
+    borderRadius: "999px",
+    background: "rgba(249,115,22,0.18)",
+    border: "1px solid rgba(249,115,22,0.35)",
+    color: "#fed7aa",
+    fontWeight: "900",
+    fontSize: "13px",
+  },
+
+  playerStats: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: "10px",
+    marginTop: "18px",
+  },
+
+  progressBar: {
+    height: "10px",
+    background: "rgba(255,255,255,0.12)",
+    borderRadius: "999px",
+    overflow: "hidden",
+    marginTop: "18px",
+  },
+
+  playerActions: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "12px",
+    marginTop: "18px",
+  },
+
+  winBtn: {
+    padding: "12px",
+    borderRadius: "14px",
+    border: "none",
+    background: "linear-gradient(90deg, #15803d, #39ff66)",
+    color: "#022c22",
+    fontWeight: "950",
+    cursor: "pointer",
+  },
+
+  loseBtn: {
+    padding: "12px",
+    borderRadius: "14px",
+    border: "none",
+    background: "linear-gradient(90deg, #991b1b, #f97316)",
+    color: "white",
+    fontWeight: "950",
+    cursor: "pointer",
+  },
+
+  deleteBtn: {
+    width: "100%",
+    marginTop: "12px",
+    padding: "11px",
+    borderRadius: "14px",
+    border: "1px solid rgba(248,113,113,0.4)",
+    background: "rgba(127,29,29,0.25)",
+    color: "#fca5a5",
+    fontWeight: "900",
+    cursor: "pointer",
+  },
+
+  calibrando: {
+    display: "block",
+    marginTop: "14px",
+    color: "#fde68a",
+    fontWeight: "800",
+  },
+
+  medallaLista: {
+    display: "block",
+    marginTop: "14px",
+    color: "#86efac",
+    fontWeight: "800",
+  },
+
+  modalOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(255,255,255,0.92)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+  },
+
+  roomModal: {
+    width: "min(1050px, 94vw)",
+    maxHeight: "88vh",
+    overflowY: "auto",
+    background: "#ffffff",
+    border: "1px solid rgba(57,255,102,0.35)",
+    borderRadius: "28px",
+    padding: "30px",
+    color: "#0f172a",
+    boxShadow: "0 30px 100px rgba(0,0,0,0.18)",
+    position: "relative",
+  },
+
+  closeRoom: {
+    position: "absolute",
+    top: "18px",
+    right: "18px",
+    background: "rgba(255,255,255,0.12)",
+    color: "white",
+    border: "none",
+    borderRadius: "12px",
+    padding: "9px",
+    cursor: "pointer",
+    fontWeight: "900",
+  },
+
+  roomHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "22px",
+  },
+
+  roomBadge: {
+    padding: "10px 14px",
+    borderRadius: "999px",
+    border: "1px solid #39ff66",
+    color: "#39ff66",
+    fontWeight: "900",
+  },
+
+  roomInfo: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    background: "#f8fafc",
+    borderRadius: "18px",
+    padding: "16px",
+    marginBottom: "18px",
+  },
+
+
+  roomInput: {
+    width: "100%",
+    padding: "16px",
+    borderRadius: "16px",
+    border: "1px solid rgba(57,255,102,0.35)",
+    background: "rgba(255,255,255,0.08)",
+    color: "white",
+    fontSize: "16px",
+    marginBottom: "22px",
+  },
+
+  teamsRoom: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "22px",
+  },
+
+  teamHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: "12px",
+    marginBottom: "14px",
+  },
+
+  teamProgress: {
+    height: "9px",
+    borderRadius: "999px",
+    overflow: "hidden",
+    background: "rgba(255,255,255,0.13)",
+    marginBottom: "16px",
+  },
+
+  emptyTeam: {
+    padding: "13px",
+    borderRadius: "14px",
+    background: "rgba(255,255,255,0.07)",
+    border: "1px dashed rgba(255,255,255,0.16)",
+    color: "rgba(255,255,255,0.70)",
+    fontWeight: "800",
+    textAlign: "center",
+  },
+
+  teamGreen: {
+    background: "#ecfdf5",
+    border: "1px solid rgba(57,255,102,0.35)",
+    borderRadius: "22px",
+    padding: "22px",
+  },
+
+  teamRed: {
+    background: "#fff7ed",
+    border: "1px solid rgba(248,113,113,0.35)",
+    borderRadius: "22px",
+    padding: "22px",
+  },
+
+  joinGreen: {
+    width: "100%",
+    padding: "14px",
+    borderRadius: "14px",
+    border: "none",
+    background: "linear-gradient(90deg, #15803d, #39ff66)",
+    color: "#022c22",
+    fontWeight: "950",
+    cursor: "pointer",
+    marginBottom: "16px",
+  },
+
+  joinRed: {
+    width: "100%",
+    padding: "14px",
+    borderRadius: "14px",
+    border: "none",
+    background: "linear-gradient(90deg, #991b1b, #f97316)",
+    color: "white",
+    fontWeight: "950",
+    cursor: "pointer",
+    marginBottom: "16px",
+  },
+
+  playersList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "10px",
+  },
+
+  playerItem: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "12px",
+    borderRadius: "12px",
+    background: "#ffffff",
+    fontWeight: "800",
+  },
+
+  roomActions: {
+  position: "sticky",
+  bottom: 0,
+  display: "flex",
+  justifyContent: "flex-end",
+  gap: "14px",
+  marginTop: "26px",
+  paddingTop: "18px",
+  background: "#ffffff",
+  borderTop: "1px solid #e5e7eb",
+},
+
+  cancelBtn: {
+  flex: 1,
+  padding: "14px 22px",
+  borderRadius: "16px",
+  border: "1px solid #fecaca",
+  background: "#fff5f5",
+  color: "#dc2626",
+  fontWeight: "900",
+  cursor: "pointer",
+  transition: "0.2s",
+},
+
+  leaveBtn: {
+    padding: "14px 22px",
+    borderRadius: "14px",
+    border: "1px solid rgba(249,115,22,0.55)",
+    background: "rgba(249,115,22,0.16)",
+    color: "#fed7aa",
+    fontWeight: "900",
+    cursor: "pointer",
+  },
+
+  startBtn: {
+  flex: 1.2,
+  padding: "14px 22px",
+  borderRadius: "16px",
+  border: "none",
+  background: "linear-gradient(90deg, #16a34a, #22c55e)",
+  color: "#ffffff",
+  fontWeight: "950",
+  cursor: "pointer",
+  boxShadow: "0 10px 25px rgba(34,197,94,0.25)",
+},
+
+  paymentOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(15,23,42,0.45)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1200,
+    padding: "20px",
+  },
+
+  paymentModal: {
+    width: "min(900px, 94vw)",
+    maxHeight: "92vh",
+    overflowY: "auto",
+    background: "#ffffff",
+    color: "#0f172a",
+    borderRadius: "30px",
+    padding: "28px",
+    position: "relative",
+    boxShadow: "0 30px 100px rgba(0,0,0,0.28)",
+    border: "1px solid #e5e7eb",
+  },
+
+  paymentClose: {
+    position: "absolute",
+    top: "18px",
+    right: "18px",
+    width: "42px",
+    height: "42px",
+    borderRadius: "14px",
+    border: "1px solid #e5e7eb",
+    background: "#ffffff",
+    color: "#0f172a",
+    display: "grid",
+    placeItems: "center",
+    cursor: "pointer",
+  },
+
+  paymentHeader: {
+    textAlign: "center",
+    marginBottom: "24px",
+  },
+
+  paymentIcon: {
+    width: "54px",
+    height: "54px",
+    borderRadius: "18px",
+    display: "grid",
+    placeItems: "center",
+    margin: "0 auto 12px",
+    background: "linear-gradient(135deg, #7e22ce, #22c55e)",
+    color: "#ffffff",
+    fontSize: "24px",
+  },
+
+  paymentContent: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "24px",
+    alignItems: "center",
+  },
+
+  qrBox: {
+    padding: "18px",
+    borderRadius: "26px",
+    background: "#faf5ff",
+    border: "1px solid #e9d5ff",
+  },
+
+  yapeQr: {
+    width: "100%",
+    maxWidth: "360px",
+    borderRadius: "24px",
+    margin: "0 auto",
+    display: "block",
+    boxShadow: "0 18px 45px rgba(126,34,206,0.25)",
+  },
+
+  paymentInfo: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "14px",
+  },
+
+  paymentInfoBox: {
+    padding: "16px",
+    borderRadius: "18px",
+    background: "#f8fafc",
+    border: "1px solid #e5e7eb",
+    display: "flex",
+    flexDirection: "column",
+    gap: "6px",
+  },
+
+  whatsappBtn: {
+    padding: "16px 22px",
+    borderRadius: "18px",
+    background: "linear-gradient(90deg, #16a34a, #22c55e)",
+    color: "#ffffff",
+    fontWeight: "950",
+    textDecoration: "none",
+    textAlign: "center",
+    boxShadow: "0 10px 25px rgba(34,197,94,0.25)",
+  },
+
+  paymentDoneBtn: {
+    padding: "15px 22px",
+    borderRadius: "18px",
+    border: "1px solid #d1d5db",
+    background: "#ffffff",
+    color: "#0f172a",
+    fontWeight: "900",
+    cursor: "pointer",
+  },
+
+};
