@@ -18,7 +18,6 @@ export default function App() {
   const [activeSport, setActiveSport] = useState("futbol");
   const [openRoom, setOpenRoom] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState(null);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [roomTeams, setRoomTeams] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("pucallpa_rooms")) || {};
@@ -33,6 +32,7 @@ export default function App() {
   const [nombre, setNombre] = useState("");
   const [nickName, setNickName] = useState("");
   const [celular, setCelular] = useState("");
+  const [distrito, setDistrito] = useState("");
   const [deporte, setDeporte] = useState("");
   const [nivel, setNivel] = useState("");
   const [usuarios, setUsuarios] = useState([]);
@@ -55,17 +55,21 @@ export default function App() {
 
 
   useEffect(() => {
-    const cargarUsuarioGoogle = async () => {
+    const cargarSesionGoogle = async () => {
       const { data } = await supabase.auth.getSession();
       const googleUser = data.session?.user;
 
       if (googleUser) {
         const userGoogle = {
           id: googleUser.id,
-          nombre: googleUser.user_metadata?.full_name || googleUser.email,
-          nickName: googleUser.user_metadata?.name || googleUser.email?.split("@")[0],
+          nombre: googleUser.user_metadata?.full_name || googleUser.email || "Jugador Google",
+          nickName:
+            googleUser.user_metadata?.name ||
+            googleUser.email?.split("@")[0] ||
+            "player",
           celular: "",
-          email: googleUser.email,
+          distrito: "Pucallpa",
+          email: googleUser.email || "",
           password: "google",
           deporte: "Pendiente",
           nivel: "Pendiente",
@@ -82,7 +86,7 @@ export default function App() {
       }
     };
 
-    cargarUsuarioGoogle();
+    cargarSesionGoogle();
 
     const {
       data: { subscription },
@@ -92,10 +96,14 @@ export default function App() {
       if (googleUser) {
         const userGoogle = {
           id: googleUser.id,
-          nombre: googleUser.user_metadata?.full_name || googleUser.email,
-          nickName: googleUser.user_metadata?.name || googleUser.email?.split("@")[0],
+          nombre: googleUser.user_metadata?.full_name || googleUser.email || "Jugador Google",
+          nickName:
+            googleUser.user_metadata?.name ||
+            googleUser.email?.split("@")[0] ||
+            "player",
           celular: "",
-          email: googleUser.email,
+          distrito: "Pucallpa",
+          email: googleUser.email || "",
           password: "google",
           deporte: "Pendiente",
           nivel: "Pendiente",
@@ -160,6 +168,7 @@ export default function App() {
       nickName: nickName.trim(),
       celular,
       password,
+      distrito,
       deporte,
       nivel,
       partidas: 0,
@@ -184,6 +193,7 @@ export default function App() {
     setNickName("");
     setCelular("");
     setPassword("");
+    setDistrito("");
     setDeporte("");
     setNivel("");
   };
@@ -197,7 +207,7 @@ export default function App() {
     });
 
     if (error) {
-      alert("No se pudo iniciar sesión con Google.");
+      alert("No se pudo iniciar sesión con Google. Revisa la configuración en Supabase.");
     }
   };
 
@@ -466,26 +476,28 @@ export default function App() {
 
     const name = getCurrentPlayerName();
     const currentTeams = getSelectedTeams();
-    const isInRoom =
-      currentTeams.green.includes(name) || currentTeams.red.includes(name);
+    const isInRoom = currentTeams.green.includes(name) || currentTeams.red.includes(name);
 
     if (!isInRoom) {
       alert("Primero elige Equipo Verde o Equipo Rojo.");
       return;
     }
 
-    if (!currentTeams.confirmed.includes(name)) {
-      setRoomTeams((prev) => ({
-        ...prev,
-        [selectedMatch.id]: {
-          green: currentTeams.green,
-          red: currentTeams.red,
-          confirmed: [...currentTeams.confirmed, name],
-        },
-      }));
+    if (currentTeams.confirmed.includes(name)) {
+      alert("Tu participación ya está confirmada.");
+      return;
     }
 
-    setShowPaymentModal(true);
+    setRoomTeams((prev) => ({
+      ...prev,
+      [selectedMatch.id]: {
+        green: currentTeams.green,
+        red: currentTeams.red,
+        confirmed: [...currentTeams.confirmed, name],
+      },
+    }));
+
+    alert("Participación confirmada correctamente.");
   };
 
   return (
@@ -697,7 +709,7 @@ export default function App() {
                   <div style={styles.userLoggedBox}>
                     <strong>{usuarioActivo.nickName || usuarioActivo.nombre}</strong>
                     <span>Nombre: {usuarioActivo.nombre}</span>
-                    <span>{usuarioActivo.deporte} · {usuarioActivo.nivel}</span>
+                    <span>{usuarioActivo.distrito} · {usuarioActivo.deporte}</span>
                     <span>{usuarioActivo.partidas || 0}/10 partidas · {usuarioActivo.medalla}</span>
 
                     <button style={styles.cancelBtn} onClick={cerrarSesion}>
@@ -768,16 +780,7 @@ export default function App() {
                       value={celular}
                       onChange={(e) => setCelular(e.target.value)}
                     />
-                
-
-                    <input
-                      style={styles.input}
-                      placeholder="Distrito: Pucallpa, Manantay, Yarinacocha"
-                      value={distrito}
-                      onChange={(e) => setDistrito(e.target.value)}
-                    />
-                    
-                    <input
+<input
                       type="password"
                       style={styles.input}
                       placeholder="Crear contraseña"
@@ -871,7 +874,7 @@ export default function App() {
                         <div>
                           <h3>{user.nickName || user.nombre}</h3>
                           <p>{user.nombre}</p>
-                          <p>{user.deporte} · {user.nivel}</p>
+                          <p>{user.distrito} · {user.deporte} · {user.nivel}</p>
                         </div>
                         <span style={styles.playerMedal}>{user.medalla}</span>
                       </div>
@@ -1061,97 +1064,20 @@ export default function App() {
               </button>
 
               <button
-  style={{
-    ...styles.leaveBtn,
-    ...(isCurrentUserInSelectedRoom()
-      ? styles.leaveBtnActive
-      : styles.leaveBtnInactive),
-  }}
-  disabled={!isCurrentUserInSelectedRoom()}
-  onClick={leaveCurrentRoom}
->
-  Retirarme del equipo
-</button>
+                style={{
+                  ...styles.leaveBtn,
+                  opacity: isCurrentUserInSelectedRoom() ? 1 : 0.5,
+                  cursor: isCurrentUserInSelectedRoom() ? "pointer" : "not-allowed",
+                }}
+                disabled={!isCurrentUserInSelectedRoom()}
+                onClick={leaveCurrentRoom}
+              >
+                Retirarme del equipo
+              </button>
 
               <button style={styles.startBtn} onClick={confirmParticipation}>
                 Confirmar participación
               </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {showPaymentModal && selectedMatch && usuarioActivo && (
-        <div style={styles.paymentOverlay}>
-          <motion.div
-            style={styles.paymentModal}
-            initial={{ scale: 0.92, opacity: 0, y: 30 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-          >
-            <button
-              style={styles.paymentClose}
-              onClick={() => setShowPaymentModal(false)}
-            >
-              <X size={20} />
-            </button>
-
-            <div style={styles.paymentHeader}>
-              <div style={styles.paymentIcon}>💸</div>
-              <h2>Confirma tu slot con Yape</h2>
-              <p>
-                Escanea el QR, realiza el pago y envía la captura al WhatsApp
-                para validar tu participación.
-              </p>
-            </div>
-
-            <div style={styles.paymentContent}>
-              <div style={styles.qrBox}>
-                <img
-                  src={yapeQr}
-                  alt="QR de pago Yape"
-                  style={styles.yapeQr}
-                />
-              </div>
-
-              <div style={styles.paymentInfo}>
-                <div style={styles.paymentInfoBox}>
-                  <span>Jugador</span>
-                  <strong>{usuarioActivo.nickName || usuarioActivo.nombre}</strong>
-                </div>
-
-                <div style={styles.paymentInfoBox}>
-                  <span>Nombre completo</span>
-                  <strong>{usuarioActivo.nombre}</strong>
-                </div>
-
-                <div style={styles.paymentInfoBox}>
-                  <span>Reto</span>
-                  <strong>
-                    {selectedMatch.sport === "futbol" ? "Fútbol" : "Vóley"} · {selectedMatch.time}
-                  </strong>
-                </div>
-
-                <div style={styles.paymentInfoBox}>
-                  <span>WhatsApp para enviar captura</span>
-                  <strong>912 494 278</strong>
-                </div>
-
-                <a
-                  href="https://wa.me/51912494278"
-                  target="_blank"
-                  rel="noreferrer"
-                  style={styles.whatsappBtn}
-                >
-                  Enviar captura por WhatsApp
-                </a>
-
-                <button
-                  style={styles.paymentDoneBtn}
-                  onClick={() => setShowPaymentModal(false)}
-                >
-                  Ya realicé el pago
-                </button>
-              </div>
             </div>
           </motion.div>
         </div>
@@ -1161,31 +1087,6 @@ export default function App() {
 }
 
 const styles = {
-  leaveBtn: {
-  padding: "15px 24px",
-  borderRadius: "18px",
-  fontWeight: "900",
-  transition: "all 0.25s ease",
-},
-
-leaveBtnInactive: {
-  opacity: 1,
-  background: "rgba(15,23,42,0.04)",
-  color: "#64748b",
-  border: "1px solid rgba(100,116,139,0.18)",
-  cursor: "not-allowed",
-  backdropFilter: "blur(10px)",
-},
-
-leaveBtnActive: {
-  opacity: 1,
-  background: "linear-gradient(135deg, #f97316, #fb923c)",
-  color: "#ffffff",
-  border: "none",
-  cursor: "pointer",
-  boxShadow: "0 12px 28px rgba(249,115,22,0.28)",
-  transform: "translateY(-1px)",
-},
   page: {
     minHeight: "100vh",
     width: "100vw",
@@ -2040,121 +1941,4 @@ leaveBtnActive: {
   cursor: "pointer",
   boxShadow: "0 10px 25px rgba(34,197,94,0.25)",
 },
-
-  paymentOverlay: {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(15,23,42,0.45)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 1200,
-    padding: "20px",
-  },
-
-  paymentModal: {
-    width: "min(900px, 94vw)",
-    maxHeight: "92vh",
-    overflowY: "auto",
-    background: "#ffffff",
-    color: "#0f172a",
-    borderRadius: "30px",
-    padding: "28px",
-    position: "relative",
-    boxShadow: "0 30px 100px rgba(0,0,0,0.28)",
-    border: "1px solid #e5e7eb",
-  },
-
-  paymentClose: {
-    position: "absolute",
-    top: "18px",
-    right: "18px",
-    width: "42px",
-    height: "42px",
-    borderRadius: "14px",
-    border: "1px solid #e5e7eb",
-    background: "#ffffff",
-    color: "#0f172a",
-    display: "grid",
-    placeItems: "center",
-    cursor: "pointer",
-  },
-
-  paymentHeader: {
-    textAlign: "center",
-    marginBottom: "24px",
-  },
-
-  paymentIcon: {
-    width: "54px",
-    height: "54px",
-    borderRadius: "18px",
-    display: "grid",
-    placeItems: "center",
-    margin: "0 auto 12px",
-    background: "linear-gradient(135deg, #7e22ce, #22c55e)",
-    color: "#ffffff",
-    fontSize: "24px",
-  },
-
-  paymentContent: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "24px",
-    alignItems: "center",
-  },
-
-  qrBox: {
-    padding: "18px",
-    borderRadius: "26px",
-    background: "#faf5ff",
-    border: "1px solid #e9d5ff",
-  },
-
-  yapeQr: {
-    width: "100%",
-    maxWidth: "360px",
-    borderRadius: "24px",
-    margin: "0 auto",
-    display: "block",
-    boxShadow: "0 18px 45px rgba(126,34,206,0.25)",
-  },
-
-  paymentInfo: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "14px",
-  },
-
-  paymentInfoBox: {
-    padding: "16px",
-    borderRadius: "18px",
-    background: "#f8fafc",
-    border: "1px solid #e5e7eb",
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-  },
-
-  whatsappBtn: {
-    padding: "16px 22px",
-    borderRadius: "18px",
-    background: "linear-gradient(90deg, #16a34a, #22c55e)",
-    color: "#ffffff",
-    fontWeight: "950",
-    textDecoration: "none",
-    textAlign: "center",
-    boxShadow: "0 10px 25px rgba(34,197,94,0.25)",
-  },
-
-  paymentDoneBtn: {
-    padding: "15px 22px",
-    borderRadius: "18px",
-    border: "1px solid #d1d5db",
-    background: "#ffffff",
-    color: "#0f172a",
-    fontWeight: "900",
-    cursor: "pointer",
-  },
-
 };
