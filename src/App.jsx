@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import yapeQr from "./assets/yape-qr.jpg";
+import logoPucallpa from "./assets/logo-pucallpa.png";
 import { supabase } from "./supabaseClient";
 import { motion } from "framer-motion";
 import {
@@ -32,7 +33,6 @@ export default function App() {
   const [nombre, setNombre] = useState("");
   const [nickName, setNickName] = useState("");
   const [celular, setCelular] = useState("");
-  const [distrito, setDistrito] = useState("");
   const [deporte, setDeporte] = useState("");
   const [nivel, setNivel] = useState("");
   const [usuarios, setUsuarios] = useState([]);
@@ -40,7 +40,8 @@ export default function App() {
   const [usuarioActivo, setUsuarioActivo] = useState(null);
   const [loginCelular, setLoginCelular] = useState("");
   const [password, setPassword] = useState("");
-    const [loginPassword, setLoginPassword] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
     const savedUsers = JSON.parse(localStorage.getItem("pucallpa_users")) || [];
@@ -68,7 +69,7 @@ export default function App() {
             googleUser.email?.split("@")[0] ||
             "player",
           celular: "",
-          distrito: "Pucallpa",
+          distrito: "",
           email: googleUser.email || "",
           password: "google",
           deporte: "Pendiente",
@@ -241,6 +242,11 @@ export default function App() {
   };
 
   const updatePlayerStats = (id, resultado) => {
+    if (!isAdminUser()) {
+      alert("Solo el administrador principal puede modificar victorias y derrotas.");
+      return;
+    }
+
     const updatedUsers = usuarios.map((user) => {
       if (user.id !== id) return user;
 
@@ -274,6 +280,14 @@ export default function App() {
   };
 
   const deletePlayer = (id) => {
+    if (!isAdminUser()) {
+      alert("Solo el administrador principal puede eliminar usuarios.");
+      return;
+    }
+
+    const confirmar = confirm("¿Seguro que deseas eliminar este player?");
+    if (!confirmar) return;
+
     const updatedUsers = usuarios.filter((user) => user.id !== id);
 
     setUsuarios(updatedUsers);
@@ -389,6 +403,22 @@ export default function App() {
     return usuarioActivo.nickName || usuarioActivo.nombre;
   };
 
+  const isAdminUser = () => {
+    if (!usuarioActivo) return false;
+
+    const nombreActivo = (usuarioActivo.nombre || "")
+      .trim()
+      .toLowerCase();
+
+    const celularActivo = (usuarioActivo.celular || "")
+      .replace(/\s/g, "");
+
+    return (
+      nombreActivo === "elian pezo bardales" &&
+      celularActivo === "912494278"
+    );
+  };
+
   const isCurrentUserInSelectedRoom = () => {
     if (!selectedMatch || !usuarioActivo) return false;
 
@@ -484,9 +514,9 @@ export default function App() {
     }
 
     if (currentTeams.confirmed.includes(name)) {
-      alert("Tu participación ya está confirmada.");
-      return;
-    }
+  setShowPaymentModal(true);
+  return;
+}
 
     setRoomTeams((prev) => ({
       ...prev,
@@ -497,7 +527,7 @@ export default function App() {
       },
     }));
 
-    alert("Participación confirmada correctamente.");
+    setShowPaymentModal(true);
   };
 
   return (
@@ -505,11 +535,19 @@ export default function App() {
       <div style={styles.pattern}>
         <nav style={styles.navbar}>
           <div style={styles.logo}>
-            <div style={styles.logoIcon}>
-              <Flame size={26} />
-            </div>
-            <span>PUCALLPA RETOS</span>
-          </div>
+            <img
+              src={logoPucallpa}
+              alt="Pucallpa Retos"
+              style={styles.logoImage}
+  />
+
+           <div style={styles.logoTextBox}>
+              <span style={styles.logoMain}>PUCALLPA RETOS</span>
+             <small style={styles.logoSub}>
+      Arena deportiva digital
+    </small>
+  </div>
+</div>
 
           <div style={styles.navLinks}>
             <a style={styles.navLink} href="#retos">Retos</a>
@@ -709,8 +747,14 @@ export default function App() {
                   <div style={styles.userLoggedBox}>
                     <strong>{usuarioActivo.nickName || usuarioActivo.nombre}</strong>
                     <span>Nombre: {usuarioActivo.nombre}</span>
-                    <span>{usuarioActivo.distrito} · {usuarioActivo.deporte}</span>
+                    <span>{usuarioActivo.deporte}</span>
                     <span>{usuarioActivo.partidas || 0}/10 partidas · {usuarioActivo.medalla}</span>
+
+                    {isAdminUser() && (
+                      <span style={styles.adminBadge}>
+                        👑 Administrador principal
+                      </span>
+                    )}
 
                     <button style={styles.cancelBtn} onClick={cerrarSesion}>
                       Cerrar sesión
@@ -728,9 +772,15 @@ export default function App() {
                   </div>
 
                   <div style={styles.form}>
-                    <button style={styles.googleBtn} onClick={signInWithGoogle}>
-                      <span style={styles.googleIcon}>G</span>
-                      Continuar con Google
+                    <button style={styles.googleBtnPremium} onClick={signInWithGoogle}>
+                      <div style={styles.googleIconWrap}>
+                        <div style={styles.googleIconPremium}>G</div>
+                      </div>
+
+                      <div style={styles.googleTextWrap}>
+                        <strong>Continuar con Google</strong>
+                        <small>Acceso rápido y seguro</small>
+                      </div>
                     </button>
 
                     <div style={styles.loginDivider}>
@@ -851,11 +901,21 @@ export default function App() {
               <div>
                 <h2 style={styles.playersTitle}>Players registrados</h2>
                 <p style={styles.playersText}>
-                  Aquí podrás controlar partidas, victorias, derrotas y medallas para formar equipos más equilibrados.
+                  Aquí podras ver los puntajes de todos los deportistas. 
                 </p>
               </div>
               <Users color="#39ff66" size={34} />
             </div>
+
+            {isAdminUser() ? (
+              <div style={styles.adminPanelNotice}>
+                👑 Modo administrador activo: puedes eliminar usuarios y registrar victorias o derrotas.
+              </div>
+            ) : (
+              <div style={styles.userPanelNotice}>
+                USUARIOS DE 
+              </div>
+            )}
 
             {usuarios.length === 0 ? (
               <p style={styles.playersText}>Aún no hay jugadores registrados.</p>
@@ -873,8 +933,25 @@ export default function App() {
                       <div style={styles.playerHeader}>
                         <div>
                           <h3>{user.nickName || user.nombre}</h3>
-                          <p>{user.nombre}</p>
-                          <p>{user.distrito} · {user.deporte} · {user.nivel}</p>
+
+                          {isAdminUser() ? (
+                            <>
+                              <p style={styles.privateInfo}>
+                                Nombre real: {user.nombre || "Sin nombre"}
+                              </p>
+                              <p style={styles.privateInfo}>
+                                Celular: {user.celular || "No registrado"}
+                              </p>
+                              <p>{user.deporte} · {user.nivel}</p>
+                            </>
+                          ) : (
+                            <>
+                              <p style={styles.publicInfo}>
+                                Player registrado
+                              </p>
+                              <p>{user.deporte} · {user.nivel}</p>
+                            </>
+                          )}
                         </div>
                         <span style={styles.playerMedal}>{user.medalla}</span>
                       </div>
@@ -909,18 +986,26 @@ export default function App() {
                         />
                       </div>
 
-                      <div style={styles.playerActions}>
-                        <button style={styles.winBtn} onClick={() => updatePlayerStats(user.id, "win")}>
-                          + Victoria
-                        </button>
-                        <button style={styles.loseBtn} onClick={() => updatePlayerStats(user.id, "lose")}>
-                          + Derrota
-                        </button>
-                      </div>
+                      {isAdminUser() ? (
+                        <>
+                          <div style={styles.playerActions}>
+                            <button style={styles.winBtn} onClick={() => updatePlayerStats(user.id, "win")}>
+                              + Victoria
+                            </button>
+                            <button style={styles.loseBtn} onClick={() => updatePlayerStats(user.id, "lose")}>
+                              + Derrota
+                            </button>
+                          </div>
 
-                      <button style={styles.deleteBtn} onClick={() => deletePlayer(user.id)}>
-                        Eliminar player
-                      </button>
+                          <button style={styles.deleteBtn} onClick={() => deletePlayer(user.id)}>
+                            Eliminar player
+                          </button>
+                        </>
+                      ) : (
+                        <div style={styles.onlyAdminBox}>
+                          🔒 Solo el administrador puede editar este player.
+                        </div>
+                      )}
 
                       {partidas < 10 ? (
                         <small style={styles.calibrando}>
@@ -1082,6 +1167,58 @@ export default function App() {
           </motion.div>
         </div>
       )}
+
+      {showPaymentModal && (
+        <div style={styles.paymentOverlay}>
+          <motion.div
+            style={styles.paymentModal}
+            initial={{ scale: 0.88, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+          >
+            <button
+              style={styles.closePayment}
+              onClick={() => setShowPaymentModal(false)}
+            >
+              ✕
+            </button>
+
+            <h2 style={styles.paymentTitle}>💸 Confirma tu participación</h2>
+
+            <p style={styles.paymentText}>
+              Realiza tu Yape para reservar tu slot deportivo.
+            </p>
+
+            <div style={styles.qrCropBox}>
+              <img src={yapeQr} alt="QR Yape" style={styles.qrImage} />
+            </div>
+
+            <div style={styles.paymentNumber}>📞 Yape: 912494278</div>
+
+            <a
+              href="https://wa.me/51912494278"
+              target="_blank"
+              rel="noreferrer"
+              style={styles.whatsappBtn}
+            >
+              💬 Enviar captura por WhatsApp
+            </a>
+
+            <button
+              style={styles.paymentDoneBtn}
+              onClick={() => {
+                setShowPaymentModal(false);
+                alert("Participación confirmada correctamente.");
+              }}
+            >
+              ✅ Ya envié mi pago
+            </button>
+
+            <p style={styles.paymentFooter}>
+              🔒 Tu pago asegura tu participación en la sala.
+            </p>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1122,6 +1259,33 @@ const styles = {
     fontWeight: "950",
     letterSpacing: "1px",
   },
+  logoImage: {
+  width: "68px",
+  height: "68px",
+  objectFit: "contain",
+  borderRadius: "18px",
+  boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
+},
+
+logoTextBox: {
+  display: "flex",
+  flexDirection: "column",
+  lineHeight: "1",
+},
+
+logoMain: {
+  fontSize: "24px",
+  fontWeight: "950",
+  letterSpacing: "1px",
+  color: "#ffffff",
+},
+
+logoSub: {
+  color: "rgba(255,255,255,0.7)",
+  marginTop: "6px",
+  fontSize: "12px",
+  fontWeight: "700",
+},
 
   logoIcon: {
     width: "48px",
@@ -1546,6 +1710,175 @@ const styles = {
   },
 
 
+
+  paymentOverlay: {
+    position: "fixed",
+    inset: 0,
+    background: "rgba(0,0,0,0.72)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 9999,
+    padding: "20px",
+  },
+
+  paymentModal: {
+    width: "100%",
+    maxWidth: "430px",
+    maxHeight: "92vh",
+    overflowY: "auto",
+    background: "#ffffff",
+    borderRadius: "34px",
+    padding: "26px",
+    textAlign: "center",
+    position: "relative",
+    boxShadow: "0 30px 80px rgba(0,0,0,0.35)",
+  },
+
+  closePayment: {
+    position: "absolute",
+    top: "18px",
+    right: "18px",
+    border: "none",
+    background: "#f1f5f9",
+    width: "48px",
+    height: "48px",
+    borderRadius: "50%",
+    cursor: "pointer",
+    fontWeight: "900",
+    fontSize: "22px",
+    color: "#0f172a",
+  },
+
+  paymentTitle: {
+    color: "#064e3b",
+    fontSize: "42px",
+    fontWeight: "950",
+    lineHeight: "1.05",
+    marginBottom: "18px",
+  },
+
+  paymentText: {
+    color: "#475569",
+    marginBottom: "24px",
+    lineHeight: "1.6",
+    fontSize: "18px",
+  },
+
+  qrCropBox: {
+    width: "270px",
+    height: "270px",
+    margin: "0 auto 22px",
+    borderRadius: "30px",
+    overflow: "hidden",
+    background: "#8700b8",
+    boxShadow: "0 15px 40px rgba(0,0,0,0.16)",
+  },
+
+  qrImage: {
+    width: "270px",
+    height: "270px",
+    objectFit: "cover",
+    objectPosition: "center top",
+    transform: "translateY(-0px)",
+  },
+
+  paymentNumber: {
+    padding: "18px",
+    borderRadius: "24px",
+    background: "#ecfdf5",
+    color: "#064e3b",
+    fontWeight: "950",
+    marginBottom: "18px",
+    fontSize: "22px",
+  },
+
+  whatsappBtn: {
+    width: "100%",
+    display: "block",
+    padding: "20px",
+    borderRadius: "24px",
+    background: "linear-gradient(90deg, #16a34a, #22c55e)",
+    color: "#ffffff",
+    textDecoration: "none",
+    fontWeight: "950",
+    marginBottom: "16px",
+    fontSize: "22px",
+    boxSizing: "border-box",
+  },
+
+  paymentDoneBtn: {
+    width: "100%",
+    padding: "20px",
+    borderRadius: "24px",
+    border: "none",
+    background: "linear-gradient(90deg, #064e3b, #10b981)",
+    color: "#ffffff",
+    fontWeight: "950",
+    cursor: "pointer",
+    fontSize: "22px",
+  },
+
+  paymentFooter: {
+    marginTop: "22px",
+    color: "#475569",
+    fontWeight: "700",
+    fontSize: "17px",
+  },
+
+
+  googleBtnPremium: {
+    width: "100%",
+    padding: "16px 18px",
+    borderRadius: "22px",
+    border: "1px solid rgba(148,163,184,0.25)",
+    background:
+      "linear-gradient(135deg, #ffffff 0%, #f8fafc 60%, #ecfdf5 100%)",
+    color: "#0f172a",
+    fontWeight: "950",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "16px",
+    boxShadow: "0 18px 40px rgba(15,23,42,0.12)",
+  },
+
+  googleIconWrap: {
+    width: "48px",
+    height: "48px",
+    borderRadius: "18px",
+    background: "#ffffff",
+    display: "grid",
+    placeItems: "center",
+    boxShadow: "0 8px 18px rgba(15,23,42,0.10)",
+  },
+
+  googleIconPremium: {
+    width: "32px",
+    height: "32px",
+    borderRadius: "50%",
+    display: "grid",
+    placeItems: "center",
+    background:
+      "conic-gradient(from -45deg, #4285F4 0deg 90deg, #34A853 90deg 180deg, #FBBC05 180deg 270deg, #EA4335 270deg 360deg)",
+    color: "#ffffff",
+    fontWeight: "950",
+    fontSize: "18px",
+  },
+
+  googleTextWrap: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "flex-start",
+    lineHeight: "1.2",
+  },
+
+
+
+
+
+
   googleBtn: {
     width: "100%",
     padding: "15px 18px",
@@ -1941,4 +2274,63 @@ const styles = {
   cursor: "pointer",
   boxShadow: "0 10px 25px rgba(34,197,94,0.25)",
 },
+
+  adminBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "10px 14px",
+    borderRadius: "999px",
+    background: "linear-gradient(90deg, #f59e0b, #f97316)",
+    color: "#ffffff",
+    fontWeight: "950",
+    boxShadow: "0 10px 24px rgba(249,115,22,0.25)",
+  },
+
+  adminPanelNotice: {
+    marginBottom: "22px",
+    padding: "16px 18px",
+    borderRadius: "18px",
+    background: "rgba(249,115,22,0.14)",
+    border: "1px solid rgba(249,115,22,0.35)",
+    color: "#fed7aa",
+    fontWeight: "900",
+  },
+
+  userPanelNotice: {
+    marginBottom: "22px",
+    padding: "16px 18px",
+    borderRadius: "18px",
+    background: "rgba(255,255,255,0.08)",
+    border: "1px solid rgba(255,255,255,0.14)",
+    color: "#d1fae5",
+    fontWeight: "850",
+  },
+
+  onlyAdminBox: {
+    marginTop: "18px",
+    padding: "13px",
+    borderRadius: "14px",
+    background: "rgba(255,255,255,0.08)",
+    border: "1px dashed rgba(255,255,255,0.18)",
+    color: "#d1fae5",
+    fontWeight: "850",
+    textAlign: "center",
+  },
+
+
+  privateInfo: {
+    margin: "5px 0",
+    color: "#fde68a",
+    fontWeight: "850",
+  },
+
+  publicInfo: {
+    margin: "5px 0",
+    color: "#d1fae5",
+    fontWeight: "800",
+    opacity: 0.9,
+  },
+
+
 };
