@@ -82,8 +82,27 @@ export default function App() {
           createdAt: new Date().toLocaleString(),
         };
 
-        setUsuarioActivo(userGoogle);
-        localStorage.setItem("usuario_activo", JSON.stringify(userGoogle));
+        const usersStorage =
+  JSON.parse(localStorage.getItem("pucallpa_users")) || [];
+
+const existe = usersStorage.find(
+  (u) => u.email === userGoogle.email
+);
+
+if (!existe) {
+  usersStorage.push(userGoogle);
+  localStorage.setItem(
+    "pucallpa_users",
+    JSON.stringify(usersStorage)
+  );
+}
+
+setUsuarios(usersStorage);
+setUsuarioActivo(userGoogle);
+localStorage.setItem(
+  "usuario_activo",
+  JSON.stringify(userGoogle)
+);
       }
     };
 
@@ -116,8 +135,27 @@ export default function App() {
           createdAt: new Date().toLocaleString(),
         };
 
-        setUsuarioActivo(userGoogle);
-        localStorage.setItem("usuario_activo", JSON.stringify(userGoogle));
+        const usersStorage =
+  JSON.parse(localStorage.getItem("pucallpa_users")) || [];
+
+const existe = usersStorage.find(
+  (u) => u.email === userGoogle.email
+);
+
+if (!existe) {
+  usersStorage.push(userGoogle);
+  localStorage.setItem(
+    "pucallpa_users",
+    JSON.stringify(usersStorage)
+  );
+}
+
+setUsuarios(usersStorage);
+setUsuarioActivo(userGoogle);
+localStorage.setItem(
+  "usuario_activo",
+  JSON.stringify(userGoogle)
+);
       }
     });
 
