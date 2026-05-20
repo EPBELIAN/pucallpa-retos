@@ -202,14 +202,13 @@ localStorage.setItem(
     }
 
     const newUser = {
-      id: Date.now(),
-      nombre,
-      nickName: nickName.trim(),
-      celular,
-      password,
-      distrito,
-      deporte,
-      nivel,
+  id: Date.now(),
+  nombre,
+  nickName: nickName.trim(),
+  celular,
+  password,
+  deporte,
+  nivel,
       partidas: 0,
       ganadas: 0,
       perdidas: 0,
@@ -232,7 +231,6 @@ localStorage.setItem(
     setNickName("");
     setCelular("");
     setPassword("");
-    setDistrito("");
     setDeporte("");
     setNivel("");
   };
@@ -441,20 +439,24 @@ localStorage.setItem(
   };
 
   const isAdminUser = () => {
-    if (!usuarioActivo) return false;
+  if (!usuarioActivo) return false;
 
-    const nombreActivo = (usuarioActivo.nombre || "")
-      .trim()
-      .toLowerCase();
+  const nombreActivo = (usuarioActivo.nombre || "")
+    .trim()
+    .toLowerCase();
 
-    const celularActivo = (usuarioActivo.celular || "")
-      .replace(/\s/g, "");
+  const celularActivo = (usuarioActivo.celular || "")
+    .replace(/\s/g, "");
 
-    return (
-      nombreActivo === "elian pezo bardales" &&
-      celularActivo === "912494278"
-    );
-  };
+  const emailActivo = (usuarioActivo.email || "")
+    .trim()
+    .toLowerCase();
+
+  return (
+    nombreActivo === "elian pezo bardales" &&
+    celularActivo === "912494278"
+  ) || emailActivo === "elianepb9@gmail.com";
+};
 
   const isCurrentUserInSelectedRoom = () => {
     if (!selectedMatch || !usuarioActivo) return false;
@@ -933,7 +935,8 @@ localStorage.setItem(
             </section>
           </section>
 
-          <section id="players" style={styles.playersSection}>
+          {isAdminUser() && (
+  <section id="players" style={styles.playersSection}>
             <div style={styles.cardHeader}>
               <div>
                 <h2 style={styles.playersTitle}>Players registrados</h2>
