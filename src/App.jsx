@@ -200,18 +200,17 @@ export default function App() {
   };
 
   const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin,
-      },
-    });
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: "https://pucallpa-retos.vercel.app",
+    },
+  });
 
-    if (error) {
-      alert("No se pudo iniciar sesión con Google. Revisa la configuración en Supabase.");
-    }
-  };
-
+  if (error) {
+    alert("No se pudo iniciar sesión con Google. Revisa la configuración en Supabase.");
+  }
+};
   const iniciarSesion = () => {
   const user = usuarios.find(
     (u) =>
