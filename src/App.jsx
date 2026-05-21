@@ -893,7 +893,7 @@ const guardarCelular = () => {
 
     <input
       type="tel"
-      placeholder="Ejemplo: 912494278"
+      placeholder="Ejemplo: 987654321"
       value={nuevoCelular}
       onChange={(e) => setNuevoCelular(e.target.value)}
       style={styles.phoneInput}
