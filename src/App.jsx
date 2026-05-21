@@ -518,7 +518,6 @@ if (!usuarioActivo?.celular) {
 
 const name = getCurrentPlayerName();
 
-  const name = getCurrentPlayerName();
   const maxPerTeam = getMaxPerTeam();
   const currentTeams = getTeamsForSlot(selectedMatch.id);
   const totalPlayers =
