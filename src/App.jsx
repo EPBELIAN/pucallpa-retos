@@ -441,21 +441,22 @@ localStorage.setItem(
   const isAdminUser = () => {
   if (!usuarioActivo) return false;
 
-  const nombreActivo = (usuarioActivo.nombre || "")
+  const nombreActivo = String(usuarioActivo.nombre || "")
     .trim()
     .toLowerCase();
 
-  const celularActivo = (usuarioActivo.celular || "")
+  const celularActivo = String(usuarioActivo.celular || "")
     .replace(/\s/g, "");
 
-  const emailActivo = (usuarioActivo.email || "")
+  const emailActivo = String(usuarioActivo.email || "")
     .trim()
     .toLowerCase();
 
   return (
-    nombreActivo === "elian pezo bardales" &&
-    celularActivo === "912494278"
-  ) || emailActivo === "elianepb9@gmail.com";
+    emailActivo === "elianepb9@gmail.com" ||
+    celularActivo === "912494278" ||
+    nombreActivo === "elian pezo bardales"
+  );
 };
 
   const isCurrentUserInSelectedRoom = () => {
@@ -936,7 +937,7 @@ localStorage.setItem(
           </section>
 
           {isAdminUser() && (
-  <section id="players" style={styles.playersSection}>
+          <section id="players" style={styles.playersSection}>
             <div style={styles.cardHeader}>
               <div>
                 <h2 style={styles.playersTitle}>Players registrados</h2>
@@ -1062,6 +1063,7 @@ localStorage.setItem(
               </div>
             )}
           </section>
+          )}
         </main>
       </div>
 
