@@ -647,6 +647,16 @@ const guardarCelular = () => {
     alert("Ingresa un WhatsApp válido.");
     return;
   }
+  const numeroExiste = usuarios.find(
+  (u) =>
+    u.celular === celularLimpio &&
+    u.id !== usuarioActivo.id
+);
+
+if (numeroExiste) {
+  alert("Este WhatsApp ya está registrado por otro usuario.");
+  return;
+}
 
   const updatedUser = {
     ...usuarioActivo,
