@@ -1077,7 +1077,13 @@ const guardarCelular = () => {
               <p style={styles.playersText}>Aún no hay jugadores registrados.</p>
             ) : (
               <div style={styles.playersGrid}>
-                {usuarios.map((user) => {
+                {usuarios
+  .filter((user) =>
+    isAdminUser()
+      ? true
+      : user.id === usuarioActivo?.id
+  )
+  .map((user) => {
                   const partidas = user.partidas || 0;
                   const ganadas = user.ganadas || 0;
                   const perdidas = user.perdidas || 0;
