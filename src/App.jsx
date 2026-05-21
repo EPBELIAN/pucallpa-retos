@@ -19,13 +19,7 @@ export default function App() {
   const [activeSport, setActiveSport] = useState("futbol");
   const [openRoom, setOpenRoom] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState(null);
-  const [roomTeams, setRoomTeams] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("pucallpa_rooms")) || {};
-    } catch {
-      return {};
-    }
-  });
+  const [roomTeams, setRoomTeams] = useState({});
   const [greenTeam, setGreenTeam] = useState([]);
   const [redTeam, setRedTeam] = useState([]);
   const [playerName, setPlayerName] = useState("");
@@ -163,8 +157,48 @@ localStorage.setItem(
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("pucallpa_rooms", JSON.stringify(roomTeams));
-  }, [roomTeams]);
+  const cargarRooms = async () => {
+    const { data, error } = await supabase.from("rooms").select("*");
+
+    if (error) {
+      console.error("Error cargando rooms:", error);
+      return;
+    }
+
+    const roomsObject = {};
+
+    data.forEach((room) => {
+      roomsObject[room.slot_id] = {
+        green: room.green || [],
+        red: room.red || [],
+        confirmed: room.confirmed || [],
+      };
+    });
+
+    setRoomTeams(roomsObject);
+  };
+
+  cargarRooms();
+
+  const channel = supabase
+    .channel("rooms-realtime")
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "rooms",
+      },
+      () => {
+        cargarRooms();
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, []);
 
   const getMedalla = (ganadas, partidas) => {
     if (partidas < 10) return "Calibrando";
@@ -468,108 +502,131 @@ localStorage.setItem(
     return teams.green.includes(name) || teams.red.includes(name);
   };
 
-  const joinTeam = (team) => {
-    if (!selectedMatch) return;
+  const joinTeam = async (team) => {
+  if (!selectedMatch) return;
 
-    if (!usuarioActivo) {
-      alert("Primero inicia sesión o crea tu cuenta para unirte a una sala.");
-      return;
-    }
+  if (!usuarioActivo) {
+    alert("Primero inicia sesión.");
+    return;
+  }
 
-    const name = getCurrentPlayerName();
-    const maxPerTeam = getMaxPerTeam();
-    const currentTeams = getTeamsForSlot(selectedMatch.id);
-    const totalPlayers = currentTeams.green.length + currentTeams.red.length;
+  const name = getCurrentPlayerName();
+  const maxPerTeam = getMaxPerTeam();
+  const currentTeams = getTeamsForSlot(selectedMatch.id);
+  const totalPlayers =
+    currentTeams.green.length + currentTeams.red.length;
 
-    if (totalPlayers >= getMaxPlayers()) {
-      alert("La sala ya está llena. Elige otro horario disponible.");
-      return;
-    }
+  if (totalPlayers >= getMaxPlayers()) {
+    alert("Sala llena");
+    return;
+  }
 
-    if (currentTeams.green.includes(name) || currentTeams.red.includes(name)) {
-      alert("Ya estás en un equipo");
-      return;
-    }
+  if (
+    currentTeams.green.includes(name) ||
+    currentTeams.red.includes(name)
+  ) {
+    alert("Ya estás inscrito");
+    return;
+  }
 
-    if (team === "green" && currentTeams.green.length >= maxPerTeam) {
-      alert("El Equipo Verde ya está lleno");
-      return;
-    }
+  if (
+    team === "green" &&
+    currentTeams.green.length >= maxPerTeam
+  ) {
+    alert("Equipo Verde lleno");
+    return;
+  }
 
-    if (team === "red" && currentTeams.red.length >= maxPerTeam) {
-      alert("El Equipo Rojo ya está lleno");
-      return;
-    }
+  if (
+    team === "red" &&
+    currentTeams.red.length >= maxPerTeam
+  ) {
+    alert("Equipo Rojo lleno");
+    return;
+  }
 
-    setRoomTeams((prev) => {
-      const previousTeams = prev[selectedMatch.id] || { green: [], red: [], confirmed: [] };
-
-      return {
-        ...prev,
-        [selectedMatch.id]: {
-          green: team === "green" ? [...(previousTeams.green || []), name] : previousTeams.green || [],
-          red: team === "red" ? [...(previousTeams.red || []), name] : previousTeams.red || [],
-          confirmed: previousTeams.confirmed || [],
-        },
-      };
-    });
+  const updatedRoom = {
+    green:
+      team === "green"
+        ? [...currentTeams.green, name]
+        : currentTeams.green,
+    red:
+      team === "red"
+        ? [...currentTeams.red, name]
+        : currentTeams.red,
+    confirmed: currentTeams.confirmed || [],
   };
 
-  const leaveCurrentRoom = () => {
-    if (!selectedMatch || !usuarioActivo) return;
+  await supabase.from("rooms").upsert(
+  [
+    {
+      slot_id: selectedMatch.id,
+      green: updatedRoom.green,
+      red: updatedRoom.red,
+      confirmed: updatedRoom.confirmed,
+    },
+  ],
+  { onConflict: "slot_id" }
+);
+};
+const leaveCurrentRoom = async () => {
+  if (!selectedMatch || !usuarioActivo) return;
 
-    const name = getCurrentPlayerName();
-    const currentTeams = getSelectedTeams();
+  const name = getCurrentPlayerName();
+  const currentTeams = getSelectedTeams();
 
-    if (!currentTeams.green.includes(name) && !currentTeams.red.includes(name)) {
-      alert("Todavía no estás inscrito en esta sala.");
-      return;
-    }
+  const updatedRoom = {
+    green: currentTeams.green.filter((p) => p !== name),
+    red: currentTeams.red.filter((p) => p !== name),
+    confirmed: currentTeams.confirmed.filter((p) => p !== name),
+  };
 
-    setRoomTeams((prev) => ({
-      ...prev,
-      [selectedMatch.id]: {
-        green: currentTeams.green.filter((player) => player !== name),
-        red: currentTeams.red.filter((player) => player !== name),
-        confirmed: currentTeams.confirmed.filter((player) => player !== name),
+  await supabase.from("rooms").upsert(
+    [
+      {
+        slot_id: selectedMatch.id,
+        green: updatedRoom.green,
+        red: updatedRoom.red,
+        confirmed: updatedRoom.confirmed,
       },
-    }));
-  };
+    ],
+    { onConflict: "slot_id" }
+  );
+};
 
-  const confirmParticipation = () => {
-    if (!selectedMatch) return;
+const confirmParticipation = async () => {
+  if (!selectedMatch || !usuarioActivo) return;
 
-    if (!usuarioActivo) {
-      alert("Primero inicia sesión para confirmar tu participación.");
-      return;
-    }
+  const name = getCurrentPlayerName();
+  const currentTeams = getSelectedTeams();
 
-    const name = getCurrentPlayerName();
-    const currentTeams = getSelectedTeams();
-    const isInRoom = currentTeams.green.includes(name) || currentTeams.red.includes(name);
+  if (
+    !currentTeams.green.includes(name) &&
+    !currentTeams.red.includes(name)
+  ) {
+    alert("Primero elige equipo");
+    return;
+  }
 
-    if (!isInRoom) {
-      alert("Primero elige Equipo Verde o Equipo Rojo.");
-      return;
-    }
+  if (currentTeams.confirmed.includes(name)) {
+    setShowPaymentModal(true);
+    return;
+  }
 
-    if (currentTeams.confirmed.includes(name)) {
-  setShowPaymentModal(true);
-  return;
-}
-
-    setRoomTeams((prev) => ({
-      ...prev,
-      [selectedMatch.id]: {
+  await supabase.from("rooms").upsert(
+    [
+      {
+        slot_id: selectedMatch.id,
         green: currentTeams.green,
         red: currentTeams.red,
         confirmed: [...currentTeams.confirmed, name],
       },
-    }));
+    ],
+    { onConflict: "slot_id" }
+  );
 
-    setShowPaymentModal(true);
-  };
-
+  setShowPaymentModal(true);
+};
   return (
     <div style={styles.page}>
       <div style={styles.pattern}>
