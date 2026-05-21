@@ -92,11 +92,14 @@ if (!existe) {
   );
 }
 
+const usuarioFinal = existe || userGoogle;
+
 setUsuarios(usersStorage);
-setUsuarioActivo(userGoogle);
+setUsuarioActivo(usuarioFinal);
+
 localStorage.setItem(
   "usuario_activo",
-  JSON.stringify(userGoogle)
+  JSON.stringify(usuarioFinal)
 );
       }
     };
@@ -145,11 +148,14 @@ if (!existe) {
   );
 }
 
+const usuarioFinal = existe || userGoogle;
+
 setUsuarios(usersStorage);
-setUsuarioActivo(userGoogle);
+setUsuarioActivo(usuarioFinal);
+
 localStorage.setItem(
   "usuario_activo",
-  JSON.stringify(userGoogle)
+  JSON.stringify(usuarioFinal)
 );
       }
     });
@@ -1084,24 +1090,21 @@ const guardarCelular = () => {
                         <div>
                           <h3>{user.nickName || user.nombre}</h3>
 
-                          {isAdminUser() ? (
-                            <>
-                              <p style={styles.privateInfo}>
-                                Nombre real: {user.nombre || "Sin nombre"}
-                              </p>
-                              <p style={styles.privateInfo}>
-                                Celular: {user.celular || "No registrado"}
-                              </p>
-                              <p>{user.deporte} · {user.nivel}</p>
-                            </>
-                          ) : (
-                            <>
-                              <p style={styles.publicInfo}>
-                                Player registrado
-                              </p>
-                              <p>{user.deporte} · {user.nivel}</p>
-                            </>
-                          )}
+                          {isAdminUser() && (
+  <>
+    <p style={styles.privateInfo}>
+      Nombre real: {user.nombre || "Sin nombre"}
+    </p>
+
+    <p style={styles.privateInfo}>
+      Celular: {user.celular || "No registrado"}
+    </p>
+
+    <p>
+      {user.deporte} · {user.nivel}
+    </p>
+  </>
+)}
                         </div>
                         <span style={styles.playerMedal}>{user.medalla}</span>
                       </div>
