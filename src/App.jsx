@@ -36,6 +36,7 @@ export default function App() {
   const [password, setPassword] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [nuevoCelular, setNuevoCelular] = useState("");
 
   useEffect(() => {
     const savedUsers = JSON.parse(localStorage.getItem("pucallpa_users")) || [];
@@ -506,9 +507,16 @@ localStorage.setItem(
   if (!selectedMatch) return;
 
   if (!usuarioActivo) {
-    alert("Primero inicia sesión.");
-    return;
-  }
+  alert("Primero inicia sesión.");
+  return;
+}
+
+if (!usuarioActivo?.celular) {
+  alert("Debes registrar tu WhatsApp antes de elegir equipo.");
+  return;
+}
+
+const name = getCurrentPlayerName();
 
   const name = getCurrentPlayerName();
   const maxPerTeam = getMaxPerTeam();
@@ -626,6 +634,32 @@ const confirmParticipation = async () => {
   );
 
   setShowPaymentModal(true);
+};
+const guardarCelular = () => {
+  const celularLimpio = nuevoCelular.trim();
+
+  if (!celularLimpio || celularLimpio.length < 9) {
+    alert("Ingresa un WhatsApp válido.");
+    return;
+  }
+
+  const updatedUser = {
+    ...usuarioActivo,
+    celular: celularLimpio,
+  };
+
+  const updatedUsers = usuarios.map((u) =>
+    u.id === usuarioActivo.id ? updatedUser : u
+  );
+
+  localStorage.setItem("pucallpa_users", JSON.stringify(updatedUsers));
+  localStorage.setItem("usuario_activo", JSON.stringify(updatedUser));
+
+  setUsuarios(updatedUsers);
+  setUsuarioActivo(updatedUser);
+  setNuevoCelular("");
+
+  alert("WhatsApp registrado correctamente.");
 };
   return (
     <div style={styles.page}>
@@ -852,6 +886,25 @@ const confirmParticipation = async () => {
                         👑 Administrador principal
                       </span>
                     )}
+                    {!usuarioActivo?.celular && (
+  <div style={styles.phoneBox}>
+    <p style={styles.phoneTitle}>
+      📱 Ingresa tu WhatsApp para reservar slot
+    </p>
+
+    <input
+      type="tel"
+      placeholder="Ejemplo: 912494278"
+      value={nuevoCelular}
+      onChange={(e) => setNuevoCelular(e.target.value)}
+      style={styles.phoneInput}
+    />
+
+    <button style={styles.phoneBtn} onClick={guardarCelular}>
+      Guardar WhatsApp
+    </button>
+  </div>
+)}
 
                     <button style={styles.cancelBtn} onClick={cerrarSesion}>
                       Cerrar sesión
@@ -1718,6 +1771,41 @@ logoSub: {
     color: "#064e3b",
     fontWeight: "850",
   },
+  phoneBox: {
+  marginTop: "14px",
+  padding: "16px",
+  borderRadius: "18px",
+  background: "#ffffff",
+  border: "1px solid rgba(6,78,59,0.18)",
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+},
+
+phoneTitle: {
+  margin: 0,
+  color: "#064e3b",
+  fontWeight: "900",
+  fontSize: "14px",
+},
+
+phoneInput: {
+  padding: "14px",
+  borderRadius: "14px",
+  border: "1px solid #d1d5db",
+  fontSize: "15px",
+  outline: "none",
+},
+
+phoneBtn: {
+  padding: "14px",
+  borderRadius: "14px",
+  border: "none",
+  background: "linear-gradient(90deg, #065f46, #10b981)",
+  color: "#ffffff",
+  fontWeight: "950",
+  cursor: "pointer",
+},
 
   divider: {
     width: "100%",
