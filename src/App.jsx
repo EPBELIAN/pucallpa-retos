@@ -687,12 +687,26 @@ const guardarCelular = () => {
 </div>
 
           <div style={styles.navLinks}>
-            <a style={styles.navLink} href="#retos">Retos</a>
-            <a style={styles.navLink} href="#ranking">Ranking</a>
-            <a style={styles.navLink} href="#envivo">En vivo</a>
-            <a style={styles.navLink} href="#registro">Registro</a>
-            <a style={styles.navLink} href="#players">Players</a>
-          </div>
+  <a style={styles.navLink} href="#retos">Retos</a>
+  <a style={styles.navLink} href="#ranking">Ranking</a>
+  <a style={styles.navLink} href="#envivo">En vivo</a>
+
+  {!usuarioActivo ? (
+    <a style={styles.navAuthBtn} href="#registro">
+      Entrar
+    </a>
+  ) : (
+    <div style={styles.navUserBox}>
+      <span style={styles.navUserName}>
+        👤 {usuarioActivo.nickName || usuarioActivo.nombre}
+      </span>
+
+      <button style={styles.navLogoutBtn} onClick={cerrarSesion}>
+        Salir
+      </button>
+    </div>
+  )}
+</div>
         </nav>
 
         <main style={styles.container}>
@@ -1494,6 +1508,44 @@ logoSub: {
     textDecoration: "none",
     fontWeight: "900",
   },
+  navAuthBtn: {
+  padding: "10px 16px",
+  borderRadius: "999px",
+  background: "linear-gradient(90deg,#39ff66,#f97316)",
+  color: "#022c22",
+  fontWeight: "950",
+  textDecoration: "none",
+  boxShadow: "0 12px 28px rgba(0,0,0,0.25)",
+},
+
+navUserBox: {
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+  padding: "8px 10px",
+  borderRadius: "999px",
+  background: "rgba(255,255,255,0.14)",
+  border: "1px solid rgba(255,255,255,0.18)",
+},
+
+navUserName: {
+  color: "#ffffff",
+  fontWeight: "900",
+  maxWidth: "160px",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+},
+
+navLogoutBtn: {
+  padding: "8px 12px",
+  borderRadius: "999px",
+  border: "none",
+  background: "#fff5f5",
+  color: "#dc2626",
+  fontWeight: "900",
+  cursor: "pointer",
+},
 
   container: {
     width: "100%",
