@@ -647,16 +647,7 @@ const guardarCelular = () => {
     alert("Ingresa un WhatsApp válido.");
     return;
   }
-  const numeroExiste = usuarios.find(
-  (u) =>
-    u.celular === celularLimpio &&
-    u.id !== usuarioActivo.id
-);
-
-if (numeroExiste) {
-  alert("Este WhatsApp ya está registrado por otro usuario.");
-  return;
-}
+  
 
   const updatedUser = {
     ...usuarioActivo,
@@ -890,41 +881,59 @@ if (numeroExiste) {
                     <UserPlus color="#39ff66" size={32} />
                   </div>
 
-                  <div style={styles.userLoggedBox}>
-                    <strong>{usuarioActivo.nickName || usuarioActivo.nombre}</strong>
-                    <span>Nombre: {usuarioActivo.nombre}</span>
-                    <span>{usuarioActivo.deporte}</span>
-                    <span>{usuarioActivo.partidas || 0}/10 partidas · {usuarioActivo.medalla}</span>
-
-                    {isAdminUser() && (
-                      <span style={styles.adminBadge}>
-                        👑 Administrador principal
-                      </span>
-                    )}
-                    {!usuarioActivo?.celular && (
-  <div style={styles.phoneBox}>
-    <p style={styles.phoneTitle}>
-      📱 Ingresa tu WhatsApp para reservar slot
-    </p>
-
-    <input
-      type="tel"
-      placeholder="Ejemplo: 987654321"
-      value={nuevoCelular}
-      onChange={(e) => setNuevoCelular(e.target.value)}
-      style={styles.phoneInput}
-    />
-
-    <button style={styles.phoneBtn} onClick={guardarCelular}>
-      Guardar WhatsApp
-    </button>
+                  <div style={styles.userCompactBox}>
+  <div style={styles.userAvatar}>
+    {(usuarioActivo.nickName || usuarioActivo.nombre || "P")[0]}
   </div>
-)}
 
-                    <button style={styles.cancelBtn} onClick={cerrarSesion}>
-                      Cerrar sesión
-                    </button>
-                  </div>
+  <div style={styles.userCompactInfo}>
+    <strong>
+      {usuarioActivo.nickName || usuarioActivo.nombre}
+    </strong>
+
+    <span>
+      {usuarioActivo.deporte || "Pendiente"} · {usuarioActivo.partidas || 0}/10 · {usuarioActivo.medalla}
+    </span>
+
+    {isAdminUser() && (
+      <span style={styles.adminMiniBadge}>
+        👑 Admin principal
+      </span>
+    )}
+
+    {!usuarioActivo?.celular && (
+      <div style={styles.phoneBox}>
+        <p style={styles.phoneTitle}>
+          📱 Ingresa tu WhatsApp para reservar slot
+        </p>
+
+        <input
+          type="tel"
+          placeholder="Ejemplo: 900123456"
+          value={nuevoCelular}
+          onChange={(e) =>
+            setNuevoCelular(e.target.value)
+          }
+          style={styles.phoneInput}
+        />
+
+        <button
+          style={styles.phoneBtn}
+          onClick={guardarCelular}
+        >
+          Guardar WhatsApp
+        </button>
+      </div>
+    )}
+  </div>
+
+  <button
+    style={styles.logoutMiniBtn}
+    onClick={cerrarSesion}
+  >
+    Salir
+  </button>
+</div>
                 </>
               ) : (
                 <>
@@ -1789,6 +1798,49 @@ logoSub: {
     color: "#064e3b",
     fontWeight: "850",
   },
+  userCompactBox: {
+  display: "flex",
+  alignItems: "center",
+  gap: "14px",
+  padding: "16px",
+  borderRadius: "22px",
+  background: "#ecfdf5",
+  color: "#064e3b",
+},
+
+userAvatar: {
+  width: "50px",
+  height: "50px",
+  borderRadius: "50%",
+  background: "linear-gradient(135deg,#065f46,#22c55e)",
+  color: "#fff",
+  display: "grid",
+  placeItems: "center",
+  fontWeight: "900",
+  fontSize: "22px",
+},
+
+userCompactInfo: {
+  flex: 1,
+  display: "flex",
+  flexDirection: "column",
+  gap: "4px",
+},
+
+adminMiniBadge: {
+  color: "#f97316",
+  fontWeight: "900",
+},
+
+logoutMiniBtn: {
+  padding: "10px 14px",
+  borderRadius: "14px",
+  border: "1px solid #fecaca",
+  background: "#fff5f5",
+  color: "#dc2626",
+  fontWeight: "900",
+  cursor: "pointer",
+},
   phoneBox: {
   marginTop: "14px",
   padding: "16px",
