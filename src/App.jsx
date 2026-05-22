@@ -1366,6 +1366,54 @@ const guardarCelular = () => {
           </motion.div>
         </div>
       )}
+      {showLoginModal && (
+  <div style={styles.authOverlay}>
+    <div style={styles.authModal}>
+      <button
+        style={styles.authClose}
+        onClick={() => setShowLoginModal(false)}
+      >
+        ✕
+      </button>
+
+      <h2 style={styles.authTitle}>Entrar a Pucallpa Retos</h2>
+      <p style={styles.authText}>Accede con tu celular o Google.</p>
+
+      <button style={styles.googleBtnPremium} onClick={signInWithGoogle}>
+        Continuar con Google
+      </button>
+
+      <input
+        style={styles.input}
+        placeholder="Celular"
+        value={loginCelular}
+        onChange={(e) => setLoginCelular(e.target.value)}
+      />
+
+      <input
+        type="password"
+        style={styles.input}
+        placeholder="Contraseña"
+        value={loginPassword}
+        onChange={(e) => setLoginPassword(e.target.value)}
+      />
+
+      <button style={styles.fullBtn} onClick={iniciarSesion}>
+        Iniciar sesión
+      </button>
+
+      <button
+        style={styles.authSwitchBtn}
+        onClick={() => {
+          setShowLoginModal(false);
+          setShowRegisterModal(true);
+        }}
+      >
+        Crear cuenta nueva
+      </button>
+    </div>
+  </div>
+)}
 
       {showPaymentModal && (
         <div style={styles.paymentOverlay}>
@@ -2632,6 +2680,66 @@ phoneBtn: {
     fontWeight: "850",
     textAlign: "center",
   },
+  authOverlay: {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.68)",
+  backdropFilter: "blur(8px)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 9999,
+  padding: "20px",
+},
+
+authModal: {
+  width: "100%",
+  maxWidth: "430px",
+  background: "#ffffff",
+  color: "#0f172a",
+  borderRadius: "30px",
+  padding: "30px",
+  position: "relative",
+  display: "flex",
+  flexDirection: "column",
+  gap: "14px",
+  boxShadow: "0 30px 90px rgba(0,0,0,0.35)",
+},
+
+authClose: {
+  position: "absolute",
+  top: "16px",
+  right: "16px",
+  border: "none",
+  background: "#f1f5f9",
+  borderRadius: "50%",
+  width: "40px",
+  height: "40px",
+  cursor: "pointer",
+  fontWeight: "900",
+},
+
+authTitle: {
+  margin: "10px 0 0",
+  color: "#064e3b",
+  fontSize: "30px",
+  fontWeight: "950",
+},
+
+authText: {
+  margin: 0,
+  color: "#64748b",
+},
+
+authSwitchBtn: {
+  border: "none",
+  background: "transparent",
+  color: "#065f46",
+  fontWeight: "900",
+  cursor: "pointer",
+  marginTop: "4px",
+},
+
 
 
   privateInfo: {
