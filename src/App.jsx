@@ -870,7 +870,13 @@ const guardarCelular = () => {
               )}
             </section>
 
-            <section id="registro" style={styles.card}>
+            <section
+  id="registro"
+  style={{
+    ...styles.card,
+    display: "none",
+  }}
+>
               {usuarioActivo ? (
                 <>
                   <div style={styles.cardHeader}>
