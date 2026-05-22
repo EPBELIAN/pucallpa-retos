@@ -36,6 +36,8 @@ export default function App() {
   const [password, setPassword] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [nuevoCelular, setNuevoCelular] = useState("");
 
   useEffect(() => {
@@ -692,9 +694,12 @@ const guardarCelular = () => {
   <a style={styles.navLink} href="#envivo">En vivo</a>
 
   {!usuarioActivo ? (
-    <a style={styles.navAuthBtn} href="#registro">
-      Entrar
-    </a>
+    <button
+  style={styles.navAuthBtn}
+  onClick={() => setShowLoginModal(true)}
+>
+  Entrar
+</button>
   ) : (
     <div style={styles.navUserBox}>
       <span style={styles.navUserName}>
@@ -1405,8 +1410,8 @@ const guardarCelular = () => {
       <button
         style={styles.authSwitchBtn}
         onClick={() => {
-          setShowLoginModal(false);
-          setShowRegisterModal(true);
+        setShowLoginModal(false);
+alert("Primero terminaremos el modal de registro.");
         }}
       >
         Crear cuenta nueva
