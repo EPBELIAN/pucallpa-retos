@@ -524,6 +524,7 @@ if (!usuarioActivo?.celular) {
   return;
 }
 
+
 const name = getCurrentPlayerName();
 
   const maxPerTeam = getMaxPerTeam();
@@ -1261,7 +1262,35 @@ const guardarCelular = () => {
                 </strong>
                 <p>jugadores en sala</p>
               </div>
-            </div>
+                        </div>
+
+            {!usuarioActivo?.celular && (
+              <div style={styles.roomPhoneBox}>
+                <strong>📱 Registra tu WhatsApp para elegir equipo</strong>
+
+                <p>
+                  Debes guardar tu número antes de seleccionar Equipo Verde o Equipo Rojo.
+                </p>
+
+                <div style={styles.roomPhoneForm}>
+                  <input
+                    type="tel"
+                    placeholder="Ejemplo: 900123456"
+                    value={nuevoCelular}
+                    onChange={(e) => setNuevoCelular(e.target.value)}
+                    style={styles.phoneInput}
+                  />
+
+                  <button
+                    style={styles.phoneBtn}
+                    onClick={guardarCelular}
+                  >
+                    Guardar WhatsApp
+                  </button>
+                </div>
+              </div>
+            )}
+           
 
             <div style={styles.teamsRoom}>
               <div style={styles.teamGreen}>
@@ -2759,6 +2788,24 @@ authSwitchBtn: {
     fontWeight: "800",
     opacity: 0.9,
   },
+  roomPhoneBox: {
+  marginBottom: "20px",
+  padding: "18px",
+  borderRadius: "20px",
+  background: "#ecfdf5",
+  border: "1px solid rgba(6,78,59,0.18)",
+  color: "#064e3b",
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
+},
+
+roomPhoneForm: {
+  display: "grid",
+  gridTemplateColumns: "1fr auto",
+  gap: "12px",
+  alignItems: "center",
+},
 
 
 };
