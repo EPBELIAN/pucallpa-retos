@@ -696,15 +696,23 @@ const guardarCelular = () => {
   Entrar
 </button>
   ) : (
-    <div style={styles.navUserBox}>
-      <span style={styles.navUserName}>
-        👤 {usuarioActivo.nickName || usuarioActivo.nombre}
-      </span>
+    <div style={styles.googleUserChip}>
+  <div style={styles.googleAvatar}>
+    {(usuarioActivo.nickName || usuarioActivo.nombre || "P")[0]
+      ?.toUpperCase()}
+  </div>
 
-      <button style={styles.navLogoutBtn} onClick={cerrarSesion}>
-        Salir
-      </button>
-    </div>
+  <span style={styles.googleUserName}>
+    {usuarioActivo.nickName || usuarioActivo.nombre}
+  </span>
+
+  <button
+    style={styles.googleArrowBtn}
+    onClick={cerrarSesion}
+  >
+    ▼
+  </button>
+</div>
   )}
 </div>
         </nav>
@@ -1594,9 +1602,10 @@ logo: {
   display: "flex",
   alignItems: "center",
   justifyContent: "flex-end",
-  gap: "42px",
-  fontWeight: "900",
+  gap: "26px",
   flexWrap: "nowrap",
+  minWidth: "420px",
+  flexShrink: 0,
 },
 navLink: {
   color: "#06251a",
@@ -1947,16 +1956,28 @@ navLogoutBtn: {
     cursor: "pointer",
   },
 
-  userLoggedBox: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "12px",
-    padding: "18px",
-    borderRadius: "18px",
-    background: "#ecfdf5",
-    color: "#064e3b",
-    fontWeight: "850",
-  },
+ userLoggedBox: {
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+
+  maxWidth: "240px",
+  minWidth: "160px",
+
+  padding: "10px 16px",
+  borderRadius: "18px",
+
+  background: "rgba(255,255,255,.60)",
+  backdropFilter: "blur(10px)",
+
+  border: "1px solid rgba(6,78,59,.10)",
+
+  overflow: "hidden",
+  whiteSpace: "nowrap",
+  textOverflow: "ellipsis",
+
+  flexShrink: 0,
+},
   userCompactBox: {
   display: "flex",
   alignItems: "center",
@@ -2824,6 +2845,60 @@ roomPhoneForm: {
   gridTemplateColumns: "1fr auto",
   gap: "12px",
   alignItems: "center",
+},
+googleUserChip: {
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+
+  padding: "8px 14px",
+  borderRadius: "999px",
+
+  background: "rgba(255,255,255,.72)",
+  backdropFilter: "blur(12px)",
+
+  border: "1px solid rgba(6,78,59,.10)",
+
+  boxShadow: "0 8px 20px rgba(6,78,59,.08)",
+
+  maxWidth: "250px",
+  flexShrink: 0,
+},
+
+googleAvatar: {
+  width: "38px",
+  height: "38px",
+  borderRadius: "50%",
+
+  background:
+    "linear-gradient(135deg,#16a34a,#22c55e)",
+
+  color: "#fff",
+  display: "grid",
+  placeItems: "center",
+
+  fontWeight: "900",
+  fontSize: "16px",
+},
+
+googleUserName: {
+  maxWidth: "110px",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+
+  color: "#064e3b",
+  fontWeight: "900",
+  fontSize: "15px",
+},
+
+googleArrowBtn: {
+  border: "none",
+  background: "transparent",
+  color: "#065f46",
+  cursor: "pointer",
+  fontSize: "13px",
+  fontWeight: "900",
 },
 
 
