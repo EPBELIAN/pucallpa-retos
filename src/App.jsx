@@ -1507,32 +1507,58 @@ alert("Primero terminaremos el modal de registro.");
       <style>
   {`
     @media (max-width: 768px) {
+      * {
+        box-sizing: border-box !important;
+      }
+
+      html, body {
+        width: 100% !important;
+        overflow-x: hidden !important;
+      }
+
       nav {
+        width: calc(100% - 18px) !important;
+        margin: 8px auto 0 !important;
+        padding: 12px !important;
         flex-direction: column !important;
-        gap: 14px !important;
-        padding: 14px !important;
+        align-items: center !important;
+        gap: 12px !important;
       }
 
       nav img {
-        width: 260px !important;
+        width: 300px !important;
         height: auto !important;
+        max-width: 100% !important;
       }
 
       main {
-        padding: 12px !important;
+        width: 100% !important;
+        padding: 18px 14px 50px !important;
+        overflow-x: hidden !important;
       }
 
       h1 {
         font-size: 42px !important;
         line-height: 1.05 !important;
+        letter-spacing: -1px !important;
       }
 
-      a, button {
-        max-width: 100%;
-      }
-
-      .mobile-grid {
+      section,
+      div[style*="grid-template-columns"] {
         grid-template-columns: 1fr !important;
+      }
+
+      div[style*="display: grid"] {
+        grid-template-columns: 1fr !important;
+      }
+
+      div[style*="display: flex"] {
+        max-width: 100% !important;
+      }
+
+      button,
+      a {
+        max-width: 100% !important;
       }
     }
   `}
