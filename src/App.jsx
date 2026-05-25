@@ -673,23 +673,17 @@ const guardarCelular = () => {
   return (
     <div style={styles.page}>
       <div style={styles.pattern}>
-        <nav style={styles.navbar}>
-          <div style={styles.logo}>
-            <img
-              src={logoPucallpa}
-              alt="Pucallpa Retos"
-              style={styles.logoImage}
-  />
-
-           <div style={styles.logoTextBox}>
-              <span style={styles.logoMain}>PUCALLPA RETOS</span>
-             <small style={styles.logoSub}>
-      Arena deportiva digital
-    </small>
+      <nav style={styles.navbar}>
+  <div style={styles.logo}>
+    <img
+      src={logoPucallpa}
+      alt="Pucallpa Retos"
+      style={styles.logoImage}
+    />
   </div>
-</div>
 
-          <div style={styles.navLinks}>
+
+   <div style={styles.navLinks}>
   <a style={styles.navLink} href="#retos">Retos</a>
   <a style={styles.navLink} href="#ranking">Ranking</a>
   <a style={styles.navLink} href="#envivo">En vivo</a>
@@ -1185,7 +1179,8 @@ const guardarCelular = () => {
                             width: `${avance}%`,
                             height: "100%",
                             display: "block",
-                            background: "linear-gradient(90deg, #39ff66, #f97316)",
+                           backgroundImage:
+  "repeating-linear-gradient(135deg, rgba(6,78,59,0.08) 0px, rgba(6,78,59,0.08) 2px, transparent 2px, transparent 18px)",
                           }}
                         />
                       </div>
@@ -1506,46 +1501,61 @@ alert("Primero terminaremos el modal de registro.");
 
 const styles = {
   page: {
-    minHeight: "100vh",
-    width: "100vw",
-    overflowX: "hidden",
-    background:
-      "linear-gradient(135deg, #020b08 0%, #022c22 35%, #064e3b 65%, #7c2d12 100%)",
-    color: "#f4fff2",
-    fontFamily: "Inter, system-ui, sans-serif",
-  },
+  minHeight: "100vh",
+  width: "100vw",
+  overflowX: "hidden",
+  background:
+    "linear-gradient(135deg,#f7fff1 0%,#eaffd8 35%,#d8f8b6 65%,#b9ee85 100%)",
+  color: "#06251a",
+  fontFamily: "Inter, system-ui, sans-serif",
+},
 
-  pattern: {
-    minHeight: "100vh",
-    width: "100%",
-    backgroundImage:
-      "radial-gradient(circle at 20% 20%, rgba(57,255,102,0.14), transparent 24%), radial-gradient(circle at 80% 10%, rgba(249,115,22,0.16), transparent 25%), repeating-linear-gradient(45deg, rgba(255,255,255,0.04) 0 2px, transparent 2px 24px)",
-  },
+pattern: {
+  minHeight: "100vh",
+  width: "100%",
+  backgroundImage:
+    "radial-gradient(circle at 12% 45%, rgba(57,255,102,0.18), transparent 22%), radial-gradient(circle at 88% 20%, rgba(6,95,70,0.10), transparent 26%), repeating-linear-gradient(45deg, rgba(6,78,59,0.05) 0 2px, transparent 2px 26px)",
+},
 
-  navbar: {
-    width: "100%",
-    maxWidth: "1500px",
-    margin: "0 auto",
-    padding: "24px 36px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    boxSizing: "border-box",
-  },
+ navbar: {
+  width: "calc(100% - 34px)",
+  maxWidth: "1500px",
+  margin: "8px auto 0",
+  padding: "10px 44px",
+  minHeight: "105px",
 
-  logo: {
-    display: "flex",
-    alignItems: "center",
-    gap: "12px",
-    fontWeight: "950",
-    letterSpacing: "1px",
-  },
-  logoImage: {
-  width: "68px",
-  height: "68px",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  boxSizing: "border-box",
+
+  overflow: "visible",
+  position: "relative",
+
+  background: "rgba(255,255,255,0.82)",
+  backdropFilter: "blur(18px)",
+  WebkitBackdropFilter: "blur(18px)",
+  border: "1px solid rgba(6,78,59,0.10)",
+  borderRadius: "30px",
+  boxShadow: "0 18px 55px rgba(6,78,59,0.16)",
+},
+logo: {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-start",
+  width: "760px",
+  flexShrink: 0,
+  overflow: "visible",
+},
+
+logoImage: {
+  width: "700px",
+  height: "120px",
   objectFit: "contain",
-  borderRadius: "18px",
-  boxShadow: "0 12px 30px rgba(0,0,0,0.35)",
+  objectPosition: "left center",
+  borderRadius: "0px",
+  boxShadow: "none",
+ 
 },
 
 logoTextBox: {
@@ -1561,11 +1571,13 @@ logoMain: {
   color: "#ffffff",
 },
 
-logoSub: {
-  color: "rgba(255,255,255,0.7)",
-  marginTop: "6px",
-  fontSize: "12px",
-  fontWeight: "700",
+logo: {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-start",
+  width: "620px",
+  flexShrink: 0,
+  overflow: "visible",
 },
 
   logoIcon: {
@@ -1578,28 +1590,32 @@ logoSub: {
     placeItems: "center",
   },
 
-  navLinks: {
-    display: "flex",
-    gap: "26px",
-    fontWeight: "800",
-    flexWrap: "wrap",
-  },
-
-  navLink: {
-    color: "#f4fff2",
-    textDecoration: "none",
-    fontWeight: "900",
-  },
-  navAuthBtn: {
-  padding: "10px 16px",
-  borderRadius: "999px",
-  background: "linear-gradient(90deg,#39ff66,#f97316)",
-  color: "#022c22",
-  fontWeight: "950",
-  textDecoration: "none",
-  boxShadow: "0 12px 28px rgba(0,0,0,0.25)",
+ navLinks: {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: "42px",
+  fontWeight: "900",
+  flexWrap: "nowrap",
 },
-
+navLink: {
+  color: "#06251a",
+  textDecoration: "none",
+  fontWeight: "950",
+  fontSize: "18px",
+},
+  navAuthBtn: {
+  padding: "18px 34px",
+  borderRadius: "18px",
+  border: "none",
+  background: "linear-gradient(135deg,#059669,#16a34a)",
+  color: "#ffffff",
+  fontWeight: "950",
+  fontSize: "20px",
+  textDecoration: "none",
+  boxShadow: "0 18px 36px rgba(22,163,74,0.30)",
+  cursor: "pointer",
+},
 navUserBox: {
   display: "flex",
   alignItems: "center",
@@ -1630,57 +1646,60 @@ navLogoutBtn: {
 },
 
   container: {
-    width: "100%",
-    maxWidth: "1500px",
-    margin: "0 auto",
-    padding: "20px 36px 70px",
-    boxSizing: "border-box",
-  },
+  width: "100%",
+  maxWidth: "1500px",
+  margin: "0 auto",
+  padding: "65px 36px 70px",
+  boxSizing: "border-box",
+},
 
-  hero: {
-    textAlign: "center",
-    padding: "80px 0 70px",
-  },
+ hero: {
+  textAlign: "center",
+  padding: "0 0 65px",
+},
 
   badge: {
-    padding: "10px 20px",
-    borderRadius: "999px",
-    background: "rgba(255,255,255,0.14)",
-    border: "1px solid rgba(255,255,255,0.24)",
-    fontWeight: "800",
-  },
+  padding: "14px 26px",
+  borderRadius: "999px",
+  background: "rgba(255,255,255,0.62)",
+  border: "1px solid rgba(6,95,70,0.16)",
+  color: "#047857",
+  fontWeight: "950",
+  boxShadow: "0 12px 30px rgba(6,78,59,0.10)",
+},
 
   title: {
-    fontSize: "clamp(44px, 5.4vw, 82px)",
-    lineHeight: "0.95",
-    margin: "30px auto 20px",
-    maxWidth: "1100px",
-    fontWeight: "950",
-    letterSpacing: "-2.5px",
-    color: "#f4fff2",
-    textShadow: "0 10px 35px rgba(0,0,0,0.65)",
-  },
+  fontSize: "clamp(56px, 6vw, 96px)",
+  lineHeight: "1.03",
+  margin: "38px auto 24px",
+  maxWidth: "1160px",
+  fontWeight: "950",
+  letterSpacing: "-3px",
+  color: "#031f18",
+  textShadow: "0 14px 30px rgba(6,78,59,0.12)",
+},
 
   subtitle: {
-    maxWidth: "850px",
-    margin: "0 auto",
-    fontSize: "21px",
-    color: "rgba(255,255,255,0.88)",
-    lineHeight: "1.6",
-  },
+  maxWidth: "900px",
+  margin: "0 auto",
+  color: "#334155",
+  fontSize: "clamp(20px, 2vw, 28px)",
+  lineHeight: "1.45",
+},
 
-  paymentNotice: {
-    maxWidth: "720px",
-    margin: "24px auto 0",
-    padding: "14px 20px",
-    borderRadius: "18px",
-    background: "rgba(249,115,22,0.16)",
-    border: "1px solid rgba(249,115,22,0.35)",
-    color: "#ffedd5",
-    fontWeight: "850",
-    fontSize: "17px",
-  },
+ noticeBox: {
+  maxWidth: "760px",
+  margin: "34px auto",
+  padding: "18px 28px",
+  borderRadius: "22px",
 
+  background: "rgba(255,248,220,0.75)",
+  backdropFilter: "blur(14px)",
+  border: "1px solid rgba(251,191,36,.30)",
+
+  color: "#7c4a03",
+  boxShadow: "0 10px 30px rgba(251,191,36,.12)",
+},
   sessionBanner: {
     maxWidth: "620px",
     margin: "18px auto 0",
