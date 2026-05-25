@@ -1501,8 +1501,42 @@ alert("Primero terminaremos el modal de registro.");
               🔒 Tu pago asegura tu participación en la sala.
             </p>
           </motion.div>
+          
         </div>
       )}
+      <style>
+  {`
+    @media (max-width: 768px) {
+      nav {
+        flex-direction: column !important;
+        gap: 14px !important;
+        padding: 14px !important;
+      }
+
+      nav img {
+        width: 260px !important;
+        height: auto !important;
+      }
+
+      main {
+        padding: 12px !important;
+      }
+
+      h1 {
+        font-size: 42px !important;
+        line-height: 1.05 !important;
+      }
+
+      a, button {
+        max-width: 100%;
+      }
+
+      .mobile-grid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  `}
+</style>
     </div>
   );
 }
