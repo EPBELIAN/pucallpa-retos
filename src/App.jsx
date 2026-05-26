@@ -7,7 +7,6 @@ import {
   Trophy,
   Radio,
   CalendarDays,
-  ShieldCheck,
   Star,
   UserPlus,
   Flame,
@@ -1238,30 +1237,30 @@ const guardarCelular = () => {
               )}
             </section>
 
-            <section style={styles.cardDark}>
-              <ShieldCheck size={36} color="#39ff66" />
-              <h2>Reglamento de retos</h2>
+           <section style={styles.cardDark}>
+  <ShieldCheck size={36} color="#39ff66" />
+  <h2>Reglamento de retos</h2>
 
-              <ul style={styles.rules}>
-                <li>Se jugarán 10 retos de calibración.</li>
-                <li>Al completar 10 juegos se calificará tu rendimiento.</li>
-                <li>Respeto obligatorio entre jugadores.</li>
-                <li>El slot se cierra antes del inicio del reto.</li>
-                <li>El equipo ganador suma puntos.</li>
-                <li>Prohibida la violencia física o verbal.</li>
-                <li>Los retos pueden transmitirse en vivo.</li>
-              </ul>
+  <ul style={styles.rules}>
+    <li>Se jugarán 10 retos de calibración.</li>
+    <li>Al completar 10 juegos se calificará tu rendimiento.</li>
+    <li>Respeto obligatorio entre jugadores.</li>
+    <li>El slot se cierra antes del inicio del reto.</li>
+    <li>El equipo ganador suma puntos.</li>
+    <li>Prohibida la violencia física o verbal.</li>
+    <li>Los retos pueden transmitirse en vivo.</li>
+  </ul>
 
-              <div style={styles.medals}>
-                {["Heraldo", "Guardián", "Cruzado", "Arconte", "Leyenda", "Inmortal Pucallpino"].map(
-                  (medal) => (
-                    <span key={medal} style={styles.medal}>
-                      {medal}
-                    </span>
-                  )
-                )}
-              </div>
-            </section>
+  <div style={styles.medals}>
+    {["Heraldo", "Guardián", "Cruzado", "Arconte", "Leyenda", "Inmortal Pucallpino"].map(
+      (medal) => (
+        <span key={medal} style={styles.medal}>
+          {medal}
+        </span>
+      )
+    )}
+  </div>
+</section>
           </section>
 
           {isAdminUser() && (
@@ -1995,14 +1994,6 @@ navLogoutBtn: {
     boxShadow: "0 28px 80px rgba(0,0,0,0.28)",
   },
 
-  cardDark: {
-    background: "linear-gradient(145deg, rgba(2,44,34,0.95), rgba(7,89,60,0.88))",
-    border: "1px solid rgba(255,255,255,0.16)",
-    borderRadius: "30px",
-    padding: "30px",
-    boxShadow: "0 28px 80px rgba(0,0,0,0.28)",
-  },
-
   cardHeader: {
     display: "flex",
     justifyContent: "space-between",
@@ -2571,13 +2562,7 @@ rewardDeleteBtn: {
     border: "1px solid #d1d5db",
     fontSize: "15px",
   },
-
-  rules: {
-    lineHeight: "1.9",
-    paddingLeft: "20px",
-    color: "#ffedd5",
-  },
-
+  
   medals: {
     display: "flex",
     flexWrap: "wrap",
