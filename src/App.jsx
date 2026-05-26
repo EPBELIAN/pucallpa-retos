@@ -4,12 +4,15 @@ import logoPucallpa from "./assets/logo-pucallpa.png";
 import { supabase } from "./supabaseClient";
 import { motion } from "framer-motion";
 import {
+  Trophy,
   Radio,
   CalendarDays,
   ShieldCheck,
+  Star,
   UserPlus,
   Flame,
   Users,
+  Gift,
   X,
 } from "lucide-react";
 
@@ -37,9 +40,13 @@ export default function App() {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [nuevoCelular, setNuevoCelular] = useState("");
+  const [premios, setPremios] = useState([]);
+  const [nuevoPremio, setNuevoPremio] = useState("");
+const [nuevoPuntaje, setNuevoPuntaje] = useState("");
+const [nuevaImagen, setNuevaImagen] = useState(null);
 
   useEffect(() => {
-    const savedUsers = JSON.parse(localStorage.getItem("pucallpa_users")) || [];
+const savedUsers = JSON.parse(localStorage.getItem("pucallpa_users")) || [];
     const savedActiveUser = JSON.parse(localStorage.getItem("usuario_activo"));
 
     setUsuarios(savedUsers);
@@ -48,6 +55,9 @@ export default function App() {
       setUsuarioActivo(savedActiveUser);
     }
   }, []);
+  useEffect(() => {
+  cargarPremios();
+}, []);
 
 
   useEffect(() => {
@@ -604,6 +614,75 @@ const confirmParticipation = async () => {
 
   setShowPaymentModal(true);
 };
+const editarPremio = (id, campo, valor) => {
+  if (!isAdminUser()) return;
+
+  setPremios((prev) =>
+    prev.map((premio) =>
+      premio.id === id
+        ? {
+            ...premio,
+            [campo]: campo === "puntos" ? Number(valor) : valor,
+          }
+        : premio
+    )
+  );
+};
+const cargarPremios = async () => {
+  const { data, error } = await supabase
+    .from("rewards")
+    .select("*")
+    .eq("activo", true)
+    .order("id");
+
+  if (!error && data) {
+    setPremios(data);
+  }
+};
+const subirPremio = async () => {
+  if (!nuevoPremio || !nuevoPuntaje || !nuevaImagen) {
+    alert("Completa premio, puntos e imagen");
+    return;
+  }
+
+  const fileName = `${Date.now()}-${nuevaImagen.name}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("reward-images")
+    .upload(fileName, nuevaImagen);
+
+  if (uploadError) {
+    alert("Error subiendo imagen");
+    return;
+  }
+
+  const { data } = supabase.storage
+    .from("reward-images")
+    .getPublicUrl(fileName);
+
+  const imageUrl = data.publicUrl;
+
+  const { error } = await supabase
+    .from("rewards")
+    .insert({
+      nombre: nuevoPremio,
+      puntos: Number(nuevoPuntaje),
+      imagen_url: imageUrl,
+    });
+
+  if (error) {
+    alert("Error guardando premio");
+    return;
+  }
+
+  alert("Premio agregado");
+
+  setNuevoPremio("");
+  setNuevoPuntaje("");
+  setNuevaImagen(null);
+
+  cargarPremios();
+};
 const guardarCelular = () => {
   const celularLimpio = nuevoCelular.trim();
 
@@ -646,7 +725,7 @@ const guardarCelular = () => {
 
    <div style={styles.navLinks}>
   <a style={styles.navLink} href="#retos">Retos</a>
-  <a style={styles.navLink} href="#envivo">En vivo</a>
+  <a style={styles.navLink} href="#premios">Premios</a>
 
   {!usuarioActivo ? (
     <button
@@ -784,34 +863,110 @@ const guardarCelular = () => {
               </div>
             </motion.div>
 
-            <motion.div style={styles.liveCard} whileHover={{ y: -6 }} id="envivo">
-              <div style={styles.liveTop}>
-                <Radio />
-                <span>EN VIVO</span>
-              </div>
+            <motion.div style={styles.rewardsCard} whileHover={{ y: -6 }} id="premios">
+  <div style={styles.cardHeader}>
+    <div>
+      <h2 style={styles.rewardsTitle}>Premios por puntos</h2>
+      <p style={styles.rewardsText}>
+        Acumula puntos jugando retos y reclama premios disponibles.
+      </p>
+    </div>
+    <Gift color="#16a34a" size={34} />
+  </div>
+  {isAdminUser() && (
+  <div style={styles.adminRewardsBox}>
+    <h3>Administrador premios</h3>
 
-              <h2 style={styles.liveTitle}>Reto Fútbol 7</h2>
-              <p style={styles.mutedLight}>Campo 9 de Octubre · Pucallpa</p>
+    <input
+      style={styles.rewardInput}
+      placeholder="Nombre premio"
+      value={nuevoPremio}
+      onChange={(e) => setNuevoPremio(e.target.value)}
+    />
 
-              <div style={styles.scoreBox}>
-                <div>
-                  <strong>Los Tigres</strong>
-                  <h3>3</h3>
-                </div>
-                <span>VS</span>
-                <div>
-                  <strong>Barrio Unido</strong>
-                  <h3>2</h3>
-                </div>
-              </div>
+    <input
+      style={styles.rewardInput}
+      placeholder="Puntos"
+      value={nuevoPuntaje}
+      onChange={(e) => setNuevoPuntaje(e.target.value)}
+    />
 
-              <div style={styles.liveFeed}>
-                <p>🔥 Min 42: Golazo de Los Tigres.</p>
-                <p>⚽ Partido intenso en la tierra colorada.</p>
-                <p>🏆 El ganador suma puntos para futuras competencias.</p>
-              </div>
-            </motion.div>
-          </section>
+    <input
+      type="file"
+      onChange={(e) => setNuevaImagen(e.target.files[0])}
+    />
+
+    <button
+      style={styles.claimBtn}
+      onClick={subirPremio}
+    >
+      Guardar premio
+    </button>
+  </div>
+)}
+  <div style={styles.rewardsGrid}>
+  {premios.length === 0 ? (
+    <div style={styles.emptyRewards}>
+      🎁 Próximamente premios disponibles.
+    </div>
+  ) : (
+    premios.map((premio) => (
+      <div key={premio.id} style={styles.rewardItem}>
+        <img
+          src={premio.imagen_url}
+          alt={premio.nombre}
+          style={styles.rewardImage}
+        />
+
+        <div style={styles.rewardInfo}>
+          <strong>{premio.nombre}</strong>
+          <span>{premio.puntos} puntos</span>
+        </div>
+
+        <button
+          style={styles.claimBtn}
+          onClick={() =>
+            alert("Solicitud enviada. El administrador validará tu canje.")
+          }
+        >
+          Reclamar
+        </button>
+
+        {isAdminUser() && (
+          <div style={styles.rewardAdminBox}>
+            <input
+              style={styles.rewardInput}
+              value={premio.nombre}
+              onChange={(e) =>
+                editarPremio(premio.id, "nombre", e.target.value)
+              }
+              placeholder="Nombre del premio"
+            />
+
+            <input
+              style={styles.rewardInput}
+              value={premio.puntos}
+              onChange={(e) =>
+                editarPremio(premio.id, "puntos", e.target.value)
+              }
+              placeholder="Puntos"
+            />
+
+            <input
+              style={styles.rewardInput}
+              value={premio.imagen_url || ""}
+              onChange={(e) =>
+                editarPremio(premio.id, "imagen_url", e.target.value)
+              }
+              placeholder="URL imagen"
+            />
+          </div>
+        )}
+      </div>
+    ))
+    )}
+  </div>
+</motion.div>          </section>
 
           <section style={styles.gridInferior}>
             
@@ -2021,47 +2176,83 @@ phoneBtn: {
     borderTop: "1px solid #d1d5db",
     margin: "8px 0",
   },
+  rewardsCard: {
+  background: "rgba(255,255,255,0.88)",
+  border: "1px solid rgba(6,78,59,0.10)",
+  borderRadius: "30px",
+  padding: "30px",
+  boxShadow: "0 28px 80px rgba(6,78,59,0.18)",
+},
 
-  liveCard: {
-    background: "linear-gradient(145deg, rgba(15,23,42,0.96), rgba(6,95,70,0.94), rgba(124,45,18,0.85))",
-    border: "1px solid rgba(255,255,255,0.16)",
-    borderRadius: "30px",
-    padding: "34px",
-    boxShadow: "0 28px 80px rgba(0,0,0,0.3)",
-  },
+rewardsTitle: {
+  margin: 0,
+  fontSize: "32px",
+  fontWeight: "950",
+  color: "#064e3b",
+},
 
-  liveTop: {
-    display: "flex",
-    gap: "10px",
-    alignItems: "center",
-    color: "#f97316",
-    fontWeight: "950",
-  },
+rewardsText: {
+  marginTop: "8px",
+  color: "#475569",
+},
 
-  liveTitle: {
-    fontSize: "38px",
-    marginBottom: "6px",
-  },
+rewardsGrid: {
+  display: "grid",
+  gap: "18px",
+  marginTop: "24px",
+},
 
-  scoreBox: {
-    display: "grid",
-    gridTemplateColumns: "1fr auto 1fr",
-    alignItems: "center",
-    gap: "16px",
-    textAlign: "center",
-    background: "rgba(255,255,255,0.12)",
-    padding: "28px",
-    borderRadius: "24px",
-    marginTop: "24px",
-  },
+rewardItem: {
+  background: "#ecfdf5",
+  borderRadius: "24px",
+  padding: "16px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "12px",
+  border: "1px solid rgba(6,78,59,0.08)",
+},
 
-  liveFeed: {
-    marginTop: "22px",
-    lineHeight: "1.8",
-    color: "#ffedd5",
-  },
+rewardImage: {
+  width: "100%",
+  height: "150px",
+  objectFit: "cover",
+  borderRadius: "18px",
+  background: "#d1fae5",
+},
 
-  form: {
+rewardInfo: {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  fontWeight: "900",
+},
+
+claimBtn: {
+  border: "none",
+  borderRadius: "14px",
+  padding: "12px",
+  background: "linear-gradient(90deg,#16a34a,#22c55e)",
+  color: "#fff",
+  cursor: "pointer",
+  fontWeight: "900",
+},
+
+rewardAdminBox: {
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
+  marginTop: "10px",
+  paddingTop: "10px",
+  borderTop: "1px solid rgba(6,78,59,0.10)",
+},
+
+rewardInput: {
+  padding: "10px",
+  borderRadius: "12px",
+  border: "1px solid #d1d5db",
+},
+
+ form: {
     display: "flex",
     flexDirection: "column",
     gap: "14px",
@@ -2806,6 +2997,15 @@ googleArrowBtn: {
   fontSize: "13px",
   fontWeight: "900",
 },
-
+adminRewardsBox: {
+  background: "#ecfdf5",
+  border: "1px dashed rgba(6,78,59,.25)",
+  borderRadius: "22px",
+  padding: "18px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "12px",
+  marginBottom: "20px",
+},
 
 };
