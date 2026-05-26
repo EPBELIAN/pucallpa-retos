@@ -4,11 +4,9 @@ import logoPucallpa from "./assets/logo-pucallpa.png";
 import { supabase } from "./supabaseClient";
 import { motion } from "framer-motion";
 import {
-  Trophy,
   Radio,
   CalendarDays,
   ShieldCheck,
-  Star,
   UserPlus,
   Flame,
   Users,
@@ -406,25 +404,6 @@ localStorage.setItem(
   ]);
 
   const filteredSlots = slots.filter((slot) => slot.sport === activeSport);
-
-  const rankingDinamico = [...usuarios]
-    .filter((user) => (user.partidas || 0) >= 10)
-    .sort((a, b) => {
-      if ((b.puntos || 0) !== (a.puntos || 0)) {
-        return (b.puntos || 0) - (a.puntos || 0);
-      }
-
-      if ((b.ganadas || 0) !== (a.ganadas || 0)) {
-        return (b.ganadas || 0) - (a.ganadas || 0);
-      }
-
-      const rendimientoA = (a.ganadas || 0) / Math.max(a.partidas || 1, 1);
-      const rendimientoB = (b.ganadas || 0) / Math.max(b.partidas || 1, 1);
-
-      return rendimientoB - rendimientoA;
-    })
-    .slice(0, 10);
-
   const openMatchRoom = (slot) => {
     const totalPlayers = getSlotTotal(slot);
     const maxPlayers = getMaxPlayersBySport(slot.sport);
@@ -685,7 +664,6 @@ const guardarCelular = () => {
 
    <div style={styles.navLinks}>
   <a style={styles.navLink} href="#retos">Retos</a>
-  <a style={styles.navLink} href="#ranking">Ranking</a>
   <a style={styles.navLink} href="#envivo">En vivo</a>
 
   {!usuarioActivo ? (
@@ -848,49 +826,13 @@ const guardarCelular = () => {
               <div style={styles.liveFeed}>
                 <p>🔥 Min 42: Golazo de Los Tigres.</p>
                 <p>⚽ Partido intenso en la tierra colorada.</p>
-                <p>🏆 El ganador suma puntos para el ranking.</p>
+                <p>🏆 El ganador suma puntos para futuras competencias.</p>
               </div>
             </motion.div>
           </section>
 
           <section style={styles.gridInferior}>
-            <section id="ranking" style={styles.card}>
-              <div style={styles.cardHeader}>
-                <div>
-                  <h2 style={styles.sectionTitle}>TOP 10 GENERAL</h2>
-                  <p style={styles.muted}>
-                    Aquí aparecerán automáticamente los 10 mejores players de fútbol y vóley cuando completen 10 partidas.
-                  </p>
-                </div>
-                <Trophy color="#f59e0b" size={32} />
-              </div>
-
-              {rankingDinamico.length === 0 ? (
-                <div style={styles.emptyRanking}>
-                  <Trophy size={42} color="#f59e0b" />
-                  <h3>Ranking en calibración</h3>
-                  <p>Aún no hay players con 10 partidas completadas.</p>
-                </div>
-              ) : (
-                <div style={styles.rankingList}>
-                  {rankingDinamico.map((player, index) => (
-                    <div key={player.id} style={styles.rankingItem}>
-                      <div style={styles.position}>{index + 1}</div>
-                      <div style={{ flex: 1 }}>
-                        <strong>{player.nickName || player.nombre}</strong>
-                        <p>
-                          {player.deporte} · {player.ganadas || 0}G / {player.perdidas || 0}P
-                        </p>
-                      </div>
-                      <div style={styles.rankBadge}>
-                        <Star size={15} /> {player.medalla}
-                      </div>
-                      <strong>{player.puntos || 0} pts</strong>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
+            
 
             <section
   id="registro"
@@ -1872,21 +1814,6 @@ navLogoutBtn: {
     color: "rgba(255,255,255,0.78)",
   },
 
-  emptyRanking: {
-    minHeight: "220px",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "center",
-    textAlign: "center",
-    gap: "10px",
-    padding: "30px",
-    borderRadius: "22px",
-    background: "#ecfdf5",
-    color: "#064e3b",
-    border: "1px dashed rgba(16,185,129,0.45)",
-  },
-
   sportTabs: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
@@ -2161,43 +2088,6 @@ phoneBtn: {
     marginTop: "22px",
     lineHeight: "1.8",
     color: "#ffedd5",
-  },
-
-  rankingList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "14px",
-  },
-
-  rankingItem: {
-    display: "flex",
-    alignItems: "center",
-    gap: "16px",
-    padding: "16px",
-    borderRadius: "18px",
-    background: "#ecfdf5",
-  },
-
-  position: {
-    width: "40px",
-    height: "40px",
-    borderRadius: "14px",
-    background: "linear-gradient(135deg, #064e3b, #10b981)",
-    color: "white",
-    display: "grid",
-    placeItems: "center",
-    fontWeight: "950",
-  },
-
-  rankBadge: {
-    display: "flex",
-    alignItems: "center",
-    gap: "6px",
-    background: "#fef3c7",
-    color: "#92400e",
-    padding: "8px 12px",
-    borderRadius: "999px",
-    fontWeight: "850",
   },
 
   form: {
