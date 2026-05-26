@@ -683,6 +683,67 @@ const subirPremio = async () => {
 
   cargarPremios();
 };
+const guardarCambiosPremio = async (premio) => {
+  if (!isAdminUser()) return;
+
+  const { error } = await supabase
+    .from("rewards")
+    .update({
+      nombre: premio.nombre,
+      puntos: Number(premio.puntos),
+      imagen_url: premio.imagen_url,
+    })
+    .eq("id", premio.id);
+
+  if (error) {
+    alert("Error guardando cambios del premio");
+    return;
+  }
+
+  alert("Premio actualizado");
+  cargarPremios();
+};
+
+const eliminarPremio = async (id) => {
+  if (!isAdminUser()) return;
+
+  const confirmar = confirm("¿Seguro que deseas eliminar este premio?");
+  if (!confirmar) return;
+
+  const { error } = await supabase
+    .from("rewards")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    alert("Error eliminando premio");
+    return;
+  }
+
+  alert("Premio eliminado");
+  cargarPremios();
+};
+
+const reclamarPremio = async (premio) => {
+  if (!usuarioActivo) {
+    alert("Debes iniciar sesión para reclamar.");
+    return;
+  }
+
+  if ((usuarioActivo.puntos || 0) < premio.puntos) {
+    alert("No tienes puntos suficientes.");
+    return;
+  }
+
+  await supabase.from("reward_claims").insert({
+    reward_id: premio.id,
+    user_name: usuarioActivo.nombre,
+    celular: usuarioActivo.celular || "",
+    puntos_usados: premio.puntos,
+  });
+
+  alert("Solicitud enviada. El administrador validará tu canje.");
+};
 const guardarCelular = () => {
   const celularLimpio = nuevoCelular.trim();
 
@@ -924,13 +985,26 @@ const guardarCelular = () => {
         </div>
 
         <button
-          style={styles.claimBtn}
-          onClick={() =>
-            alert("Solicitud enviada. El administrador validará tu canje.")
-          }
-        >
-          Reclamar
-        </button>
+  style={{
+    ...styles.claimBtn,
+    opacity:
+      !usuarioActivo || (usuarioActivo.puntos || 0) < premio.puntos
+        ? 0.45
+        : 1,
+    cursor:
+      !usuarioActivo || (usuarioActivo.puntos || 0) < premio.puntos
+        ? "not-allowed"
+        : "pointer",
+  }}
+  disabled={!usuarioActivo || (usuarioActivo.puntos || 0) < premio.puntos}
+  onClick={() => reclamarPremio(premio)}
+>
+  {!usuarioActivo
+    ? "Inicia sesión"
+    : (usuarioActivo.puntos || 0) < premio.puntos
+    ? "Puntos insuficientes"
+    : "Reclamar"}
+</button>
 
         {isAdminUser() && (
           <div style={styles.rewardAdminBox}>
@@ -942,6 +1016,20 @@ const guardarCelular = () => {
               }
               placeholder="Nombre del premio"
             />
+            <button
+  style={styles.claimBtn}
+  onClick={() => guardarCambiosPremio(premio)}
+>
+  Guardar cambios
+</button>
+
+<button
+  style={styles.rewardDeleteBtn}
+  onClick={() => eliminarPremio(premio.id)}
+>
+  Eliminar premio
+</button>
+          
 
             <input
               style={styles.rewardInput}
@@ -2250,6 +2338,15 @@ rewardInput: {
   padding: "10px",
   borderRadius: "12px",
   border: "1px solid #d1d5db",
+},
+rewardDeleteBtn: {
+  border: "none",
+  borderRadius: "14px",
+  padding: "12px",
+  background: "#ef4444",
+  color: "#fff",
+  cursor: "pointer",
+  fontWeight: "900",
 },
 
  form: {
