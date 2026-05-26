@@ -709,7 +709,7 @@ const guardarCelular = () => {
             </h1>
 
             <p style={styles.subtitle}>
-              Reserva tu slot, elige tu equipo, compite en la sala y sube de rango en las arenas deportivas de Pucallpa.
+              Reserva tu lugar, elige tu equipo, acumula puntos y reclama los premios.
             </p>
 
             <div style={styles.paymentNotice}>
@@ -2095,8 +2095,6 @@ phoneBtn: {
     flexDirection: "column",
     gap: "14px",
   },
-
-
 
   paymentOverlay: {
     position: "fixed",
