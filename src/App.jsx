@@ -73,8 +73,7 @@ export default function App() {
           ganadas: 0,
           perdidas: 0,
           puntos: 0,
-          medalla: "Calibrando",
-          createdAt: new Date().toLocaleString(),
+              createdAt: new Date().toLocaleString(),
         };
 
         const usersStorage =
@@ -129,7 +128,6 @@ localStorage.setItem(
           ganadas: 0,
           perdidas: 0,
           puntos: 0,
-          medalla: "Calibrando",
           createdAt: new Date().toLocaleString(),
         };
 
@@ -207,19 +205,6 @@ localStorage.setItem(
   };
 }, []);
 
-  const getMedalla = (ganadas, partidas) => {
-    if (partidas < 10) return "Calibrando";
-
-    const rendimiento = ganadas / partidas;
-
-    if (rendimiento >= 0.85) return "Inmortal Pucallpino";
-    if (rendimiento >= 0.7) return "Leyenda";
-    if (rendimiento >= 0.55) return "Arconte";
-    if (rendimiento >= 0.4) return "Cruzado";
-    if (rendimiento >= 0.25) return "Guardián";
-    return "Heraldo";
-  };
-
   const createUser = () => {
     if (!nombre || !nickName || !celular || !password || !deporte || !nivel) {
       alert("Completa todos los datos del usuario");
@@ -254,8 +239,7 @@ localStorage.setItem(
       ganadas: 0,
       perdidas: 0,
       puntos: 0,
-      medalla: "Calibrando",
-      createdAt: new Date().toLocaleString(),
+            createdAt: new Date().toLocaleString(),
     };
 
     const updatedUsers = [...usuarios, newUser];
@@ -333,15 +317,13 @@ localStorage.setItem(
         resultado === "lose" ? (user.perdidas || 0) + 1 : user.perdidas || 0;
 
       const puntos = ganadas * 100 - perdidas * 25;
-      const medalla = getMedalla(ganadas, partidas);
-
+      
       return {
         ...user,
         partidas,
         ganadas,
         perdidas,
         puntos,
-        medalla,
       };
     });
 
@@ -718,7 +700,7 @@ const guardarCelular = () => {
 
             {usuarioActivo && (
               <div style={styles.sessionBanner}>
-                Sesión activa: <strong>{usuarioActivo.nombre}</strong> · {usuarioActivo.medalla}
+                Sesión activa: <strong>{usuarioActivo.nombre}</strong>
               </div>
             )}
 
@@ -862,7 +844,7 @@ const guardarCelular = () => {
     </strong>
 
     <span>
-      {usuarioActivo.deporte || "Pendiente"} · {usuarioActivo.partidas || 0}/10 · {usuarioActivo.medalla}
+      {usuarioActivo.deporte || "Pendiente"} · {usuarioActivo.partidas || 0} partidas
     </span>
 
     {isAdminUser() && (
@@ -1020,7 +1002,6 @@ const guardarCelular = () => {
               <ul style={styles.rules}>
                 <li>Se jugarán 10 retos de calibración.</li>
                 <li>Al completar 10 juegos se calificará tu rendimiento.</li>
-                <li>Según tu rendimiento sabrás tu medalla.</li>
                 <li>Respeto obligatorio entre jugadores.</li>
                 <li>El slot se cierra antes del inicio del reto.</li>
                 <li>El equipo ganador suma puntos.</li>
@@ -1101,8 +1082,7 @@ const guardarCelular = () => {
   </>
 )}
                         </div>
-                        <span style={styles.playerMedal}>{user.medalla}</span>
-                      </div>
+                                   </div>
 
                       <div style={styles.playerStats}>
                         <div>
@@ -1156,16 +1136,7 @@ const guardarCelular = () => {
                         </div>
                       )}
 
-                      {partidas < 10 ? (
-                        <small style={styles.calibrando}>
-                          Faltan {10 - partidas} partidas para definir medalla.
-                        </small>
-                      ) : (
-                        <small style={styles.medallaLista}>
-                          Medalla asignada según rendimiento.
-                        </small>
-                      )}
-                    </div>
+                      </div>
                   );
                 })}
               </div>
@@ -2441,19 +2412,6 @@ phoneBtn: {
     cursor: "pointer",
   },
 
-  calibrando: {
-    display: "block",
-    marginTop: "14px",
-    color: "#fde68a",
-    fontWeight: "800",
-  },
-
-  medallaLista: {
-    display: "block",
-    marginTop: "14px",
-    color: "#86efac",
-    fontWeight: "800",
-  },
 
   modalOverlay: {
     position: "fixed",
