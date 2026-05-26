@@ -4,12 +4,8 @@ import logoPucallpa from "./assets/logo-pucallpa.png";
 import { supabase } from "./supabaseClient";
 import { motion } from "framer-motion";
 import {
-  Trophy,
-  Radio,
   CalendarDays,
-  Star,
   UserPlus,
-  Flame,
   Users,
   Gift,
   X,
@@ -1237,32 +1233,7 @@ const guardarCelular = () => {
               )}
             </section>
 
-           <section style={styles.cardDark}>
-  <ShieldCheck size={36} color="#39ff66" />
-  <h2>Reglamento de retos</h2>
-
-  <ul style={styles.rules}>
-    <li>Se jugarán 10 retos de calibración.</li>
-    <li>Al completar 10 juegos se calificará tu rendimiento.</li>
-    <li>Respeto obligatorio entre jugadores.</li>
-    <li>El slot se cierra antes del inicio del reto.</li>
-    <li>El equipo ganador suma puntos.</li>
-    <li>Prohibida la violencia física o verbal.</li>
-    <li>Los retos pueden transmitirse en vivo.</li>
-  </ul>
-
-  <div style={styles.medals}>
-    {["Heraldo", "Guardián", "Cruzado", "Arconte", "Leyenda", "Inmortal Pucallpino"].map(
-      (medal) => (
-        <span key={medal} style={styles.medal}>
-          {medal}
-        </span>
-      )
-    )}
-  </div>
-</section>
-          </section>
-
+           
           {isAdminUser() && (
           <section id="players" style={styles.playersSection}>
             <div style={styles.cardHeader}>
@@ -1761,14 +1732,6 @@ pattern: {
   border: "1px solid rgba(6,78,59,0.10)",
   borderRadius: "30px",
   boxShadow: "0 18px 55px rgba(6,78,59,0.16)",
-},
-logo: {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "flex-start",
-  width: "760px",
-  flexShrink: 0,
-  overflow: "visible",
 },
 
 logoImage: {
@@ -2562,22 +2525,6 @@ rewardDeleteBtn: {
     border: "1px solid #d1d5db",
     fontSize: "15px",
   },
-  
-  medals: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "10px",
-    marginTop: "22px",
-  },
-
-  medal: {
-    padding: "9px 13px",
-    borderRadius: "999px",
-    background: "rgba(255,255,255,0.12)",
-    border: "1px solid rgba(255,255,255,0.18)",
-    color: "#fed7aa",
-    fontWeight: "850",
-  },
 
   playersSection: {
     marginTop: "30px",
@@ -3088,6 +3035,15 @@ adminRewardsBox: {
   flexDirection: "column",
   gap: "12px",
   marginBottom: "20px",
+},
+emptyRewards: {
+  padding: "30px",
+  borderRadius: "22px",
+  background: "#ecfdf5",
+  border: "1px dashed rgba(6,78,59,0.25)",
+  color: "#064e3b",
+  fontWeight: "900",
+  textAlign: "center",
 },
 
 };
