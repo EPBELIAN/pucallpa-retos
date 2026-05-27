@@ -819,8 +819,8 @@ const guardarCelular = () => {
   </div>
 
   <span style={styles.googleUserName}>
-    {usuarioActivo.nickName || usuarioActivo.nombre}
-  </span>
+  {usuarioActivo.nickName || usuarioActivo.nombre} · {usuarioActivo.puntos || 0} pts
+</span>
 
   <button
     style={styles.googleArrowBtn}
@@ -855,10 +855,10 @@ const guardarCelular = () => {
             </div>
 
             {usuarioActivo && (
-              <div style={styles.sessionBanner}>
-                Sesión activa: <strong>{usuarioActivo.nombre}</strong>
-              </div>
-            )}
+  <div style={styles.sessionBanner}>
+    Sesión activa: <strong>{usuarioActivo.nombre}</strong> · ⭐ {usuarioActivo.puntos || 0} puntos
+  </div>
+)}
 
             <div style={styles.heroButtons}>
               <a style={styles.primaryBtn} href="#retos">Reservar slot</a>
