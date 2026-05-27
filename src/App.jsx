@@ -37,7 +37,7 @@ export default function App() {
   const [nuevoPremio, setNuevoPremio] = useState("");
 const [nuevoPuntaje, setNuevoPuntaje] = useState("");
 const [nuevaImagen, setNuevaImagen] = useState(null);
-
+const [showRulesModal, setShowRulesModal] = useState(false);
   useEffect(() => {
 const savedUsers = JSON.parse(localStorage.getItem("pucallpa_users")) || [];
     const savedActiveUser = JSON.parse(localStorage.getItem("usuario_activo"));
@@ -318,7 +318,8 @@ localStorage.setItem(
       const newPerdidas = resultado === "lose" ? (user.perdidas || 0) + 1 : (user.perdidas || 0);
       const newPartidas = (user.partidas || 0) + 1;
 
-      const puntos = newGanadas * 100 - newPerdidas * 25;
+      const puntosActuales = user.puntos || 0;
+const puntos = puntosActuales + (resultado === "win" ? 20 : 10);
       
       return {
         ...user,
@@ -941,14 +942,24 @@ const guardarCelular = () => {
 
             <motion.div style={styles.rewardsCard} whileHover={{ y: -6 }} id="premios">
   <div style={styles.cardHeader}>
-    <div>
-      <h2 style={styles.rewardsTitle}>CANJEAR PUNTOS</h2>
-      <p style={styles.rewardsText}>
-        Acumula puntos jugando retos y reclama premios disponibles.
-      </p>
-    </div>
-    <Gift color="#16a34a" size={34} />
+  <div>
+    <h2 style={styles.sectionTitle}>Retos disponibles</h2>
+    <p style={styles.muted}>
+      Haz clic en un horario disponible para abrir la sala y elegir equipo.
+    </p>
   </div>
+
+  <div style={styles.rulesMiniBox}>
+    <button
+      style={styles.rulesMiniBtn}
+      onClick={() => setShowRulesModal(true)}
+    >
+      Reglas
+    </button>
+
+    <CalendarDays color="#39ff66" size={32} />
+  </div>
+</div>
   {isAdminUser() && (
   <div style={styles.adminRewardsBox}>
     <h3>Administrador premios</h3>
@@ -1665,6 +1676,54 @@ alert("Primero terminaremos el modal de registro.");
           
         </div>
       )}
+      {showRulesModal && (
+  <div style={styles.rulesOverlay}>
+    <motion.div
+      style={styles.rulesModal}
+      initial={{ scale: 0.9, opacity: 0, y: 30 }}
+      animate={{ scale: 1, opacity: 1, y: 0 }}
+    >
+      <button
+        style={styles.rulesCloseBtn}
+        onClick={() => setShowRulesModal(false)}
+      >
+        ✕
+      </button>
+
+      <h2 style={styles.rulesModalTitle}>Reglas oficiales</h2>
+
+      <div style={styles.rulesModalGrid}>
+        <div style={styles.rulePremiumItem}>
+          <strong>💰 Participación</strong>
+          <span>Cada jugador paga S/ 10 por participar en el reto.</span>
+        </div>
+
+        <div style={styles.rulePremiumItem}>
+          <strong>⭐ Puntos por participar</strong>
+          <span>Cada participante recibe 10 puntos por jugar.</span>
+        </div>
+
+        <div style={styles.rulePremiumItem}>
+          <strong>🏆 Premio al ganador</strong>
+          <span>El ganador recibe S/ 5 y suma 10 puntos adicionales.</span>
+        </div>
+
+        <div style={styles.rulePremiumItem}>
+          <strong>🎁 Canje de premios</strong>
+          <span>Los premios se pueden reclamar desde 500 puntos como mínimo.</span>
+        </div>
+      </div>
+
+      <div style={styles.rulesExampleBox}>
+        <strong>Ejemplo:</strong>
+        <p>
+          Si juegas y pierdes: sumas 10 puntos. Si juegas y ganas:
+          sumas 20 puntos en total y recibes S/ 5.
+        </p>
+      </div>
+    </motion.div>
+  </div>
+)}
       <style>
   {`
     @media (max-width: 768px) {
@@ -3105,6 +3164,91 @@ pointsInput: {
   background: "#ffffff",
   color: "#064e3b",
   fontWeight: "900",
+},
+rulesMiniBox: {
+  display: "flex",
+  alignItems: "center",
+  gap: "14px",
+},
+
+rulesMiniBtn: {
+  border: "none",
+  borderRadius: "999px",
+  padding: "10px 18px",
+  background: "linear-gradient(90deg,#16a34a,#22c55e)",
+  color: "#ffffff",
+  fontWeight: "950",
+  cursor: "pointer",
+  boxShadow: "0 10px 25px rgba(34,197,94,0.22)",
+},
+
+rulesOverlay: {
+  position: "fixed",
+  inset: 0,
+  background: "rgba(0,0,0,0.62)",
+  backdropFilter: "blur(8px)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  zIndex: 99999,
+  padding: "20px",
+},
+
+rulesModal: {
+  width: "100%",
+  maxWidth: "560px",
+  background: "linear-gradient(145deg,#ffffff,#ecfdf5)",
+  borderRadius: "32px",
+  padding: "32px",
+  position: "relative",
+  boxShadow: "0 30px 90px rgba(0,0,0,0.30)",
+  border: "1px solid rgba(6,78,59,0.12)",
+},
+
+rulesCloseBtn: {
+  position: "absolute",
+  top: "18px",
+  right: "18px",
+  width: "42px",
+  height: "42px",
+  borderRadius: "50%",
+  border: "none",
+  background: "#f1f5f9",
+  color: "#064e3b",
+  fontWeight: "950",
+  cursor: "pointer",
+},
+
+rulesModalTitle: {
+  margin: "0 0 20px",
+  color: "#064e3b",
+  fontSize: "34px",
+  fontWeight: "950",
+},
+
+rulesModalGrid: {
+  display: "grid",
+  gap: "14px",
+},
+
+rulePremiumItem: {
+  padding: "16px",
+  borderRadius: "20px",
+  background: "#ffffff",
+  border: "1px solid rgba(6,78,59,0.10)",
+  display: "flex",
+  flexDirection: "column",
+  gap: "6px",
+  color: "#064e3b",
+},
+
+rulesExampleBox: {
+  marginTop: "18px",
+  padding: "16px",
+  borderRadius: "20px",
+  background: "#dcfce7",
+  color: "#065f46",
+  fontWeight: "800",
 },
 
 };
