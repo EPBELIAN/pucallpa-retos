@@ -16,9 +16,7 @@ export default function App() {
   const [openRoom, setOpenRoom] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState(null);
   const [roomTeams, setRoomTeams] = useState({});
-  const [greenTeam, setGreenTeam] = useState([]);
-  const [redTeam, setRedTeam] = useState([]);
-  const [playerName, setPlayerName] = useState("");
+  
 
   const [nombre, setNombre] = useState("");
   const [nickName, setNickName] = useState("");
@@ -312,22 +310,20 @@ localStorage.setItem(
       return;
     }
 
-    const updatedUsers = usuarios.map((user) => {
+        const updatedUsers = usuarios.map((user) => {
       if (user.id !== id) return user;
 
-      const partidas = (user.partidas || 0) + 1;
-      const ganadas =
-        resultado === "win" ? (user.ganadas || 0) + 1 : user.ganadas || 0;
-      const perdidas =
-        resultado === "lose" ? (user.perdidas || 0) + 1 : user.perdidas || 0;
+      const newGanadas = resultado === "win" ? (user.ganadas || 0) + 1 : (user.ganadas || 0);
+      const newPerdidas = resultado === "lose" ? (user.perdidas || 0) + 1 : (user.perdidas || 0);
+      const newPartidas = (user.partidas || 0) + 1;
 
-      const puntos = ganadas * 100 - perdidas * 25;
+      const puntos = newGanadas * 100 - newPerdidas * 25;
       
       return {
         ...user,
-        partidas,
-        ganadas,
-        perdidas,
+        partidas: newPartidas,
+        ganadas: newGanadas,
+        perdidas: newPerdidas,
         puntos,
       };
     });
@@ -447,26 +443,19 @@ localStorage.setItem(
     return usuarioActivo.nickName || usuarioActivo.nombre;
   };
 
-  const isAdminUser = () => {
-  if (!usuarioActivo) return false;
+      const isAdminUser = () => {
+    if (!usuarioActivo) return false;
 
-  const nombreActivo = String(usuarioActivo.nombre || "")
-    .trim()
-    .toLowerCase();
+    const nombreActivo = String(usuarioActivo.nombre || "").trim().toLowerCase();
+    const celularActivo = String(usuarioActivo.celular || "").replace(/\s/g, "");
+    const emailActivo = String(usuarioActivo.email || "").trim().toLowerCase();
 
-  const celularActivo = String(usuarioActivo.celular || "")
-    .replace(/\s/g, "");
-
-  const emailActivo = String(usuarioActivo.email || "")
-    .trim()
-    .toLowerCase();
-
-  return (
-    emailActivo === "elianepb9@gmail.com" ||
-    celularActivo === "912494278" ||
-    nombreActivo === "elian pezo bardales"
-  );
-};
+    return (
+      emailActivo === "elianepb9@gmail.com" ||
+      celularActivo === "912494278" ||
+      nombreActivo === "elian pezo bardales"
+    );
+  };
 
   const isCurrentUserInSelectedRoom = () => {
     if (!selectedMatch || !usuarioActivo) return false;
@@ -743,10 +732,9 @@ const guardarCelular = () => {
   const celularLimpio = nuevoCelular.trim();
 
   if (!celularLimpio || celularLimpio.length < 9) {
-    alert("Ingresa un WhatsApp válido.");
+    alert("Ingresa un WhatsApp válido (mínimo 9 dígitos).");
     return;
   }
-  
 
   const updatedUser = {
     ...usuarioActivo,
@@ -762,10 +750,11 @@ const guardarCelular = () => {
 
   setUsuarios(updatedUsers);
   setUsuarioActivo(updatedUser);
-  setNuevoCelular("");
+  setNuevoCelular("");   // ← Limpieza importante
 
   alert("WhatsApp registrado correctamente.");
 };
+    // ==================== RETURN DEL COMPONENTE ====================
   return (
     <div style={styles.page}>
       <div style={styles.pattern}>
@@ -1356,6 +1345,7 @@ const guardarCelular = () => {
             )}
           </section>
           )}
+          </section>
         </main>
       </div>
 
@@ -1690,7 +1680,7 @@ alert("Primero terminaremos el modal de registro.");
   `}
 </style>
     </div>
-  );
+ );
 }
 
 const styles = {
