@@ -942,7 +942,7 @@ const guardarCelular = () => {
             <motion.div style={styles.rewardsCard} whileHover={{ y: -6 }} id="premios">
   <div style={styles.cardHeader}>
     <div>
-      <h2 style={styles.rewardsTitle}>Premios por puntos</h2>
+      <h2 style={styles.rewardsTitle}>CANJEAR PUNTOS</h2>
       <p style={styles.rewardsText}>
         Acumula puntos jugando retos y reclama premios disponibles.
       </p>
