@@ -2208,14 +2208,13 @@ phoneBtn: {
     borderTop: "1px solid #d1d5db",
     margin: "8px 0",
   },
-  rewardsCard: {
+ rewardsCard: {
   background: "rgba(255,255,255,0.88)",
   border: "1px solid rgba(6,78,59,0.10)",
-  borderRadius: "30px",
-  padding: "30px",
+  borderRadius: "34px",
+  padding: "36px",
   boxShadow: "0 28px 80px rgba(6,78,59,0.18)",
 },
-
 rewardsTitle: {
   margin: 0,
   fontSize: "32px",
@@ -2236,19 +2235,21 @@ rewardsGrid: {
 
 rewardItem: {
   background: "#ecfdf5",
-  borderRadius: "24px",
-  padding: "16px",
+  borderRadius: "28px",
+  padding: "20px",
   display: "flex",
   flexDirection: "column",
-  gap: "12px",
+  gap: "16px",
   border: "1px solid rgba(6,78,59,0.08)",
+  minHeight: "430px",
 },
 
 rewardImage: {
   width: "100%",
-  height: "150px",
-  objectFit: "cover",
-  borderRadius: "18px",
+  height: "240px",
+  objectFit: "contain",
+  objectPosition: "center",
+  borderRadius: "22px",
   background: "#d1fae5",
 },
 
