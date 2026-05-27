@@ -746,7 +746,7 @@ const reclamarPremio = async (premio) => {
     return;
   }
 
-  if ((usuarioActivo.puntos || 0) < premio.puntos) {
+  if ((usuarioActivo.puntos || 0) < Math.max(Number(premio.puntos || 0), 500)) {
     alert("No tienes puntos suficientes.");
     return;
   }
@@ -1022,12 +1022,17 @@ const guardarCelular = () => {
         ? "not-allowed"
         : "pointer",
   }}
-  disabled={!usuarioActivo || (usuarioActivo.puntos || 0) < premio.puntos}
+  disabled={
+  !usuarioActivo ||
+  (usuarioActivo.puntos || 0) <
+    Math.max(Number(premio.puntos || 0), 500)
+}
   onClick={() => reclamarPremio(premio)}
 >
   {!usuarioActivo
     ? "Inicia sesión"
-    : (usuarioActivo.puntos || 0) < premio.puntos
+    : (usuarioActivo.puntos || 0) <
+Math.max(Number(premio.puntos || 0), 500)
     ? "Puntos insuficientes"
     : "Reclamar"}
 </button>
