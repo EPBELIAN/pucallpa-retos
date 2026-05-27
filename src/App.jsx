@@ -305,6 +305,7 @@ localStorage.setItem(
   };
 
   const updatePlayerStats = (id, resultado) => {
+    
     if (!isAdminUser()) {
       alert("Solo el administrador principal puede modificar victorias y derrotas.");
       return;
@@ -337,7 +338,37 @@ localStorage.setItem(
       localStorage.setItem("usuario_activo", JSON.stringify(actualizado));
     }
   };
+const updatePlayerPoints = (id, nuevosPuntos) => {
+  if (!isAdminUser()) {
+    alert("Solo el administrador puede editar puntos.");
+    return;
+  }
 
+  const puntosConvertidos = Number(nuevosPuntos);
+
+  if (Number.isNaN(puntosConvertidos) || puntosConvertidos < 0) {
+    alert("Ingresa un puntaje válido.");
+    return;
+  }
+
+  const updatedUsers = usuarios.map((user) =>
+    user.id === id
+      ? {
+          ...user,
+          puntos: puntosConvertidos,
+        }
+      : user
+  );
+
+  setUsuarios(updatedUsers);
+  localStorage.setItem("pucallpa_users", JSON.stringify(updatedUsers));
+
+  if (usuarioActivo && usuarioActivo.id === id) {
+    const actualizado = updatedUsers.find((u) => u.id === id);
+    setUsuarioActivo(actualizado);
+    localStorage.setItem("usuario_activo", JSON.stringify(actualizado));
+  }
+};
   const deletePlayer = (id) => {
     if (!isAdminUser()) {
       alert("Solo el administrador principal puede eliminar usuarios.");
@@ -1303,6 +1334,10 @@ const guardarCelular = () => {
                           <strong>{rendimiento}%</strong>
                           <span>Rendimiento</span>
                         </div>
+                        <div>
+  <strong>{user.puntos || 0}</strong>
+  <span>Puntos</span>
+</div>
                       </div>
 
                       <div style={styles.progressBar}>
@@ -1319,6 +1354,16 @@ const guardarCelular = () => {
 
                       {isAdminUser() ? (
                         <>
+                        <div style={styles.pointsAdminBox}>
+  <label style={styles.pointsLabel}>Editar puntos</label>
+
+  <input
+    type="number"
+    style={styles.pointsInput}
+    defaultValue={user.puntos || 0}
+    onBlur={(e) => updatePlayerPoints(user.id, e.target.value)}
+  />
+</div>
                           <div style={styles.playerActions}>
                             <button style={styles.winBtn} onClick={() => updatePlayerStats(user.id, "win")}>
                               + Victoria
@@ -2571,7 +2616,7 @@ rewardDeleteBtn: {
 
   playerStats: {
     display: "grid",
-    gridTemplateColumns: "repeat(4, 1fr)",
+    gridTemplateColumns: "repeat(5, 1fr)",
     gap: "10px",
     marginTop: "18px",
   },
@@ -3035,6 +3080,31 @@ emptyRewards: {
   color: "#064e3b",
   fontWeight: "900",
   textAlign: "center",
+},
+pointsAdminBox: {
+  marginTop: "18px",
+  padding: "14px",
+  borderRadius: "16px",
+  background: "rgba(255,255,255,0.08)",
+  border: "1px solid rgba(57,255,102,0.18)",
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
+},
+
+pointsLabel: {
+  color: "#d1fae5",
+  fontWeight: "900",
+  fontSize: "13px",
+},
+
+pointsInput: {
+  padding: "12px",
+  borderRadius: "12px",
+  border: "1px solid rgba(57,255,102,0.35)",
+  background: "#ffffff",
+  color: "#064e3b",
+  fontWeight: "900",
 },
 
 };
