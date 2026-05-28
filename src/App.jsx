@@ -318,7 +318,7 @@ localStorage.setItem(
       const newPerdidas = resultado === "lose" ? (user.perdidas || 0) + 1 : (user.perdidas || 0);
       const newPartidas = (user.partidas || 0) + 1;
 
-      const puntosActuales = user.puntos || 0;
+     const puntosActuales = user.puntos || 0;
 const puntos = puntosActuales + (resultado === "win" ? 20 : 10);
       
       return {
@@ -1014,11 +1014,11 @@ const guardarCelular = () => {
   style={{
     ...styles.claimBtn,
     opacity:
-      !usuarioActivo || (usuarioActivo.puntos || 0) < premio.puntos
+      (usuarioActivo.puntos || 0) < Math.max(Number(premio.puntos || 0), 500)
         ? 0.45
         : 1,
     cursor:
-      !usuarioActivo || (usuarioActivo.puntos || 0) < premio.puntos
+      (usuarioActivo.puntos || 0) < Math.max(Number(premio.puntos || 0), 500)
         ? "not-allowed"
         : "pointer",
   }}
