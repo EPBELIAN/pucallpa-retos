@@ -207,6 +207,25 @@ localStorage.setItem(
     supabase.removeChannel(channel);
   };
 }, []);
+useEffect(() => {
+  const channel = supabase
+    .channel("profiles-realtime")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "profiles" },
+      (payload) => {
+        setUsuarios((prev) =>
+          prev.map((u) => u.id === payload.new.id ? { ...u, ...payload.new } : u)
+        );
+        if (usuarioActivo?.id === payload.new?.id) {
+          setUsuarioActivo((prev) => ({ ...prev, ...payload.new }));
+        }
+      }
+    )
+    .subscribe();
+
+  return () => supabase.removeChannel(channel);
+}, [usuarioActivo]);
 
   const createUser = () => {
     if (!nombre || !nickName || !celular || !password || !deporte || !nivel) {
@@ -1089,7 +1108,6 @@ Math.max(Number(premio.puntos || 0), 500)
  </section>
 
            
-          {isAdminUser() && (
           <section id="players" style={styles.playersSection}>
             <div style={styles.cardHeader}>
               <div>
@@ -1152,28 +1170,40 @@ Math.max(Number(premio.puntos || 0), 500)
                         </div>
                                    </div>
 
-                      <div style={styles.playerStats}>
-                        <div>
-                          <strong>{partidas}/10</strong>
-                          <span>Partidas</span>
-                        </div>
-                        <div>
-                          <strong>{ganadas}</strong>
-                          <span>Ganadas</span>
-                        </div>
-                        <div>
-                          <strong>{perdidas}</strong>
-                          <span>Perdidas</span>
-                        </div>
-                        <div>
-                          <strong>{rendimiento}%</strong>
-                          <span>Rendimiento</span>
-                        </div>
-                        <div>
-  <strong>{user.puntos || 0}</strong>
-  <span>Puntos</span>
+                      <div style={{ textAlign:"center", padding:"18px 0 10px", borderBottom:"1px solid rgba(57,255,102,0.15)" }}>
+  <div style={{ fontSize:"42px", fontWeight:"950", color:"#39ff66", lineHeight:1 }}>
+    {user.puntos || 0}
+  </div>
+  <div style={{ color:"#d1fae5", fontWeight:"800", fontSize:"13px", marginTop:"4px" }}>
+    PUNTOS ACUMULADOS
+  </div>
 </div>
-                      </div>
+
+<div style={{ padding:"12px 0 4px" }}>
+  <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"6px" }}>
+    <span style={{ color:"#d1fae5", fontSize:"12px", fontWeight:"800" }}>
+      {(user.puntos || 0) < 500 ? `Faltan ${500 - (user.puntos || 0)} pts para canjear` : "🎁 Puede canjear premios"}
+    </span>
+    <span style={{ color:"#39ff66", fontSize:"12px", fontWeight:"900" }}>
+      {Math.min(Math.round(((user.puntos || 0) / 500) * 100), 100)}%
+    </span>
+  </div>
+  <div style={{ height:"8px", borderRadius:"99px", background:"rgba(255,255,255,0.1)" }}>
+    <div style={{
+      height:"100%", borderRadius:"99px",
+      width:`${Math.min(((user.puntos || 0) / 500) * 100, 100)}%`,
+      background:"linear-gradient(90deg, #39ff66, #22c55e)",
+      transition:"width 0.6s ease"
+    }} />
+  </div>
+</div>
+
+<div style={styles.playerStats}>
+  <div><strong>{partidas}</strong><span>Partidas</span></div>
+  <div><strong>{ganadas}</strong><span>Ganadas</span></div>
+  <div><strong>{perdidas}</strong><span>Perdidas</span></div>
+  <div><strong>{rendimiento}%</strong><span>Winrate</span></div>
+</div>
 
                       <div style={styles.progressBar}>
                         <span
@@ -1224,7 +1254,7 @@ Math.max(Number(premio.puntos || 0), 500)
               </div>
             )}
           </section>
-          )}
+        
     
         </main>
       </div>
