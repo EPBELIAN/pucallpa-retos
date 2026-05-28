@@ -1085,41 +1085,9 @@ Math.max(Number(premio.puntos || 0), 500)
     ))
     )}
   </div>
-</motion.div>          </section>
+</motion.div>         
+ </section>
 
-          <section style={styles.gridInferior}>
-            
-
-            <section
-  id="registro"
-  style={{
-    ...styles.card,
-    display: "none",
-  }}
->
-              {usuarioActivo ? (
-                <>
-                  <div style={styles.cardHeader}>
-                    <div>
-                      <h2 style={styles.sectionTitle}>Sesión activa</h2>
-                      <p style={styles.muted}>Ya estás dentro de Pucallpa Retos.</p>
-                    </div>
-                    <UserPlus color="#39ff66" size={32} />
-                  </div>
-
-                  <div style={styles.userCompactBox}>
-  <div style={styles.userAvatar}>
-    {(usuarioActivo.nickName || usuarioActivo.nombre || "P")[0]}
-  </div>
-
-  <div style={styles.userCompactInfo}>
-    <strong>
-      {usuarioActivo.nickName || usuarioActivo.nombre}
-    </strong>
-
-    <span>
-      {usuarioActivo.deporte || "Pendiente"} · {usuarioActivo.partidas || 0} partidas
-    </span>
 
     {isAdminUser() && (
       <span style={styles.adminMiniBadge}>
@@ -2034,11 +2002,7 @@ navLogoutBtn: {
     marginBottom: "30px",
   },
 
-  gridInferior: {
-    display: "grid",
-    gridTemplateColumns: "1.1fr 0.9fr 0.9fr",
-    gap: "30px",
-  },
+  
 
   cardGrande: {
     background: "rgba(255,255,255,0.96)",
