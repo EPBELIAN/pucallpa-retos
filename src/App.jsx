@@ -225,7 +225,7 @@ useEffect(() => {
     .subscribe();
 
   return () => supabase.removeChannel(channel);
-}, [usuarioActivo]);
+}, []);
 
   const createUser = () => {
     if (!nombre || !nickName || !celular || !password || !deporte || !nivel) {
@@ -358,7 +358,7 @@ const puntos = puntosActuales + (resultado === "win" ? 20 : 10);
       localStorage.setItem("usuario_activo", JSON.stringify(actualizado));
     }
   };
-const updatePlayerPoints = (id, nuevosPuntos) => {
+const updatePlayerPoints = async (id, nuevosPuntos) => {
   if (!isAdminUser()) {
     alert("Solo el administrador puede editar puntos.");
     return;
@@ -371,22 +371,14 @@ const updatePlayerPoints = (id, nuevosPuntos) => {
     return;
   }
 
-  const updatedUsers = usuarios.map((user) =>
-    user.id === id
-      ? {
-          ...user,
-          puntos: puntosConvertidos,
-        }
-      : user
-  );
+ const { error } = await supabase
+    .from("profiles")
+    .update({ puntos: puntosConvertidos })
+    .eq("id", id);
 
-  setUsuarios(updatedUsers);
-  localStorage.setItem("pucallpa_users", JSON.stringify(updatedUsers));
-
-  if (usuarioActivo && usuarioActivo.id === id) {
-    const actualizado = updatedUsers.find((u) => u.id === id);
-    setUsuarioActivo(actualizado);
-    localStorage.setItem("usuario_activo", JSON.stringify(actualizado));
+  if (error) {
+    alert("Error guardando puntos: " + error.message);
+    return;
   }
 };
   const deletePlayer = (id) => {
@@ -765,10 +757,17 @@ const reclamarPremio = async (premio) => {
     return;
   }
 
-  if ((usuarioActivo.puntos || 0) < Math.max(Number(premio.puntos || 0), 500)) {
+ const { data: perfil } = await supabase
+    .from("profiles")
+    .select("puntos")
+    .eq("id", usuarioActivo.id)
+    .single();
+
+  if ((perfil?.puntos || 0) < Math.max(Number(premio.puntos || 0), 500)) {
     alert("No tienes puntos suficientes.");
     return;
   }
+  
 
   await supabase.from("reward_claims").insert({
     reward_id: premio.id,
