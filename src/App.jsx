@@ -1014,11 +1014,11 @@ const guardarCelular = () => {
   style={{
     ...styles.claimBtn,
     opacity:
-      (usuarioActivo.puntos || 0) < Math.max(Number(premio.puntos || 0), 500)
+      !usuarioActivo || (usuarioActivo.puntos || 0) < Math.max(Number(premio.puntos || 0), 500)
         ? 0.45
         : 1,
     cursor:
-      (usuarioActivo.puntos || 0) < Math.max(Number(premio.puntos || 0), 500)
+      !usuarioActivo || (usuarioActivo.puntos || 0) < Math.max(Number(premio.puntos || 0), 500)
         ? "not-allowed"
         : "pointer",
   }}
@@ -1087,155 +1087,6 @@ Math.max(Number(premio.puntos || 0), 500)
   </div>
 </motion.div>         
  </section>
-
-
-    {isAdminUser() && (
-      <span style={styles.adminMiniBadge}>
-        👑 Admin principal
-      </span>
-    )}
-
-    {!usuarioActivo?.celular && (
-      <div style={styles.phoneBox}>
-        <p style={styles.phoneTitle}>
-          📱 Ingresa tu WhatsApp para reservar slot
-        </p>
-
-        <input
-          type="tel"
-          placeholder="Ejemplo: 900123456"
-          value={nuevoCelular}
-          onChange={(e) =>
-            setNuevoCelular(e.target.value)
-          }
-          style={styles.phoneInput}
-        />
-
-        <button
-          style={styles.phoneBtn}
-          onClick={guardarCelular}
-        >
-          Guardar WhatsApp
-        </button>
-      </div>
-    )}
-  </div>
-
-  <button
-    style={styles.logoutMiniBtn}
-    onClick={cerrarSesion}
-  >
-    Salir
-  </button>
-</div>
-                </>
-              ) : (
-                <>
-                  <div style={styles.cardHeader}>
-                    <div>
-                      <h2 style={styles.sectionTitle}>Crear usuario</h2>
-                      <p style={styles.muted}>Crea tu cuenta o inicia sesión con tu celular.</p>
-                    </div>
-                    <UserPlus color="#39ff66" size={32} />
-                  </div>
-
-                  <div style={styles.form}>
-                    <button style={styles.googleBtnPremium} onClick={signInWithGoogle}>
-                      <div style={styles.googleIconWrap}>
-                        <div style={styles.googleIconPremium}>G</div>
-                      </div>
-
-                      <div style={styles.googleTextWrap}>
-                        <strong>Continuar con Google</strong>
-                        <small>Acceso rápido y seguro</small>
-                      </div>
-                    </button>
-
-                    <div style={styles.loginDivider}>
-                      <span style={styles.loginDividerLine}></span>
-                      <small>o ingresa con celular</small>
-                      <span style={styles.loginDividerLine}></span>
-                    </div>
-
-                    <input
-  style={styles.input}
-  placeholder="Celular registrado para iniciar sesión"
-  value={loginCelular}
-  onChange={(e) => setLoginCelular(e.target.value)}
-/>
-
-<input
-  type="password"
-  style={styles.input}
-  placeholder="Contraseña"
-  value={loginPassword}
-  onChange={(e) => setLoginPassword(e.target.value)}
-/>
-
-<button style={styles.fullBtn} onClick={iniciarSesion}>
-  Iniciar sesión
-</button>
-
-                    <hr style={styles.divider} />
-
-                    <input
-                      style={styles.input}
-                      placeholder="Nombre completo"
-                      value={nombre}
-                      onChange={(e) => setNombre(e.target.value)}
-                    />
-
-                    <input
-                      style={styles.input}
-                      placeholder="Nick name / Nombre de jugador"
-                      value={nickName}
-                      onChange={(e) => setNickName(e.target.value)}
-                    />
-
-                    <input
-                      style={styles.input}
-                      placeholder="Celular / WhatsApp"
-                      value={celular}
-                      onChange={(e) => setCelular(e.target.value)}
-                    />
-<input
-                      type="password"
-                      style={styles.input}
-                      placeholder="Crear contraseña"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
-
-
-                    <select
-                      style={styles.input}
-                      value={deporte}
-                      onChange={(e) => setDeporte(e.target.value)}
-                    >
-                      <option value="">Deporte favorito</option>
-                      <option>Fútbol</option>
-                      <option>Vóley</option>
-                      <option>Ambos</option>
-                    </select>
-
-                    <select
-                      style={styles.input}
-                      value={nivel}
-                      onChange={(e) => setNivel(e.target.value)}
-                    >
-                      <option value="">Nivel competitivo</option>
-                      <option>Principiante</option>
-                      <option>Intermedio</option>
-                      <option>Competitivo</option>
-                    </select>
-
-                    <button style={styles.fullBtn} onClick={createUser}>
-                      Crear cuenta
-                    </button>
-                  </div>
-                </>
-              )}
-            </section>
 
            
           {isAdminUser() && (
@@ -1374,7 +1225,7 @@ Math.max(Number(premio.puntos || 0), 500)
             )}
           </section>
           )}
-          </section>
+    
         </main>
       </div>
 
