@@ -61,8 +61,6 @@ const [showRulesModal, setShowRulesModal] = useState(false);
       celular: "",
       email: googleUser.email || "",
       password: "google",
-      deporte: "Pendiente",
-      nivel: "Pendiente",
       partidas: 0,
       ganadas: 0,
       perdidas: 0,
