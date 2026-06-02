@@ -38,126 +38,57 @@ export default function App() {
 const [nuevoPuntaje, setNuevoPuntaje] = useState("");
 const [nuevaImagen, setNuevaImagen] = useState(null);
 const [showRulesModal, setShowRulesModal] = useState(false);
+  const cargarPlayers = async () => {
+    const { data } = await supabase.from("players").select("*");
+    if (data) setUsuarios(data);
+  };
+
   useEffect(() => {
-const savedUsers = JSON.parse(localStorage.getItem("pucallpa_users")) || [];
-    const savedActiveUser = JSON.parse(localStorage.getItem("usuario_activo"));
-
-    setUsuarios(savedUsers);
-
-    if (savedActiveUser) {
-      setUsuarioActivo(savedActiveUser);
-    }
+    cargarPlayers();
   }, []);
   useEffect(() => {
   cargarPremios();
 }, []);
 
 
-  useEffect(() => {
-    const cargarSesionGoogle = async () => {
-      const { data } = await supabase.auth.getSession();
-      const googleUser = data.session?.user;
+  const manejarUsuarioGoogle = async (googleUser) => {
+    if (!googleUser) return;
 
-      if (googleUser) {
-        const userGoogle = {
-          id: googleUser.id,
-          nombre: googleUser.user_metadata?.full_name || googleUser.email || "Jugador Google",
-          nickName:
-            googleUser.user_metadata?.name ||
-            googleUser.email?.split("@")[0] ||
-            "player",
-          celular: "",
-          distrito: "",
-          email: googleUser.email || "",
-          password: "google",
-          deporte: "Pendiente",
-          nivel: "Pendiente",
-          partidas: 0,
-          ganadas: 0,
-          perdidas: 0,
-          puntos: 0,
-              createdAt: new Date().toLocaleString(),
-        };
-
-        const usersStorage =
-  JSON.parse(localStorage.getItem("pucallpa_users")) || [];
-
-const existe = usersStorage.find(
-  (u) => u.email === userGoogle.email
-);
-
-if (!existe) {
-  usersStorage.push(userGoogle);
-  localStorage.setItem(
-    "pucallpa_users",
-    JSON.stringify(usersStorage)
-  );
-}
-
-const usuarioFinal = existe || userGoogle;
-
-setUsuarios(usersStorage);
-setUsuarioActivo(usuarioFinal);
-
-localStorage.setItem(
-  "usuario_activo",
-  JSON.stringify(usuarioFinal)
-);
-      }
+    const perfil = {
+      id: googleUser.id,
+      nombre: googleUser.user_metadata?.full_name || googleUser.email || "Jugador",
+      nickName: googleUser.user_metadata?.name || googleUser.email?.split("@")[0] || "player",
+      celular: "",
+      email: googleUser.email || "",
+      password: "google",
+      deporte: "Pendiente",
+      nivel: "Pendiente",
+      partidas: 0,
+      ganadas: 0,
+      perdidas: 0,
+      puntos: 0,
     };
 
-    cargarSesionGoogle();
+    await supabase.from("players").upsert([perfil], { onConflict: "id", ignoreDuplicates: true });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      const googleUser = session?.user;
+    const { data } = await supabase.from("players").select("*").eq("id", googleUser.id).single();
+    if (data) setUsuarioActivo(data);
 
-      if (googleUser) {
-        const userGoogle = {
-          id: googleUser.id,
-          nombre: googleUser.user_metadata?.full_name || googleUser.email || "Jugador Google",
-          nickName:
-            googleUser.user_metadata?.name ||
-            googleUser.email?.split("@")[0] ||
-            "player",
-          celular: "",
-          distrito: "Pucallpa",
-          email: googleUser.email || "",
-          password: "google",
-          deporte: "Pendiente",
-          nivel: "Pendiente",
-          partidas: 0,
-          ganadas: 0,
-          perdidas: 0,
-          puntos: 0,
-          createdAt: new Date().toLocaleString(),
-        };
+    cargarPlayers();
+  };
 
-        const usersStorage =
-  JSON.parse(localStorage.getItem("pucallpa_users")) || [];
+  useEffect(() => {
+    const init = async () => {
+      const { data } = await supabase.auth.getSession();
+      await manejarUsuarioGoogle(data.session?.user);
+    };
+    init();
 
-const existe = usersStorage.find(
-  (u) => u.email === userGoogle.email
-);
-
-if (!existe) {
-  usersStorage.push(userGoogle);
-  localStorage.setItem(
-    "pucallpa_users",
-    JSON.stringify(usersStorage)
-  );
-}
-
-const usuarioFinal = existe || userGoogle;
-
-setUsuarios(usersStorage);
-setUsuarioActivo(usuarioFinal);
-
-localStorage.setItem(
-  "usuario_activo",
-  JSON.stringify(usuarioFinal)
-);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        await manejarUsuarioGoogle(session.user);
+      } else {
+        setUsuarioActivo(null);
       }
     });
 
@@ -227,6 +158,25 @@ useEffect(() => {
   return () => supabase.removeChannel(channel);
 }, []);
 
+useEffect(() => {
+  const channel = supabase
+    .channel("players-realtime")
+    .on(
+      "postgres_changes",
+      { event: "UPDATE", schema: "public", table: "players" },
+      (payload) => {
+        setUsuarios((prev) =>
+          prev.map((u) => u.id === payload.new.id ? { ...u, ...payload.new } : u)
+        );
+        setUsuarioActivo((prev) =>
+          prev?.id === payload.new.id ? { ...prev, ...payload.new } : prev
+        );
+      }
+    )
+    .subscribe();
+
+  return () => supabase.removeChannel(channel);
+}, []);
   const createUser = () => {
     if (!nombre || !nickName || !celular || !password || !deporte || !nivel) {
       alert("Completa todos los datos del usuario");
@@ -323,39 +273,30 @@ useEffect(() => {
     await supabase.auth.signOut();
   };
 
-  const updatePlayerStats = (id, resultado) => {
-    
+  const updatePlayerStats = async (id, resultado) => {
     if (!isAdminUser()) {
       alert("Solo el administrador principal puede modificar victorias y derrotas.");
       return;
     }
 
-        const updatedUsers = usuarios.map((user) => {
-      if (user.id !== id) return user;
+    const user = usuarios.find((u) => u.id === id);
+    if (!user) return;
 
-      const newGanadas = resultado === "win" ? (user.ganadas || 0) + 1 : (user.ganadas || 0);
-      const newPerdidas = resultado === "lose" ? (user.perdidas || 0) + 1 : (user.perdidas || 0);
-      const newPartidas = (user.partidas || 0) + 1;
+    const newGanadas = resultado === "win" ? (user.ganadas || 0) + 1 : (user.ganadas || 0);
+    const newPerdidas = resultado === "lose" ? (user.perdidas || 0) + 1 : (user.perdidas || 0);
+    const newPartidas = (user.partidas || 0) + 1;
+    const puntos = (user.puntos || 0) + (resultado === "win" ? 20 : 10);
 
-     const puntosActuales = user.puntos || 0;
-const puntos = puntosActuales + (resultado === "win" ? 20 : 10);
-      
-      return {
-        ...user,
-        partidas: newPartidas,
-        ganadas: newGanadas,
-        perdidas: newPerdidas,
-        puntos,
-      };
-    });
+    const { error } = await supabase
+      .from("players")
+      .update({ partidas: newPartidas, ganadas: newGanadas, perdidas: newPerdidas, puntos })
+      .eq("id", id);
 
-    setUsuarios(updatedUsers);
-    localStorage.setItem("pucallpa_users", JSON.stringify(updatedUsers));
+    if (error) { alert("Error: " + error.message); return; }
 
-    if (usuarioActivo && usuarioActivo.id === id) {
-      const actualizado = updatedUsers.find((u) => u.id === id);
-      setUsuarioActivo(actualizado);
-      localStorage.setItem("usuario_activo", JSON.stringify(actualizado));
+    setUsuarios((prev) => prev.map((u) => u.id === id ? { ...u, partidas: newPartidas, ganadas: newGanadas, perdidas: newPerdidas, puntos } : u));
+    if (usuarioActivo?.id === id) {
+      setUsuarioActivo((prev) => ({ ...prev, partidas: newPartidas, ganadas: newGanadas, perdidas: newPerdidas, puntos }));
     }
   };
 const updatePlayerPoints = async (id, nuevosPuntos) => {
@@ -371,8 +312,8 @@ const updatePlayerPoints = async (id, nuevosPuntos) => {
     return;
   }
 
- const { error } = await supabase
-    .from("profiles")
+const { error } = await supabase
+    .from("players")
     .update({ puntos: puntosConvertidos })
     .eq("id", id);
 
@@ -380,8 +321,15 @@ const updatePlayerPoints = async (id, nuevosPuntos) => {
     alert("Error guardando puntos: " + error.message);
     return;
   }
+
+  setUsuarios((prev) =>
+    prev.map((u) => u.id === id ? { ...u, puntos: puntosConvertidos } : u)
+  );
+  if (usuarioActivo?.id === id) {
+    setUsuarioActivo((prev) => ({ ...prev, puntos: puntosConvertidos }));
+  }
 };
-  const deletePlayer = (id) => {
+  const deletePlayer = async (id) => {
     if (!isAdminUser()) {
       alert("Solo el administrador principal puede eliminar usuarios.");
       return;
@@ -390,16 +338,14 @@ const updatePlayerPoints = async (id, nuevosPuntos) => {
     const confirmar = confirm("¿Seguro que deseas eliminar este player?");
     if (!confirmar) return;
 
-    const updatedUsers = usuarios.filter((user) => user.id !== id);
+    await supabase.from("players").delete().eq("id", id);
 
-    setUsuarios(updatedUsers);
-    localStorage.setItem("pucallpa_users", JSON.stringify(updatedUsers));
+    setUsuarios((prev) => prev.filter((u) => u.id !== id));
 
     if (usuarioActivo && usuarioActivo.id === id) {
       cerrarSesion();
     }
   };
-
   const [slots] = useState([
     { id: 1, sport: "futbol", time: "2:00 pm", status: "available" },
     { id: 2, sport: "futbol", time: "3:00 pm", status: "available" },
@@ -758,7 +704,7 @@ const reclamarPremio = async (premio) => {
   }
 
  const { data: perfil } = await supabase
-    .from("profiles")
+    .from("players")
     .select("puntos")
     .eq("id", usuarioActivo.id)
     .single();
