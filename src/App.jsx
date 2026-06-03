@@ -57,7 +57,7 @@ const [showRulesModal, setShowRulesModal] = useState(false);
     const perfil = {
       id: googleUser.id,
       nombre: googleUser.user_metadata?.full_name || googleUser.email || "Jugador",
-      nickName: googleUser.user_metadata?.name || googleUser.email?.split("@")[0] || "player",
+      nickname: googleUser.user_metadata?.name || googleUser.email?.split("@")[0] || "player",
       celular: "",
       email: googleUser.email || "",
       password: "google",
@@ -189,7 +189,7 @@ useEffect(() => {
     }
 
     const existeNick = usuarios.find(
-      (user) => (user.nickName || "").toLowerCase() === nickName.trim().toLowerCase()
+      (user) => (nickName || "").toLowerCase() === nickName.trim().toLowerCase()
     );
 
     if (existeNick) {
@@ -427,7 +427,7 @@ const { error } = await supabase
 
   const getCurrentPlayerName = () => {
     if (!usuarioActivo) return "";
-    return usuarioActivo.nickName || usuarioActivo.nombre;
+    return usuarioActivo.nickname || usuarioActivo.nombre;
   };
 
       const isAdminUser = () => {
@@ -776,12 +776,12 @@ const guardarCelular = () => {
   ) : (
     <div style={styles.googleUserChip}>
   <div style={styles.googleAvatar}>
-    {(usuarioActivo.nickName || usuarioActivo.nombre || "P")[0]
+    {(usuarioActivo.nickname || usuarioActivo.nombre || "P")[0]
       ?.toUpperCase()}
   </div>
 
   <span style={styles.googleUserName}>
-  {usuarioActivo.nickName || usuarioActivo.nombre} · {usuarioActivo.puntos || 0} pts
+  {usuarioActivo.nickname || usuarioActivo.nombre} · {usuarioActivo.puntos || 0} pts
 </span>
 
   <button
@@ -1093,7 +1093,7 @@ Math.max(Number(premio.puntos || 0), 500)
                     <div key={user.id} style={styles.playerCard}>
                       <div style={styles.playerHeader}>
                         <div>
-                          <h3>{user.nickName || user.nombre}</h3>
+                          <h3>{user.nickname || user.nombre}</h3>
 
                           {isAdminUser() && (
   <>
