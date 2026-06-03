@@ -738,12 +738,20 @@ const reclamarPremio = async (premio) => {
   }
   
 
-  await supabase.from("reward_claims").insert({
+  const { error: claimError } = await supabase.from("reward_claims").insert({
     reward_id: premio.id,
     user_name: usuarioActivo.nombre,
     celular: usuarioActivo.celular || "",
     puntos_usados: premio.puntos,
   });
+
+  if (claimError) {
+    console.error("CLAIM ERROR:", claimError.message);
+    alert("Error guardando premio: " + claimError.message);
+    return;
+  }
+
+  alert("Solicitud enviada. El administrador validará tu canje.");
 
   alert("Solicitud enviada. El administrador validará tu canje.");
 };
