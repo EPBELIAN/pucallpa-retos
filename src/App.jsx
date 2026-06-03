@@ -109,10 +109,10 @@ const [showRulesModal, setShowRulesModal] = useState(false);
     };
     init();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+   const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         await manejarUsuarioGoogle(session.user);
-      } else {
+      } else if (event === "SIGNED_OUT") {
         setUsuarioActivo(null);
       }
     });
@@ -257,14 +257,16 @@ useEffect(() => {
     setNivel("");
   };
 
-  const signInWithGoogle = async () => {
+const signInWithGoogle = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: "https://pucallpa-retos.vercel.app",
+      redirectTo: window.location.origin,
+      queryParams: {
+        prompt: "select_account",
+      },
     },
   });
-
   if (error) {
     alert("No se pudo iniciar sesión con Google. Revisa la configuración en Supabase.");
   }
