@@ -35,6 +35,7 @@ export default function App() {
   const [nuevoCelular, setNuevoCelular] = useState("");
   const [premios, setPremios] = useState([]);
   const [nuevoPremio, setNuevoPremio] = useState("");
+  const [canjes, setCanjes] = useState([]);
 const [nuevoPuntaje, setNuevoPuntaje] = useState("");
 const [nuevaImagen, setNuevaImagen] = useState(null);
 const [showRulesModal, setShowRulesModal] = useState(false);
@@ -43,8 +44,9 @@ const [showRulesModal, setShowRulesModal] = useState(false);
     if (data) setUsuarios(data);
   };
 
-  useEffect(() => {
+ useEffect(() => {
     cargarPlayers();
+    cargarCanjes();
   }, []);
   useEffect(() => {
   cargarPremios();
@@ -635,6 +637,27 @@ const cargarPremios = async () => {
     setPremios(data);
   }
 };
+const cargarCanjes = async () => {
+  const { data } = await supabase
+    .from("reward_claims")
+    .select("*, rewards(nombre)")
+    .order("id", { ascending: false });
+  if (data) setCanjes(data);
+};
+
+const aprobarCanje = async (id) => {
+  await supabase.from("reward_claims").update({ estado: "entregado" }).eq("id", id);
+  cargarCanjes();
+};
+
+const rechazarCanje = async (id, userId, puntos) => {
+  // Devolver puntos al usuario
+  const { data: perfil } = await supabase.from("players").select("puntos").eq("id", userId).single();
+  const puntosActuales = perfil?.puntos || 0;
+  await supabase.from("players").update({ puntos: puntosActuales + puntos }).eq("id", userId);
+  await supabase.from("reward_claims").update({ estado: "rechazado" }).eq("id", id);
+  cargarCanjes();
+};
 const subirPremio = async () => {
   if (!nuevoPremio || !nuevoPuntaje || !nuevaImagen) {
     alert("Completa premio, puntos e imagen");
@@ -726,62 +749,59 @@ const reclamarPremio = async (premio) => {
     return;
   }
 
- const { data: perfil } = await supabase
+  const { data: perfil } = await supabase
     .from("players")
     .select("puntos")
     .eq("id", usuarioActivo.id)
     .single();
 
-  if ((perfil?.puntos || 0) < Math.max(Number(premio.puntos || 0), 500)) {
-    alert("No tienes puntos suficientes.");
+  const puntosActuales = perfil?.puntos || 0;
+  const puntosRequeridos = Math.max(Number(premio.puntos || 0), 500);
+
+  if (puntosActuales < puntosRequeridos) {
+    alert(`No tienes puntos suficientes. Tienes ${puntosActuales} y necesitas ${puntosRequeridos}.`);
     return;
   }
-  
+
+  const nuevosPuntos = puntosActuales - puntosRequeridos;
+
+  const { error: puntosError } = await supabase
+    .from("players")
+    .update({ puntos: nuevosPuntos })
+    .eq("id", usuarioActivo.id);
+
+  if (puntosError) { alert("Error descontando puntos."); return; }
 
   const { error: claimError } = await supabase.from("reward_claims").insert({
     reward_id: premio.id,
+    user_id: usuarioActivo.id,
     user_name: usuarioActivo.nombre,
     celular: usuarioActivo.celular || "",
-    puntos_usados: premio.puntos,
+    puntos_usados: puntosRequeridos,
+    estado: "pendiente",
   });
 
-  if (claimError) {
-    console.error("CLAIM ERROR:", claimError.message);
-    alert("Error guardando premio: " + claimError.message);
-    return;
-  }
+  if (claimError) { alert("Error registrando canje: " + claimError.message); return; }
 
-  alert("Solicitud enviada. El administrador validará tu canje.");
+  setUsuarioActivo((prev) => ({ ...prev, puntos: nuevosPuntos }));
+  setUsuarios((prev) =>
+    prev.map((u) => u.id === usuarioActivo.id ? { ...u, puntos: nuevosPuntos } : u)
+  );
 
-  alert("Solicitud enviada. El administrador validará tu canje.");
+  alert("✅ Canje solicitado. El administrador validará y enviará tu premio.");
 };
-const guardarCelular = () => {
-  const celularLimpio = nuevoCelular.trim();
 
+const guardarCelular = async () => {
+  const celularLimpio = nuevoCelular.trim();
   if (!celularLimpio || celularLimpio.length < 9) {
     alert("Ingresa un WhatsApp válido (mínimo 9 dígitos).");
     return;
   }
-
-  const updatedUser = {
-    ...usuarioActivo,
-    celular: celularLimpio,
-  };
-
-  const updatedUsers = usuarios.map((u) =>
-    u.id === usuarioActivo.id ? updatedUser : u
-  );
-
-  localStorage.setItem("pucallpa_users", JSON.stringify(updatedUsers));
-  localStorage.setItem("usuario_activo", JSON.stringify(updatedUser));
-
-  setUsuarios(updatedUsers);
-  setUsuarioActivo(updatedUser);
-  setNuevoCelular("");   // ← Limpieza importante
-
+  await supabase.from("players").update({ celular: celularLimpio }).eq("id", usuarioActivo.id);
+  setUsuarioActivo((prev) => ({ ...prev, celular: celularLimpio }));
+  setNuevoCelular("");
   alert("WhatsApp registrado correctamente.");
 };
-    // ==================== RETURN DEL COMPONENTE ====================
   return (
     <div style={styles.page}>
       <div style={styles.pattern}>
@@ -984,6 +1004,46 @@ const guardarCelular = () => {
     >
       Guardar premio
     </button>
+  </div>
+)}
+{isAdminUser() && (
+  <div style={{ ...styles.adminRewardsBox, marginTop: "20px" }}>
+    <h3 style={{ color: "#39ff66", marginBottom: "12px" }}>
+      📋 Canjes pendientes ({canjes.filter(c => c.estado === "pendiente").length})
+    </h3>
+    {canjes.filter(c => c.estado === "pendiente").length === 0 ? (
+      <p style={{ color: "#d1fae5" }}>No hay canjes pendientes.</p>
+    ) : (
+      canjes.filter(c => c.estado === "pendiente").map((canje) => (
+        <div key={canje.id} style={{
+          background: "rgba(255,255,255,0.05)",
+          borderRadius: "12px",
+          padding: "12px",
+          marginBottom: "10px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "8px"
+        }}>
+          <div>
+            <div style={{ color: "#fff", fontWeight: "800" }}>{canje.user_name}</div>
+            <div style={{ color: "#39ff66", fontSize: "13px" }}>{canje.rewards?.nombre} — {canje.puntos_usados} pts</div>
+            <div style={{ color: "#aaa", fontSize: "12px" }}>Cel: {canje.celular || "No registrado"}</div>
+          </div>
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button onClick={() => aprobarCanje(canje.id)} style={{
+              background: "#22c55e", color: "#fff", border: "none",
+              borderRadius: "8px", padding: "6px 14px", fontWeight: "800", cursor: "pointer"
+            }}>✅ Entregar</button>
+            <button onClick={() => rechazarCanje(canje.id, canje.user_id, canje.puntos_usados)} style={{
+              background: "#ef4444", color: "#fff", border: "none",
+              borderRadius: "8px", padding: "6px 14px", fontWeight: "800", cursor: "pointer"
+            }}>❌ Rechazar</button>
+          </div>
+        </div>
+      ))
+    )}
   </div>
 )}
   <div style={styles.rewardsGrid}>
