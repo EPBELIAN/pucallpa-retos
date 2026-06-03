@@ -67,10 +67,35 @@ const [showRulesModal, setShowRulesModal] = useState(false);
       puntos: 0,
     };
 
-    await supabase.from("players").upsert([perfil], { onConflict: "id", ignoreDuplicates: true });
+    const { error: upsertError } = await supabase
+      .from("players")
+      .upsert([perfil], { onConflict: "id", ignoreDuplicates: true });
 
-    const { data } = await supabase.from("players").select("*").eq("id", googleUser.id).single();
-    if (data) setUsuarioActivo(data);
+    if (upsertError) {
+      console.error("Error upsert:", upsertError.message);
+    }
+
+    const { data } = await supabase
+      .from("players")
+      .select("*")
+      .eq("id", googleUser.id)
+      .single();
+
+    if (data) {
+      setUsuarioActivo(data);
+    } else {
+      // Si no está en players, igual mantener sesión con datos básicos
+      setUsuarioActivo({
+        id: googleUser.id,
+        nombre: googleUser.user_metadata?.full_name || googleUser.email,
+        nickname: googleUser.user_metadata?.name || googleUser.email?.split("@")[0],
+        email: googleUser.email,
+        puntos: 0,
+        partidas: 0,
+        ganadas: 0,
+        perdidas: 0,
+      });
+    }
 
     cargarPlayers();
   };
