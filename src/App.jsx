@@ -19,7 +19,15 @@ export default function App() {
   
 
   const [usuarios, setUsuarios] = useState([]);
-  const [usuarioActivo, setUsuarioActivo] = useState(undefined);
+ const [usuarioActivo, setUsuarioActivo] = useState(() => {
+  try {
+    const guardado = localStorage.getItem("usuario_activo");
+    return guardado ? JSON.parse(guardado) : undefined;
+  } catch (error) {
+    localStorage.removeItem("usuario_activo");
+    return undefined;
+  }
+});
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [nuevoCelular, setNuevoCelular] = useState("");
@@ -32,6 +40,15 @@ export default function App() {
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
 
+  useEffect(() => {
+  if (usuarioActivo === undefined) return;
+
+  if (usuarioActivo) {
+    localStorage.setItem("usuario_activo", JSON.stringify(usuarioActivo));
+  } else {
+    localStorage.removeItem("usuario_activo");
+  }
+}, [usuarioActivo]);
  const cargarPlayers = async () => {
   const { data, error } = await supabase
     .from("players")
@@ -41,9 +58,6 @@ export default function App() {
     console.error("Error cargando players:", error.message);
     return;
   }
-
-  if (data) setUsuarios(data);
-};
 
   if (data) setUsuarios(data);
 };
