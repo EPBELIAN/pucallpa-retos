@@ -205,21 +205,15 @@ useEffect(() => {
     .channel("players-realtime")
     .on(
       "postgres_changes",
-      { event: "UPDATE", schema: "public", table: "players" },
-      (payload) => {
-        setUsuarios((prev) =>
-          prev.map((u) => u.id === payload.new.id ? { ...u, ...payload.new } : u)
-        );
-        setUsuarioActivo((prev) =>
-          prev?.id === payload.new.id ? { ...prev, ...payload.new } : prev
-        );
+      { event: "*", schema: "public", table: "players" },
+      () => {
+        cargarPlayers();
       }
     )
     .subscribe();
 
   return () => supabase.removeChannel(channel);
 }, []);
-  
 
 const signInWithGoogle = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
@@ -762,7 +756,9 @@ const guardarCelular = async () => {
    <div style={styles.navLinks}>
   <a style={styles.navLink} href="#retos">Retos</a>
   <a style={styles.navLink} href="#premios">Premios</a>
-
+{isAdminUser() && (
+  <a style={styles.navLink} href="#telefonos">Teléfonos</a>
+)}
   {!usuarioActivo ? (
     <button
   style={styles.navAuthBtn}
@@ -1235,7 +1231,89 @@ Math.max(Number(premio.puntos || 0), 500)
             )}
           </section>
         
-    
+    {isAdminUser() && (
+  <section id="telefonos" style={styles.playersSection}>
+    <div style={styles.cardHeader}>
+      <div>
+        <h2 style={styles.playersTitle}>Números registrados</h2>
+        <p style={styles.playersText}>
+          Usuarios registrados en tiempo real
+        </p>
+      </div>
+    </div>
+
+    {usuarios.length === 0 ? (
+      <p style={styles.playersText}>
+        No hay usuarios registrados.
+      </p>
+    ) : (
+      <div style={styles.playersGrid}>
+        {usuarios.map((user) => (
+          <div key={user.id} style={styles.playerCard}>
+            <h3>{user.nickname || "Sin nombre"}</h3>
+
+           <p style={styles.privateInfo}>
+  Nombre: {user.nombre || "Sin nombre"}
+</p>
+
+<p style={styles.privateInfo}>
+  Nickname: {user.nickname || "Sin nickname"}
+</p>
+
+<p style={styles.privateInfo}>
+  Celular: {user.celular || "Sin celular"}
+</p>
+
+<p style={styles.privateInfo}>
+  Correo: {user.email || "Sin correo"}
+</p>
+
+<p style={styles.privateInfo}>
+  Puntos: {user.puntos || 0}
+</p>
+          </div>
+        ))}
+      </div>
+    )}
+  </section>
+)}
+{isAdminUser() && (
+  <section id="telefonos" style={styles.playersSection}>
+    <div style={styles.cardHeader}>
+      <div>
+        <h2 style={styles.playersTitle}>Números registrados</h2>
+        <p style={styles.playersText}>
+          Usuarios registrados en tiempo real
+        </p>
+      </div>
+    </div>
+
+    <div style={styles.playersGrid}>
+      {usuarios.map((user) => (
+        <div key={user.id} style={styles.playerCard}>
+          <h3>{user.nickname || user.nombre || "Sin nombre"}</h3>
+
+          <p style={styles.privateInfo}>
+            Nombre: {user.nombre || "Sin nombre"}
+          </p>
+
+          <p style={styles.privateInfo}>
+            Celular: {user.celular || "Sin celular"}
+          </p>
+
+          <p style={styles.privateInfo}>
+            Correo: {user.email || "Sin correo"}
+          </p>
+
+          <p style={styles.privateInfo}>
+            Puntos: {user.puntos || 0}
+          </p>
+        </div>
+      ))}
+    </div>
+  </section>
+)}
+
         </main>
       </div>
 
@@ -2880,10 +2958,11 @@ authSwitchBtn: {
 
 
   privateInfo: {
-    margin: "5px 0",
-    color: "#fde68a",
-    fontWeight: "850",
-  },
+  color: "#fff",
+  fontSize: "14px",
+  marginTop: "6px",
+  wordBreak: "break-word",
+},
 
   publicInfo: {
     margin: "5px 0",
