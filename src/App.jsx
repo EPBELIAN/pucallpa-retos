@@ -38,6 +38,7 @@ export default function App() {
  const [nuevaImagen, setNuevaImagen] = useState(null);
   const [loginCelular, setLoginCelular] = useState("");
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+ const [nicknameRegistro, setNicknameRegistro] = useState("");
   const [showRegistrosModal, setShowRegistrosModal] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
 
@@ -427,8 +428,8 @@ const { error } = await supabase
   return;
 }
 
-if (!usuarioActivo?.celular) {
-  alert("Debes registrar tu WhatsApp antes de elegir equipo.");
+if (!usuarioActivo?.celular || !usuarioActivo?.nickname) {
+  alert("Debes registrar tu WhatsApp y nickname antes de elegir equipo.");
   return;
 }
 
@@ -732,16 +733,43 @@ const reclamarPremio = async (premio) => {
 
 const guardarCelular = async () => {
   const celularLimpio = nuevoCelular.trim();
+  const nicknameLimpio = nicknameRegistro.trim();
+
   if (!celularLimpio || celularLimpio.length < 9) {
     alert("Ingresa un WhatsApp válido (mínimo 9 dígitos).");
     return;
   }
-  await supabase.from("players").update({ celular: celularLimpio }).eq("id", usuarioActivo.id);
-  setUsuarioActivo((prev) => ({ ...prev, celular: celularLimpio }));
+
+  if (!nicknameLimpio || nicknameLimpio.length < 3) {
+    alert("Ingresa un nickname válido (mínimo 3 letras).");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("players")
+    .update({
+      celular: celularLimpio,
+      nickname: nicknameLimpio,
+    })
+    .eq("id", usuarioActivo.id);
+
+  if (error) {
+    alert("Error guardando datos: " + error.message);
+    return;
+  }
+
+  setUsuarioActivo((prev) => ({
+    ...prev,
+    celular: celularLimpio,
+    nickname: nicknameLimpio,
+  }));
+
   setNuevoCelular("");
-  alert("WhatsApp registrado correctamente.");
+  setNicknameRegistro("");
+  alert("WhatsApp y nickname registrados correctamente.");
 };
-  return (
+
+return (
     <div style={styles.page}>
       <div style={styles.pattern}>
       <nav style={styles.navbar}>
@@ -757,7 +785,7 @@ const guardarCelular = async () => {
    <div style={styles.navLinks}>
   <a style={styles.navLink} href="#retos">Retos</a>
   <a style={styles.navLink} href="#premios">Premios</a>
-{isAdminUser() && (
+  {isAdminUser() && (
   <button
     style={styles.navAuthBtn}
     onClick={() => setShowRegistrosModal(true)}
@@ -1290,6 +1318,13 @@ Math.max(Number(premio.puntos || 0), 500)
                     onChange={(e) => setNuevoCelular(e.target.value)}
                     style={styles.phoneInput}
                   />
+                  <input
+  type="text"
+  placeholder="Nickname obligatorio"
+  value={nicknameRegistro}
+  onChange={(e) => setNicknameRegistro(e.target.value)}
+  style={styles.phoneInput}
+/>
 
                   <button
                     style={styles.phoneBtn}
@@ -1443,26 +1478,52 @@ Math.max(Number(premio.puntos || 0), 500)
         value={loginCelular}
         onChange={(e) => setLoginCelular(e.target.value)}
       />
+      <input
+  style={styles.input}
+  type="text"
+  placeholder="Nickname obligatorio"
+  value={nicknameRegistro}
+  onChange={(e) => setNicknameRegistro(e.target.value)}
+/>
       <button
         style={styles.fullBtn}
-        onClick={async () => {
-          const celularLimpio = loginCelular.trim();
-          if (!celularLimpio || celularLimpio.length < 9) {
-            alert("Ingresa un número válido (mínimo 9 dígitos).");
-            return;
-          }
-          const { error } = await supabase
-            .from("players")
-            .update({ celular: celularLimpio })
-            .eq("id", usuarioActivo.id);
-          if (error) {
-            alert("Error guardando número: " + error.message);
-            return;
-          }
-          setUsuarioActivo((prev) => ({ ...prev, celular: celularLimpio }));
-          setLoginCelular("");
-          setShowPhoneModal(false);
-        }}
+       onClick={async () => {
+  const celularLimpio = loginCelular.trim();
+  const nicknameLimpio = nicknameRegistro.trim();
+
+  if (!celularLimpio || celularLimpio.length < 9) {
+    alert("Ingresa un número válido (mínimo 9 dígitos).");
+    return;
+  }
+
+  if (!nicknameLimpio || nicknameLimpio.length < 3) {
+    alert("Ingresa un nickname válido (mínimo 3 letras).");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("players")
+    .update({
+      celular: celularLimpio,
+      nickname: nicknameLimpio,
+    })
+    .eq("id", usuarioActivo.id);
+
+  if (error) {
+    alert("Error guardando datos: " + error.message);
+    return;
+  }
+
+  setUsuarioActivo((prev) => ({
+    ...prev,
+    celular: celularLimpio,
+    nickname: nicknameLimpio,
+  }));
+
+  setLoginCelular("");
+  setNicknameRegistro("");
+  setShowPhoneModal(false);
+}}
       >
         Guardar y continuar
       </button>
@@ -1474,20 +1535,38 @@ Math.max(Number(premio.puntos || 0), 500)
   <div style={styles.authOverlay}>
     <div style={styles.authModal}>
       <button
-        style={styles.closeBtn}
+        style={styles.authClose}
         onClick={() => setShowRegistrosModal(false)}
       >
-        ×
+        ✕
       </button>
 
-      <h2 style={styles.authTitle}>Usuarios registrados</h2>
+      <h2 style={styles.authTitle}>
+        Usuarios registrados ({usuarios.length})
+      </h2>
 
       <div style={{ maxHeight: "420px", overflowY: "auto" }}>
         {usuarios.map((user) => (
-          <div key={user.id} style={{ padding: "8px", borderBottom: "1px solid #333" }}>
-            <strong>{user.nombre || user.nickname || "Sin nombre"}</strong>
-            <p style={styles.privateInfo}>Celular: {user.celular || "Sin celular"}</p>
-            <p style={styles.privateInfo}>Correo: {user.email || "Sin correo"}</p>
+          <div
+            key={user.id}
+            style={{
+              padding: "10px 0",
+              borderBottom: "1px solid #333",
+            }}
+          >
+            <strong>{user.nombre || "Sin nombre real"}</strong>
+
+            <p style={styles.privateInfo}>
+              Nickname: {user.nickname || "No registrado"}
+            </p>
+
+            <p style={styles.privateInfo}>
+              Celular: {user.celular || "No registrado"}
+            </p>
+
+            <p style={styles.privateInfo}>
+              Gmail: {user.email || "No registrado"}
+            </p>
           </div>
         ))}
       </div>
