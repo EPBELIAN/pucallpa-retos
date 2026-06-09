@@ -18,39 +18,41 @@ export default function App() {
   const [roomTeams, setRoomTeams] = useState({});
   
 
-  const [nombre, setNombre] = useState("");
-  const [nickName, setNickName] = useState("");
-  const [celular, setCelular] = useState("");
-  const [deporte, setDeporte] = useState("");
-  const [nivel, setNivel] = useState("");
   const [usuarios, setUsuarios] = useState([]);
-
-  const [usuarioActivo, setUsuarioActivo] = useState(null);
-  const [loginCelular, setLoginCelular] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
+  const [usuarioActivo, setUsuarioActivo] = useState(undefined);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [nuevoCelular, setNuevoCelular] = useState("");
   const [premios, setPremios] = useState([]);
   const [nuevoPremio, setNuevoPremio] = useState("");
   const [canjes, setCanjes] = useState([]);
-const [nuevoPuntaje, setNuevoPuntaje] = useState("");
-const [nuevaImagen, setNuevaImagen] = useState(null);
-const [showRulesModal, setShowRulesModal] = useState(false);
-  const cargarPlayers = async () => {
-    const { data } = await supabase.from("players").select("*");
-    if (data) setUsuarios(data);
-  };
+  const [nuevoPuntaje, setNuevoPuntaje] = useState("");
+ const [nuevaImagen, setNuevaImagen] = useState(null);
+  const [loginCelular, setLoginCelular] = useState("");
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [showRulesModal, setShowRulesModal] = useState(false);
 
- useEffect(() => {
+ const cargarPlayers = async () => {
+  const { data, error } = await supabase
+    .from("players")
+    .select("*");
+
+  if (error) {
+    console.error("Error cargando players:", error.message);
+    return;
+  }
+
+  if (data) setUsuarios(data);
+};
+
+  if (data) setUsuarios(data);
+};
+
+  useEffect(() => {
     cargarPlayers();
+    cargarPremios();
     cargarCanjes();
   }, []);
-  useEffect(() => {
-  cargarPremios();
-}, []);
 
 
   const manejarUsuarioGoogle = async (googleUser) => {
@@ -83,8 +85,9 @@ const [showRulesModal, setShowRulesModal] = useState(false);
       .eq("id", googleUser.id)
       .single();
 
-    if (data) {
+   if (data) {
       setUsuarioActivo(data);
+      if (!data.celular) setShowPhoneModal(true);
     } else {
       // Si no está en players, igual mantener sesión con datos básicos
       setUsuarioActivo({
@@ -202,60 +205,7 @@ useEffect(() => {
 
   return () => supabase.removeChannel(channel);
 }, []);
-  const createUser = () => {
-    if (!nombre || !nickName || !celular || !password || !deporte || !nivel) {
-      alert("Completa todos los datos del usuario");
-      return;
-    }
-
-    const existe = usuarios.find((user) => user.celular === celular);
-
-    if (existe) {
-      alert("Este celular ya está registrado. Inicia sesión.");
-      return;
-    }
-
-    const existeNick = usuarios.find(
-      (user) => (nickName || "").toLowerCase() === nickName.trim().toLowerCase()
-    );
-
-    if (existeNick) {
-      alert("Este nickname ya está registrado. Elige otro.");
-      return;
-    }
-
-    const newUser = {
-  id: Date.now(),
-  nombre,
-  nickName: nickName.trim(),
-  celular,
-  password,
-  deporte,
-  nivel,
-      partidas: 0,
-      ganadas: 0,
-      perdidas: 0,
-      puntos: 0,
-            createdAt: new Date().toLocaleString(),
-    };
-
-    const updatedUsers = [...usuarios, newUser];
-
-    localStorage.setItem("pucallpa_users", JSON.stringify(updatedUsers));
-    localStorage.setItem("usuario_activo", JSON.stringify(newUser));
-
-    setUsuarios(updatedUsers);
-    setUsuarioActivo(newUser);
-
-    alert("Usuario creado correctamente. Sesión iniciada.");
-
-    setNombre("");
-    setNickName("");
-    setCelular("");
-    setPassword("");
-    setDeporte("");
-    setNivel("");
-  };
+  
 
 const signInWithGoogle = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
@@ -270,28 +220,6 @@ const signInWithGoogle = async () => {
   if (error) {
     alert("No se pudo iniciar sesión con Google. Revisa la configuración en Supabase.");
   }
-};
-  const iniciarSesion = () => {
-  const user = usuarios.find(
-    (u) =>
-      u.celular === loginCelular.trim() &&
-      u.password === loginPassword
-  );
-
-  if (!user) {
-    alert("Celular o contraseña incorrecta");
-    return;
-  }
-
-  setUsuarioActivo(user);
-
-  localStorage.setItem(
-    "usuario_activo",
-    JSON.stringify(user)
-  );
-
-  setLoginCelular("");
-  setLoginPassword("");
 };
 
   const cerrarSesion = async () => {
@@ -1478,43 +1406,55 @@ Math.max(Number(premio.puntos || 0), 500)
       </button>
 
       <h2 style={styles.authTitle}>Entrar a Pucallpa Retos</h2>
-      <p style={styles.authText}>Accede con tu celular o Google.</p>
+      <p style={styles.authText}>Accede con tu cuenta de Google.</p>
 
       <button style={styles.googleBtnPremium} onClick={signInWithGoogle}>
         Continuar con Google
       </button>
-
+    </div>
+  </div>
+)}
+{showPhoneModal && (
+  <div style={styles.authOverlay}>
+    <div style={styles.authModal}>
+      <h2 style={styles.authTitle}>📱 Último paso</h2>
+      <p style={styles.authText}>
+        Ingresa tu número de WhatsApp para poder unirte a las salas de juego.
+      </p>
       <input
         style={styles.input}
-        placeholder="Celular"
+        type="tel"
+        placeholder="Ejemplo: 900123456"
         value={loginCelular}
         onChange={(e) => setLoginCelular(e.target.value)}
       />
-
-      <input
-        type="password"
-        style={styles.input}
-        placeholder="Contraseña"
-        value={loginPassword}
-        onChange={(e) => setLoginPassword(e.target.value)}
-      />
-
-      <button style={styles.fullBtn} onClick={iniciarSesion}>
-        Iniciar sesión
-      </button>
-
       <button
-        style={styles.authSwitchBtn}
-        onClick={() => {
-        setShowLoginModal(false);
-alert("Primero terminaremos el modal de registro.");
+        style={styles.fullBtn}
+        onClick={async () => {
+          const celularLimpio = loginCelular.trim();
+          if (!celularLimpio || celularLimpio.length < 9) {
+            alert("Ingresa un número válido (mínimo 9 dígitos).");
+            return;
+          }
+          const { error } = await supabase
+            .from("players")
+            .update({ celular: celularLimpio })
+            .eq("id", usuarioActivo.id);
+          if (error) {
+            alert("Error guardando número: " + error.message);
+            return;
+          }
+          setUsuarioActivo((prev) => ({ ...prev, celular: celularLimpio }));
+          setLoginCelular("");
+          setShowPhoneModal(false);
         }}
       >
-        Crear cuenta nueva
+        Guardar y continuar
       </button>
     </div>
   </div>
 )}
+
 
       {showPaymentModal && (
         <div style={styles.paymentOverlay}>
