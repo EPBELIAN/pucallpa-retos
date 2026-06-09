@@ -1546,30 +1546,30 @@ Math.max(Number(premio.puntos || 0), 500)
       </h2>
 
       <div style={{ maxHeight: "420px", overflowY: "auto" }}>
-        {usuarios.map((user) => (
-          <div
-            key={user.id}
-            style={{
-              padding: "10px 0",
-              borderBottom: "1px solid #333",
-            }}
-          >
-            <strong>{user.nombre || "Sin nombre real"}</strong>
+  {usuarios.map((user) => (
+    <div
+      key={user.id}
+      style={{
+        padding: "10px 0",
+        borderBottom: "1px solid #333",
+      }}
+    >
+      <strong>{user.nombre || "Sin nombre real"}</strong>
 
-            <p style={styles.privateInfo}>
-              Nickname: {user.nickname || "No registrado"}
-            </p>
+     <p style={{ ...styles.privateInfo, color: "#111827" }}>
+  Nickname: {user.nickname || "No registrado"}
+</p>
 
-            <p style={styles.privateInfo}>
-              Celular: {user.celular || "No registrado"}
-            </p>
+<p style={{ ...styles.privateInfo, color: "#111827" }}>
+  Celular: {user.celular || "No registrado"}
+</p>
 
-            <p style={styles.privateInfo}>
-              Gmail: {user.email || "No registrado"}
-            </p>
-          </div>
-        ))}
-      </div>
+<p style={{ ...styles.privateInfo, color: "#111827" }}>
+  Gmail: {user.email || "No registrado"}
+</p>
+    </div>
+  ))}
+</div>
     </div>
   </div>
 )}
