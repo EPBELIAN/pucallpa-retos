@@ -843,9 +843,15 @@ return (
               💸 Para confirmar tu participación, solicita tu slot en Retos disponibles,yapea envia captura y listo.
             </div>
 
-            {usuarioActivo && (
+          {usuarioActivo && (
   <div style={styles.sessionBanner}>
-    Sesión activa: <strong>{usuarioActivo.nombre}</strong> · ⭐ {usuarioActivo.puntos || 0} puntos
+    <span>
+      👤 {usuarioActivo?.nombre || "Usuario"}
+    </span>
+
+    <span>
+      ⭐ {usuarioActivo?.puntos || 0} puntos
+    </span>
   </div>
 )}
 
@@ -1934,17 +1940,18 @@ navLogoutBtn: {
   color: "#7c4a03",
   boxShadow: "0 10px 30px rgba(251,191,36,.12)",
 },
-  sessionBanner: {
-    maxWidth: "620px",
-    margin: "18px auto 0",
-    padding: "12px 18px",
-    borderRadius: "999px",
-    background: "rgba(57,255,102,0.13)",
-    border: "1px solid rgba(57,255,102,0.35)",
-    color: "#dcfce7",
-    fontWeight: "850",
-  },
-
+ sessionBanner: {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "12px",
+  padding: "12px 20px",
+  background: "#0f172a",
+  color: "#ffffff",
+  borderRadius: "16px",
+  fontWeight: "700",
+  boxShadow: "0 8px 25px rgba(0,0,0,.25)",
+  border: "1px solid rgba(255,255,255,.08)",
+},
   heroButtons: {
     marginTop: "38px",
     display: "flex",
