@@ -1543,6 +1543,10 @@ Math.max(Number(premio.puntos || 0), 500)
 
       <h2 style={styles.authTitle}>
         Usuarios registrados ({usuarios.length})
+     <input
+  placeholder="Buscar usuario..."
+  style={styles.input}
+/>
       </h2>
 
       <div style={{ maxHeight: "420px", overflowY: "auto" }}>
@@ -2982,8 +2986,8 @@ authSwitchBtn: {
 
 
 
-  privateInfo: {
-  color: "#fff",
+ privateInfo: {
+  color: "#111827",
   fontSize: "14px",
   marginTop: "6px",
   wordBreak: "break-word",
