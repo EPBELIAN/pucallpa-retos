@@ -855,10 +855,17 @@ return (
   </div>
 )}
 
-            <div style={styles.heroButtons}>
-              <a style={styles.primaryBtn} href="#retos">Reservar slot</a>
-              <a style={styles.secondaryBtn} href="#players">Ver players</a>
-            </div>
+           <div style={styles.heroButtons}>
+  <a style={styles.primaryBtn} href="#retos">
+    Reservar slot
+  </a>
+
+  {isAdminUser() && (
+    <a style={styles.secondaryBtn} href="#players">
+      👥 Participantes
+    </a>
+  )}
+</div>
           </motion.section>
 
           <section id="retos" style={styles.gridPrincipal}>
