@@ -839,13 +839,10 @@ return (
               Reserva tu lugar, elige tu equipo, acumula puntos y reclama los premios.
             </p>
 
-            <div style={styles.paymentNotice}>
-              💸 Para confirmar tu participación, solicita tu slot en Retos disponibles,yapea envia captura y listo.
-            </div>
-
           {usuarioActivo && (
   <div style={styles.sessionBanner}>
     <span>
+    
       👤 {usuarioActivo?.nombre || "Usuario"}
     </span>
 
@@ -1554,13 +1551,14 @@ Math.max(Number(premio.puntos || 0), 500)
         ✕
       </button>
 
-      <h2 style={styles.authTitle}>
-        Usuarios registrados ({usuarios.length})
-     <input
+    <h2 style={styles.authTitle}>
+  Usuarios registrados ({usuarios.length})
+</h2>
+
+<input
   placeholder="Buscar usuario..."
   style={styles.input}
 />
-      </h2>
 
       <div style={{ maxHeight: "420px", overflowY: "auto" }}>
   {usuarios.map((user) => (
