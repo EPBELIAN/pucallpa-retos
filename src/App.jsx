@@ -861,9 +861,9 @@ return (
   </a>
 
   {isAdminUser() && (
-    <a style={styles.secondaryBtn} href="#players">
-      👥 Participantes
-    </a>
+   <a style={styles.adminBtn} href="#players">
+  👥 Participantes
+</a>
   )}
 </div>
           </motion.section>
@@ -1988,6 +1988,17 @@ navLogoutBtn: {
     cursor: "pointer",
     textDecoration: "none",
   },
+  adminBtn: {
+  background: "linear-gradient(135deg,#2563eb,#1d4ed8)",
+  color: "#fff",
+  border: "none",
+  borderRadius: "18px",
+  padding: "14px 24px",
+  fontWeight: "700",
+  textDecoration: "none",
+  boxShadow: "0 8px 18px rgba(37,99,235,.25)",
+  transition: "all .2s ease",
+},
 
   gridPrincipal: {
     display: "grid",
