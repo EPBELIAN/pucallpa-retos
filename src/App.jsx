@@ -1556,17 +1556,17 @@ Math.max(Number(premio.puntos || 0), 500)
     >
       <strong>{user.nombre || "Sin nombre real"}</strong>
 
-     <p style={{ ...styles.privateInfo, color: "#111827" }}>
-  Nickname: {user.nickname || "No registrado"}
-</p>
+      <p style={{ ...styles.privateInfo, color: "#111827" }}>
+        Nickname: {user.nickname || "No registrado"}
+      </p>
 
-<p style={{ ...styles.privateInfo, color: "#111827" }}>
-  Celular: {user.celular || "No registrado"}
-</p>
+      <p style={{ ...styles.privateInfo, color: "#111827" }}>
+        Celular: {user.celular || "No registrado"}
+      </p>
 
-<p style={{ ...styles.privateInfo, color: "#111827" }}>
-  Gmail: {user.email || "No registrado"}
-</p>
+      <p style={{ ...styles.privateInfo, color: "#111827" }}>
+        Gmail: {user.email || "No registrado"}
+      </p>
     </div>
   ))}
 </div>
