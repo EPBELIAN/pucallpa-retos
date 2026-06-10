@@ -835,10 +835,6 @@ return (
               Pucallpa Retos: fútbol y vóley competitivo
             </h1>
 
-            <p style={styles.subtitle}>
-              Reserva tu lugar, elige tu equipo, acumula puntos y reclama los premios.
-            </p>
-
           {usuarioActivo && (
   <div style={styles.sessionBanner}>
     <span>
