@@ -1899,7 +1899,7 @@ navLogoutBtn: {
 },
 
   badge: {
-  padding: "14px 26px",
+  padding: "14px 24px",
   borderRadius: "999px",
   background: "rgba(255,255,255,0.62)",
   border: "1px solid rgba(6,95,70,0.16)",
@@ -1938,7 +1938,7 @@ navLogoutBtn: {
   border: "1px solid rgba(251,191,36,.30)",
 
   color: "#7c4a03",
-  boxShadow: "0 10px 30px rgba(251,191,36,.12)",
+  boxShadow: "0 8px 18px rgba(0,0,0,.20)",
 },
  sessionBanner: {
   display: "inline-flex",
