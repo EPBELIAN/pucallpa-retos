@@ -851,7 +851,7 @@ return (
             <motion.div style={styles.cardGrande} whileHover={{ y: -6 }}>
               <div style={styles.cardHeader}>
                 <div>
-                  <h2 style={styles.sectionTitle}>Retos disponibles</h2>
+                  <h2 style={styles.sectionTitle}>🎁 Premios canjeables</h2>
                   <p style={styles.muted}>
                     Haz clic en un horario disponible para abrir la sala y elegir equipo.
                   </p>
@@ -926,7 +926,7 @@ return (
   <div>
     <h2 style={styles.sectionTitle}>Retos disponibles</h2>
     <p style={styles.muted}>
-      Haz clic en un horario disponible para abrir la sala y elegir equipo.
+      canjea los puntos acumulados.
     </p>
   </div>
 
@@ -1030,30 +1030,17 @@ return (
           <strong>{premio.nombre}</strong>
           <span>{premio.puntos} puntos</span>
         </div>
-
-        <button
-  style={{
-    ...styles.claimBtn,
-    opacity:
-      !usuarioActivo || (usuarioActivo.puntos || 0) < Math.max(Number(premio.puntos || 0), 500)
-        ? 0.45
-        : 1,
-    cursor:
-      !usuarioActivo || (usuarioActivo.puntos || 0) < Math.max(Number(premio.puntos || 0), 500)
-        ? "not-allowed"
-        : "pointer",
-  }}
+ <button
+  style={styles.claimBtn}
   disabled={
-  !usuarioActivo ||
-  (usuarioActivo.puntos || 0) <
-    Math.max(Number(premio.puntos || 0), 500)
-}
+    !usuarioActivo ||
+    (usuarioActivo.puntos || 0) < Math.max(Number(premio.puntos || 0), 500)
+  }
   onClick={() => reclamarPremio(premio)}
 >
   {!usuarioActivo
     ? "Inicia sesión"
-    : (usuarioActivo.puntos || 0) <
-Math.max(Number(premio.puntos || 0), 500)
+    : (usuarioActivo.puntos || 0) < Math.max(Number(premio.puntos || 0), 500)
     ? "Puntos insuficientes"
     : "Reclamar"}
 </button>
