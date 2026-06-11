@@ -19,6 +19,7 @@ export default function App() {
   
 
   const [usuarios, setUsuarios] = useState([]);
+  const [loadingPlayers, setLoadingPlayers] = useState(true);
  const [usuarioActivo, setUsuarioActivo] = useState(() => {
   try {
     const guardado = localStorage.getItem("usuario_activo");
@@ -52,16 +53,21 @@ export default function App() {
   }
 }, [usuarioActivo]);
  const cargarPlayers = async () => {
+  setLoadingPlayers(true);
+
   const { data, error } = await supabase
     .from("players")
     .select("*");
 
   if (error) {
     console.error("Error cargando players:", error.message);
+    setLoadingPlayers(false);
     return;
   }
 
   if (data) setUsuarios(data);
+
+  setLoadingPlayers(false);
 };
 
   useEffect(() => {
@@ -1118,9 +1124,15 @@ return (
               </div>
             )}
 
-            {usuarios.length === 0 ? (
-              <p style={styles.playersText}>Aún no hay jugadores registrados.</p>
-            ) : (
+       {loadingPlayers ? (
+  <p style={styles.playersText}>
+    Cargando jugadores...
+  </p>
+) : usuarios.length === 0 ? (
+  <p style={styles.playersText}>
+    Aún no hay jugadores registrados.
+  </p>
+) : (
               <div style={styles.playersGrid}>
                 {usuarios
   .filter((user) =>
