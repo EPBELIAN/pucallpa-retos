@@ -924,7 +924,7 @@ return (
             <motion.div style={styles.rewardsCard} whileHover={{ y: -6 }} id="premios">
   <div style={styles.cardHeader}>
   <div>
-    <h2 style={styles.sectionTitle}>Retos disponibles</h2>
+    <h2 style={styles.sectionTitle}>Premios Canjeables</h2>
     <p style={styles.muted}>
       canjea los puntos acumulados.
     </p>
