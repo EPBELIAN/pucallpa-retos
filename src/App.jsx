@@ -184,16 +184,17 @@ export default function App() {
 }, []);
 useEffect(() => {
   const channel = supabase
-    .channel("profiles-realtime")
+    .channel("players-realtime")
     .on(
       "postgres_changes",
-      { event: "*", schema: "public", table: "profiles" },
+      { event: "*", schema: "public", table: "players" },
       (payload) => {
-        setUsuarios((prev) =>
-          prev.map((u) => u.id === payload.new.id ? { ...u, ...payload.new } : u)
-        );
-        if (usuarioActivo?.id === payload.new?.id) {
-          setUsuarioActivo((prev) => ({ ...prev, ...payload.new }));
+        cargarPlayers();
+
+        if (payload.new?.id) {
+          setUsuarioActivo((prev) =>
+            prev?.id === payload.new.id ? { ...prev, ...payload.new } : prev
+          );
         }
       }
     )
@@ -201,7 +202,6 @@ useEffect(() => {
 
   return () => supabase.removeChannel(channel);
 }, []);
-
 useEffect(() => {
   const channel = supabase
     .channel("players-realtime")
