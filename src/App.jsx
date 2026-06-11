@@ -202,20 +202,6 @@ useEffect(() => {
 
   return () => supabase.removeChannel(channel);
 }, []);
-useEffect(() => {
-  const channel = supabase
-    .channel("players-realtime")
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "players" },
-      () => {
-        cargarPlayers();
-      }
-    )
-    .subscribe();
-
-  return () => supabase.removeChannel(channel);
-}, []);
 
 const signInWithGoogle = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
