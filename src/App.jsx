@@ -52,26 +52,29 @@ export default function App() {
     localStorage.removeItem("usuario_activo");
   }
 }, [usuarioActivo]);
- const cargarPlayers = async () => {
-  setLoadingPlayers(true);
+ const cargarPlayers = async (mostrarCarga = false) => {
+  if (mostrarCarga) setLoadingPlayers(true);
 
-  const { data, error } = await supabase
-    .from("players")
-    .select("*");
+  try {
+    const { data, error } = await supabase
+      .from("players")
+      .select("*")
+      .order("puntos", { ascending: false });
 
-  if (error) {
-    console.error("Error cargando players:", error.message);
+    if (error) {
+      console.error("Error cargando players:", error.message);
+      return;
+    }
+
+    setUsuarios(data || []);
+  } catch (error) {
+    console.error("Error inesperado cargando players:", error);
+  } finally {
     setLoadingPlayers(false);
-    return;
   }
-
-  if (data) setUsuarios(data);
-
-  setLoadingPlayers(false);
 };
-
   useEffect(() => {
-    cargarPlayers();
+   cargarPlayers(true);
     cargarPremios();
     cargarCanjes();
   }, []);
@@ -195,7 +198,7 @@ useEffect(() => {
       "postgres_changes",
       { event: "*", schema: "public", table: "players" },
       (payload) => {
-        cargarPlayers();
+        cargarPlayers(false);
 
         if (payload.new?.id) {
           setUsuarioActivo((prev) =>
