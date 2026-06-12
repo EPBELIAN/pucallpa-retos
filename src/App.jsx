@@ -19,7 +19,7 @@ export default function App() {
   
 
   const [usuarios, setUsuarios] = useState([]);
-  const [loadingPlayers, setLoadingPlayers] = useState(true);
+  const [loadingPlayers, setLoadingPlayers] = useState(false);
  const [usuarioActivo, setUsuarioActivo] = useState(() => {
   try {
     const guardado = localStorage.getItem("usuario_activo");
@@ -27,7 +27,7 @@ export default function App() {
   } catch (error) {
     localStorage.removeItem("usuario_activo");
     return undefined;
-  }
+  }const cargarPlayers = async
 });
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -52,7 +52,7 @@ export default function App() {
     localStorage.removeItem("usuario_activo");
   }
 }, [usuarioActivo]);
- const cargarPlayers = async (mostrarCarga = false) => {
+  (mostrarCarga = false) => {
   if (mostrarCarga) setLoadingPlayers(true);
 
   try {
@@ -853,6 +853,12 @@ return (
   👥 Participantes
 </a>
   )}
+  <button
+  style={styles.rulesHeroBtn}
+  onClick={() => setShowRulesModal(true)}
+>
+  Reglas
+</button>
 </div>
           </motion.section>
 
@@ -860,7 +866,7 @@ return (
             <motion.div style={styles.cardGrande} whileHover={{ y: -6 }}>
               <div style={styles.cardHeader}>
                 <div>
-                  <h2 style={styles.sectionTitle}>🎁 Retos Disponibles</h2>
+                  <h2 style={styles.sectionTitle}>⚽Retos Disponibles</h2>
                   <p style={styles.muted}>
                     Haz clic en un horario disponible para abrir la sala y elegir equipo.
                   </p>
@@ -940,12 +946,6 @@ return (
   </div>
 
   <div style={styles.rulesMiniBox}>
-    <button
-      style={styles.rulesMiniBtn}
-      onClick={() => setShowRulesModal(true)}
-    >
-      Reglas
-    </button>
 
     <CalendarDays color="#39ff66" size={32} />
   </div>
@@ -1982,6 +1982,16 @@ navLogoutBtn: {
   transition: "all .2s ease",
 },
 
+rulesHeroBtn: {
+  background: "linear-gradient(135deg,#16a34a,#22c55e)",
+  color: "#ffffff",
+  border: "none",
+  borderRadius: "18px",
+  padding: "14px 24px",
+  fontWeight: "800",
+  cursor: "pointer",
+  boxShadow: "0 8px 18px rgba(22,163,74,.25)",
+},
   gridPrincipal: {
     display: "grid",
     gridTemplateColumns: "1.4fr 0.8fr",
