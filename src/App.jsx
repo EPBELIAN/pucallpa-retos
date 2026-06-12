@@ -866,7 +866,7 @@ return (
             <motion.div style={styles.cardGrande} whileHover={{ y: -6 }}>
               <div style={styles.cardHeader}>
                 <div>
-                  <h2 style={styles.sectionTitle}>⚽ Retos disponibles </h2>
+                 <h2 style={styles.sectionTitle}>⚽ Retos disponibles</h2>
                   <p style={styles.muted}>
                     Haz clic en un horario disponible para abrir la sala y elegir equipo.
                   </p>
