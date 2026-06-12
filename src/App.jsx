@@ -392,19 +392,9 @@ const { error } = await supabase
     return usuarioActivo.nickname || usuarioActivo.nombre;
   };
 
-      const isAdminUser = () => {
-    if (!usuarioActivo) return false;
-
-    const nombreActivo = String(usuarioActivo.nombre || "").trim().toLowerCase();
-    const celularActivo = String(usuarioActivo.celular || "").replace(/\s/g, "");
-    const emailActivo = String(usuarioActivo.email || "").trim().toLowerCase();
-
-    return (
-      emailActivo === "elianepb9@gmail.com" ||
-      celularActivo === "912494278" ||
-      nombreActivo === "elian pezo bardales"
-    );
-  };
+  const isAdminUser = () => {
+  return usuarioActivo?.role === "admin";
+};
 
   const isCurrentUserInSelectedRoom = () => {
     if (!selectedMatch || !usuarioActivo) return false;
