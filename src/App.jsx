@@ -27,7 +27,7 @@ export default function App() {
   } catch (error) {
     localStorage.removeItem("usuario_activo");
     return undefined;
-  }const cargarPlayers = async
+  }
 });
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -52,7 +52,7 @@ export default function App() {
     localStorage.removeItem("usuario_activo");
   }
 }, [usuarioActivo]);
-  (mostrarCarga = false) => {
+ const cargarPlayers = async (mostrarCarga = false) => {
   if (mostrarCarga) setLoadingPlayers(true);
 
   try {
