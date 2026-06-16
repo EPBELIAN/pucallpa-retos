@@ -869,13 +869,47 @@ return (
       </span>
     </div>
 
-    <button style={styles.profileMenuItem}>
-      👤 Mi perfil
-    </button>
+   <div style={styles.profileStatsGrid}>
+  <div style={styles.profileStatCard}>
+    <span style={styles.profileStatLabel}>
+      Teléfono
+    </span>
 
-    <button style={styles.profileMenuItem}>
-      🏆 Mis puntos: {usuarioActivo.puntos || 0}
-    </button>
+    <strong style={styles.profileStatValue}>
+      {usuarioActivo.celular || "No registrado"}
+    </strong>
+  </div>
+
+  <div style={styles.profileStatCard}>
+    <span style={styles.profileStatLabel}>
+      Puntos
+    </span>
+
+    <strong style={styles.profileStatValue}>
+      {(usuarioActivo.puntos || 0).toLocaleString()}
+    </strong>
+  </div>
+
+  <div style={styles.profileStatCard}>
+    <span style={styles.profileStatLabel}>
+      Victorias
+    </span>
+
+    <strong style={styles.profileStatValue}>
+      {usuarioActivo.ganadas || 0}
+    </strong>
+  </div>
+
+  <div style={styles.profileStatCard}>
+    <span style={styles.profileStatLabel}>
+      Derrotas
+    </span>
+
+    <strong style={styles.profileStatValue}>
+      {usuarioActivo.perdidas || 0}
+    </strong>
+  </div>
+</div>
 
     <button
   style={styles.profileLogout}
@@ -3179,6 +3213,39 @@ profileMenuItem: {
   borderRadius: "10px",
   color: "#111827",
 },
+profileStatsGrid: {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "10px",
+  marginTop: "12px",
+  marginBottom: "12px",
+},
+
+profileStatCard: {
+  background: "#f8fafc",
+  border: "1px solid #e2e8f0",
+  borderRadius: "12px",
+  padding: "12px",
+  textAlign: "center",
+  transition: "all .2s ease",
+},
+
+profileStatLabel: {
+  display: "block",
+  fontSize: "11px",
+  fontWeight: "700",
+  color: "#64748b",
+  textTransform: "uppercase",
+  marginBottom: "6px",
+  letterSpacing: ".5px",
+},
+
+profileStatValue: {
+  display: "block",
+  fontSize: "15px",
+  fontWeight: "900",
+  color: "#0f172a",
+},
 
 profileLogout: {
   width: "100%",
@@ -3192,6 +3259,7 @@ profileLogout: {
   cursor: "pointer",
   borderRadius: "12px",
   marginTop: "10px",
+  transition: "all .2s ease",
 },
 googleUserChip: {
   display: "flex",
