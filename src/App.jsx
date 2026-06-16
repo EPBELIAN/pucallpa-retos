@@ -222,12 +222,18 @@ const signInWithGoogle = async () => {
   }
 };
 
-  const cerrarSesion = async () => {
-    setUsuarioActivo(null);
-    localStorage.removeItem("usuario_activo");
-    await supabase.auth.signOut();
-  };
+ const cerrarSesion = async () => {
+  await supabase.auth.signOut();
 
+  localStorage.removeItem("usuario_activo");
+  setUsuarioActivo(null);
+  setUsuarioPendiente(null);
+  setShowUserMenu(false);
+  setShowPhoneModal(false);
+  setShowRegistrosModal(false);
+
+  window.location.href = "/";
+};
   const updatePlayerStats = async (id, resultado) => {
     if (!isAdminUser()) {
       alert("Solo el administrador principal puede modificar victorias y derrotas.");
@@ -847,7 +853,7 @@ return (
   </span>
 </div>
 )}
-{showUserMenu && (
+{showUserMenu && usuarioActivo && (
   <div style={styles.profileDropdown}>
     <div style={styles.profileCardTop}>
       <div style={styles.profileAvatarLarge}>
