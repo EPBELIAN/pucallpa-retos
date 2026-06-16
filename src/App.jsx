@@ -111,24 +111,28 @@ const [cargandoSesion, setCargandoSesion] = useState(true);
 };
 
   useEffect(() => {
-    const init = async () => {
-      const { data } = await supabase.auth.getSession();
-      await manejarUsuarioGoogle(data.session?.user);
+  const init = async () => {
+    const { data } = await supabase.auth.getSession();
+    await manejarUsuarioGoogle(data.session?.user);
+    setCargandoSesion(false);
+  };
+
+  init();
+
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange(async (event, session) => {
+    if (session?.user) {
+      await manejarUsuarioGoogle(session.user);
+    } else if (event === "SIGNED_OUT") {
+      setUsuarioActivo(null);
+      setShowUserMenu(false);
       setCargandoSesion(false);
-    };
-    init();
+    }
+  });
 
-   const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        await manejarUsuarioGoogle(session.user);
-     else if (event === "SIGNED_OUT") {
-  setUsuarioActivo(null);
-  setShowUserMenu(false);
-}
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+  return () => subscription.unsubscribe();
+}, []);
 
   useEffect(() => {
   const cargarRooms = async () => {
@@ -210,14 +214,12 @@ const signInWithGoogle = async () => {
 };
 
 const cerrarSesion = async () => {
-  await supabase.auth.signOut();
+  try {
+    await supabase.auth.signOut();
+  } catch (error) {
+    console.error("Error cerrando sesión:", error);
+  }
 
-  setUsuarioActivo(null);
-  setShowUserMenu(false);
-  setShowPhoneModal(false);
-};
-
-  localStorage.removeItem("usuario_activo");
   setUsuarioActivo(null);
   setUsuarioPendiente(null);
   setShowUserMenu(false);
