@@ -43,6 +43,7 @@ export default function App() {
  const [usuarioPendiente, setUsuarioPendiente] = useState(null);
   const [showRegistrosModal, setShowRegistrosModal] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   useEffect(() => {
   if (usuarioActivo === undefined) return;
@@ -284,22 +285,44 @@ const { error } = await supabase
   }
 };
   const deletePlayer = async (id) => {
-    if (!isAdminUser()) {
-      alert("Solo el administrador principal puede eliminar usuarios.");
-      return;
-    }
+  if (!isAdminUser()) {
+    alert("Solo el administrador principal puede eliminar usuarios.");
+    return;
+  }
 
-    const confirmar = confirm("¿Seguro que deseas eliminar este player?");
-    if (!confirmar) return;
+  const confirmar = confirm(
+    "¿Seguro que deseas eliminar este usuario por completo?"
+  );
 
-    await supabase.from("players").delete().eq("id", id);
+  if (!confirmar) return;
 
-    setUsuarios((prev) => prev.filter((u) => u.id !== id));
+  const { error: claimsError } = await supabase
+    .from("reward_claims")
+    .delete()
+    .eq("user_id", id);
 
-    if (usuarioActivo && usuarioActivo.id === id) {
-      cerrarSesion();
-    }
-  };
+  if (claimsError) {
+    console.error(claimsError);
+  }
+
+  const { error: playerError } = await supabase
+    .from("players")
+    .delete()
+    .eq("id", id);
+
+  if (playerError) {
+    alert(playerError.message);
+    return;
+  }
+
+  setUsuarios((prev) => prev.filter((u) => u.id !== id));
+
+  if (usuarioActivo?.id === id) {
+    cerrarSesion();
+  }
+
+  alert("Usuario eliminado correctamente.");
+};
   const [slots] = useState([
     { id: 1, sport: "futbol", time: "2:00 pm", status: "available" },
     { id: 2, sport: "futbol", time: "3:00 pm", status: "available" },
@@ -780,22 +803,18 @@ return (
   Entrar
 </button>
   ) : (
-    <div style={styles.googleUserChip}>
+    <div
+  style={styles.googleUserChip}
+  onClick={() => setShowUserMenu(!showUserMenu)}
+>
   <div style={styles.googleAvatar}>
     {(usuarioActivo.nickname || usuarioActivo.nombre || "P")[0]
       ?.toUpperCase()}
   </div>
 
   <span style={styles.googleUserName}>
-  {usuarioActivo.nickname || usuarioActivo.nombre} · {usuarioActivo.puntos || 0} pts
-</span>
-
-  <button
-    style={styles.googleArrowBtn}
-    onClick={cerrarSesion}
-  >
-    ▼
-  </button>
+    {usuarioActivo.nickname || usuarioActivo.nombre} · {usuarioActivo.puntos || 0} pts
+  </span>
 </div>
   )}
 </div>
@@ -815,15 +834,27 @@ return (
             </h1>
 
           {usuarioActivo && (
-  <div style={styles.sessionBanner}>
-    <span>
-    
-      👤 {usuarioActivo?.nombre || "Usuario"}
-    </span>
+  <div
+  style={styles.sessionBanner}
+  onClick={() => setShowUserMenu(!showUserMenu)}
+>
+  <span>
+    👤 {usuarioActivo?.nombre || "Usuario"}
+  </span>
 
-    <span>
-      ⭐ {usuarioActivo?.puntos || 0} puntos
-    </span>
+  <span>
+    ⭐ {usuarioActivo?.puntos || 0} puntos 
+  </span>
+</div>
+)}
+{showUserMenu && (
+  <div style={styles.userDropdown}>
+    <button
+      style={styles.logoutBtn}
+      onClick={cerrarSesion}
+    >
+      🚪 Cerrar sesión
+    </button>
   </div>
 )}
 
@@ -1743,6 +1774,24 @@ return (
 }
 
 const styles = {
+  userDropdown: {
+  width: "320px",
+  margin: "0 auto",
+  background: "#fff",
+  borderRadius: "12px",
+  boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
+  overflow: "hidden",
+},
+
+logoutBtn: {
+  width: "100%",
+  padding: "14px",
+  border: "none",
+  background: "#ff4d4f",
+  color: "#fff",
+  fontWeight: "700",
+  cursor: "pointer",
+},
   page: {
   minHeight: "100vh",
   width: "100vw",
@@ -3087,14 +3136,6 @@ googleUserName: {
   fontSize: "15px",
 },
 
-googleArrowBtn: {
-  border: "none",
-  background: "transparent",
-  color: "#065f46",
-  cursor: "pointer",
-  fontSize: "13px",
-  fontWeight: "900",
-},
 adminRewardsBox: {
   background: "#ecfdf5",
   border: "1px dashed rgba(6,78,59,.25)",
