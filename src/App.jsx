@@ -20,15 +20,8 @@ export default function App() {
 
   const [usuarios, setUsuarios] = useState([]);
   const [loadingPlayers, setLoadingPlayers] = useState(false);
- const [usuarioActivo, setUsuarioActivo] = useState(() => {
-  try {
-    const guardado = localStorage.getItem("usuario_activo");
-    return guardado ? JSON.parse(guardado) : undefined;
-  } catch (error) {
-    localStorage.removeItem("usuario_activo");
-    return undefined;
-  }
-});
+const [usuarioActivo, setUsuarioActivo] = useState(null);
+const [cargandoSesion, setCargandoSesion] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [nuevoCelular, setNuevoCelular] = useState("");
@@ -45,15 +38,7 @@ export default function App() {
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  useEffect(() => {
-  if (usuarioActivo === undefined) return;
-
-  if (usuarioActivo) {
-    localStorage.setItem("usuario_activo", JSON.stringify(usuarioActivo));
-  } else {
-    localStorage.removeItem("usuario_activo");
-  }
-}, [usuarioActivo]);
+  
  const cargarPlayers = async (mostrarCarga = false) => {
   if (mostrarCarga) setLoadingPlayers(true);
 
@@ -129,15 +114,17 @@ export default function App() {
     const init = async () => {
       const { data } = await supabase.auth.getSession();
       await manejarUsuarioGoogle(data.session?.user);
+      setCargandoSesion(false);
     };
     init();
 
    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         await manejarUsuarioGoogle(session.user);
-      } else if (event === "SIGNED_OUT") {
-        setUsuarioActivo(null);
-      }
+     else if (event === "SIGNED_OUT") {
+  setUsuarioActivo(null);
+  setShowUserMenu(false);
+}
     });
 
     return () => subscription.unsubscribe();
@@ -223,11 +210,12 @@ const signInWithGoogle = async () => {
 };
 
 const cerrarSesion = async () => {
-  try {
-    await supabase.auth.signOut();
-  } catch (error) {
-    console.error("Error cerrando sesión:", error);
-  }
+  await supabase.auth.signOut();
+
+  setUsuarioActivo(null);
+  setShowUserMenu(false);
+  setShowPhoneModal(false);
+};
 
   localStorage.removeItem("usuario_activo");
   setUsuarioActivo(null);
