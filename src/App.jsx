@@ -222,8 +222,12 @@ const signInWithGoogle = async () => {
   }
 };
 
- const cerrarSesion = async () => {
-  await supabase.auth.signOut();
+const cerrarSesion = async () => {
+  try {
+    await supabase.auth.signOut();
+  } catch (error) {
+    console.error("Error cerrando sesión:", error);
+  }
 
   localStorage.removeItem("usuario_activo");
   setUsuarioActivo(null);
@@ -232,7 +236,7 @@ const signInWithGoogle = async () => {
   setShowPhoneModal(false);
   setShowRegistrosModal(false);
 
-  window.location.href = "/";
+  window.location.reload();
 };
   const updatePlayerStats = async (id, resultado) => {
     if (!isAdminUser()) {
@@ -911,7 +915,7 @@ return (
   </div>
 </div>
 
-    <button
+   <button
   style={styles.profileLogout}
   onClick={cerrarSesion}
 >
