@@ -878,11 +878,11 @@ return (
     </button>
 
     <button
-      style={styles.profileLogout}
-      onClick={cerrarSesion}
-    >
-      🚪 Cerrar sesión
-    </button>
+  style={styles.profileLogout}
+  onClick={cerrarSesion}
+>
+  Cerrar sesión
+</button>
   </div>
 )}
 
@@ -3182,16 +3182,16 @@ profileMenuItem: {
 
 profileLogout: {
   width: "100%",
-  padding: "13px 12px",
+  padding: "14px",
   border: "none",
   background: "#fee2e2",
   color: "#dc2626",
-  textAlign: "left",
-  fontSize: "14px",
+  textAlign: "center",
+  fontSize: "15px",
   fontWeight: "800",
   cursor: "pointer",
-  borderRadius: "10px",
-  marginTop: "8px",
+  borderRadius: "12px",
+  marginTop: "10px",
 },
 googleUserChip: {
   display: "flex",
