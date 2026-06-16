@@ -40,6 +40,7 @@ export default function App() {
   const [loginCelular, setLoginCelular] = useState("");
   const [showPhoneModal, setShowPhoneModal] = useState(false);
  const [nicknameRegistro, setNicknameRegistro] = useState("");
+ const [usuarioPendiente, setUsuarioPendiente] = useState(null);
   const [showRegistrosModal, setShowRegistrosModal] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
 
@@ -81,54 +82,47 @@ export default function App() {
 
 
   const manejarUsuarioGoogle = async (googleUser) => {
-    if (!googleUser) return;
+  if (!googleUser) return;
 
-    const perfil = {
-      id: googleUser.id,
-      nombre: googleUser.user_metadata?.full_name || googleUser.email || "Jugador",
-      nickname: googleUser.user_metadata?.name || googleUser.email?.split("@")[0] || "player",
-      celular: "",
-      email: googleUser.email || "",
-      password: "google",
-      partidas: 0,
-      ganadas: 0,
-      perdidas: 0,
-      puntos: 0,
-    };
+  const { data, error } = await supabase
+    .from("players")
+    .select("*")
+    .eq("id", googleUser.id)
+    .maybeSingle();
 
-    const { error: upsertError } = await supabase
-      .from("players")
-      .upsert([perfil], { onConflict: "id", ignoreDuplicates: true });
+  if (error) {
+    console.error("Error buscando usuario:", error.message);
+    return;
+  }
 
-    if (upsertError) {
-      console.error("Error upsert:", upsertError.message);
+  if (data) {
+    setUsuarioActivo(data);
+
+    if (!data.celular || !data.nickname) {
+      setShowPhoneModal(true);
     }
 
-    const { data } = await supabase
-      .from("players")
-      .select("*")
-      .eq("id", googleUser.id)
-      .single();
+    return;
+  }
 
-   if (data) {
-      setUsuarioActivo(data);
-      if (!data.celular) setShowPhoneModal(true);
-    } else {
-      // Si no está en players, igual mantener sesión con datos básicos
-      setUsuarioActivo({
-        id: googleUser.id,
-        nombre: googleUser.user_metadata?.full_name || googleUser.email,
-        nickname: googleUser.user_metadata?.name || googleUser.email?.split("@")[0],
-        email: googleUser.email,
-        puntos: 0,
-        partidas: 0,
-        ganadas: 0,
-        perdidas: 0,
-      });
-    }
-
-    cargarPlayers();
+  const perfilPendiente = {
+    id: googleUser.id,
+    nombre: googleUser.user_metadata?.full_name || googleUser.email || "Jugador",
+    nickname: "",
+    celular: "",
+    email: googleUser.email || "",
+    password: "google",
+    puntos: 0,
+    partidas: 0,
+    ganadas: 0,
+    perdidas: 0,
+    role: "user",
   };
+
+  setUsuarioPendiente(perfilPendiente);
+  setUsuarioActivo(perfilPendiente);
+  setShowPhoneModal(true);
+};
 
   useEffect(() => {
     const init = async () => {
@@ -1485,28 +1479,51 @@ return (
     return;
   }
 
-  const { error } = await supabase
-    .from("players")
-    .update({
+  if (usuarioPendiente) {
+    const nuevoUsuario = {
+      ...usuarioPendiente,
       celular: celularLimpio,
       nickname: nicknameLimpio,
-    })
-    .eq("id", usuarioActivo.id);
+    };
 
-  if (error) {
-    alert("Error guardando datos: " + error.message);
-    return;
+    const { data, error } = await supabase
+      .from("players")
+      .insert([nuevoUsuario])
+      .select()
+      .single();
+
+    if (error) {
+      alert("Error creando usuario: " + error.message);
+      return;
+    }
+
+    setUsuarioActivo(data);
+    setUsuarioPendiente(null);
+  } else {
+    const { error } = await supabase
+      .from("players")
+      .update({
+        celular: celularLimpio,
+        nickname: nicknameLimpio,
+      })
+      .eq("id", usuarioActivo.id);
+
+    if (error) {
+      alert("Error guardando datos: " + error.message);
+      return;
+    }
+
+    setUsuarioActivo((prev) => ({
+      ...prev,
+      celular: celularLimpio,
+      nickname: nicknameLimpio,
+    }));
   }
-
-  setUsuarioActivo((prev) => ({
-    ...prev,
-    celular: celularLimpio,
-    nickname: nicknameLimpio,
-  }));
 
   setLoginCelular("");
   setNicknameRegistro("");
   setShowPhoneModal(false);
+  cargarPlayers();
 }}
       >
         Guardar y continuar
