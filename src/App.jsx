@@ -848,9 +848,31 @@ return (
 </div>
 )}
 {showUserMenu && (
-  <div style={styles.userDropdown}>
+  <div style={styles.profileDropdown}>
+    <div style={styles.profileCardTop}>
+      <div style={styles.profileAvatarLarge}>
+        {(usuarioActivo.nickname || usuarioActivo.nombre || "P")[0]?.toUpperCase()}
+      </div>
+
+      <strong style={styles.profileName}>
+        {usuarioActivo.nombre || "Usuario"}
+      </strong>
+
+      <span style={styles.profileEmail}>
+        {usuarioActivo.email || ""}
+      </span>
+    </div>
+
+    <button style={styles.profileMenuItem}>
+      👤 Mi perfil
+    </button>
+
+    <button style={styles.profileMenuItem}>
+      🏆 Mis puntos: {usuarioActivo.puntos || 0}
+    </button>
+
     <button
-      style={styles.logoutBtn}
+      style={styles.profileLogout}
       onClick={cerrarSesion}
     >
       🚪 Cerrar sesión
@@ -1773,6 +1795,8 @@ return (
  );
 }
 
+
+
 const styles = {
   userDropdown: {
   width: "320px",
@@ -1782,6 +1806,8 @@ const styles = {
   boxShadow: "0 8px 25px rgba(0,0,0,0.15)",
   overflow: "hidden",
 },
+
+
 
 logoutBtn: {
   width: "100%",
@@ -3089,6 +3115,77 @@ roomPhoneForm: {
   gridTemplateColumns: "1fr auto",
   gap: "12px",
   alignItems: "center",
+},
+profileDropdown: {
+  position: "absolute",
+  top: "70px",
+  right: "28px",
+  width: "320px",
+  background: "#ffffff",
+  borderRadius: "18px",
+  boxShadow: "0 18px 45px rgba(0,0,0,.22)",
+  zIndex: 9999,
+  padding: "14px",
+  border: "1px solid rgba(0,0,0,.08)",
+},
+
+profileCardTop: {
+  background: "#fff3e8",
+  borderRadius: "14px",
+  padding: "22px",
+  textAlign: "center",
+  marginBottom: "12px",
+},
+
+profileAvatarLarge: {
+  width: "58px",
+  height: "58px",
+  borderRadius: "50%",
+  background: "#16a34a",
+  color: "#fff",
+  display: "grid",
+  placeItems: "center",
+  fontWeight: "900",
+  fontSize: "22px",
+  margin: "0 auto 10px",
+},
+
+profileName: {
+  display: "block",
+  color: "#111827",
+  fontSize: "15px",
+  marginBottom: "4px",
+},
+
+profileEmail: {
+  color: "#6b7280",
+  fontSize: "13px",
+},
+
+profileMenuItem: {
+  width: "100%",
+  padding: "13px 12px",
+  border: "none",
+  background: "transparent",
+  textAlign: "left",
+  fontSize: "14px",
+  cursor: "pointer",
+  borderRadius: "10px",
+  color: "#111827",
+},
+
+profileLogout: {
+  width: "100%",
+  padding: "13px 12px",
+  border: "none",
+  background: "#fee2e2",
+  color: "#dc2626",
+  textAlign: "left",
+  fontSize: "14px",
+  fontWeight: "800",
+  cursor: "pointer",
+  borderRadius: "10px",
+  marginTop: "8px",
 },
 googleUserChip: {
   display: "flex",
