@@ -61,14 +61,17 @@ const [cargandoSesion, setCargandoSesion] = useState(true);
   }
 };
   useEffect(() => {
-   cargarPlayers(true);
+   cargarPlayers();
     cargarPremios();
     cargarCanjes();
   }, []);
 
 
   const manejarUsuarioGoogle = async (googleUser) => {
-  if (!googleUser) return;
+  if (!googleUser) {
+  setCargandoSesion(false);
+  return;
+}
 
   const { data, error } = await supabase
     .from("players")
@@ -82,14 +85,15 @@ const [cargandoSesion, setCargandoSesion] = useState(true);
   }
 
   if (data) {
-    setUsuarioActivo(data);
+  setUsuarioActivo(data);
 
-    if (!data.celular || !data.nickname) {
-      setShowPhoneModal(true);
-    }
-
-    return;
+  if (!data.celular || !data.nickname) {
+    setShowPhoneModal(true);
   }
+
+  setCargandoSesion(false);
+  return;
+}
 
   const perfilPendiente = {
     id: googleUser.id,
@@ -108,12 +112,19 @@ const [cargandoSesion, setCargandoSesion] = useState(true);
   setUsuarioPendiente(perfilPendiente);
   setUsuarioActivo(perfilPendiente);
   setShowPhoneModal(true);
+  setCargandoSesion(false);
 };
 
   useEffect(() => {
   const init = async () => {
-    const { data } = await supabase.auth.getSession();
-    await manejarUsuarioGoogle(data.session?.user);
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (session?.user) {
+      await manejarUsuarioGoogle(session.user);
+    }
+
     setCargandoSesion(false);
   };
 
@@ -122,11 +133,15 @@ const [cargandoSesion, setCargandoSesion] = useState(true);
   const {
     data: { subscription },
   } = supabase.auth.onAuthStateChange(async (event, session) => {
-    if (session?.user) {
-      await manejarUsuarioGoogle(session.user);
-    } else if (event === "SIGNED_OUT") {
+    if (event === "SIGNED_OUT") {
       setUsuarioActivo(null);
       setShowUserMenu(false);
+      setCargandoSesion(false);
+      return;
+    }
+
+    if (session?.user) {
+      await manejarUsuarioGoogle(session.user);
       setCargandoSesion(false);
     }
   });
@@ -215,18 +230,18 @@ const signInWithGoogle = async () => {
 
 const cerrarSesion = async () => {
   try {
+    setShowUserMenu(false);
+
     await supabase.auth.signOut();
+
+    setUsuarioActivo(null);
+    setUsuarioPendiente(null);
+    setShowPhoneModal(false);
+    setShowRegistrosModal(false);
+
   } catch (error) {
     console.error("Error cerrando sesión:", error);
   }
-
-  setUsuarioActivo(null);
-  setUsuarioPendiente(null);
-  setShowUserMenu(false);
-  setShowPhoneModal(false);
-  setShowRegistrosModal(false);
-
-  window.location.reload();
 };
   const updatePlayerStats = async (id, resultado) => {
     if (!isAdminUser()) {
@@ -770,7 +785,22 @@ const guardarCelular = async () => {
   setNicknameRegistro("");
   alert("WhatsApp y nickname registrados correctamente.");
 };
-
+if (cargandoSesion) {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "18px",
+        fontWeight: "700",
+      }}
+    >
+      Cargando...
+    </div>
+  );
+}
 return (
     <div style={styles.page}>
       <div style={styles.pattern}>
