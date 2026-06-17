@@ -85,14 +85,13 @@ const manejarUsuarioGoogle = async (googleUser) => {
     return;
   }
 
-  if (data) {
+if (data) {
   setUsuarioActivo(data);
 
   if (!data.celular || !data.nickname) {
     setShowPhoneModal(true);
   }
 
-  setCargandoSesion(false);
   return;
 }
 
@@ -113,28 +112,27 @@ const manejarUsuarioGoogle = async (googleUser) => {
   setUsuarioPendiente(perfilPendiente);
   setUsuarioActivo(perfilPendiente);
   setShowPhoneModal(true);
-  setCargandoSesion(false);
-};
+  };
 
   useEffect(() => {
   const init = async () => {
-  try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
-    if (session?.user) {
-      await manejarUsuarioGoogle(session.user);
-    } else {
+      if (session?.user) {
+        await manejarUsuarioGoogle(session.user);
+      } else {
+        setUsuarioActivo(null);
+      }
+    } catch (error) {
+      console.error("Error iniciando sesión:", error);
       setUsuarioActivo(null);
+    } finally {
       setCargandoSesion(false);
     }
-  } catch (error) {
-    console.error("Error iniciando sesión:", error);
-    setUsuarioActivo(null);
-    setCargandoSesion(false);
-  }
-};
+  };
 
   init();
 
@@ -1619,7 +1617,7 @@ return (
       .select()
       .single();
 
-    if (error) {
+  if (error) {
   console.error("Error buscando usuario:", error.message);
   setCargandoSesion(false);
   return;
