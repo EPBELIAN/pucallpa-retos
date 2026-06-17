@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import yapeQr from "./assets/yape-qr.jpg";
 import logoPucallpa from "./assets/logo-pucallpa.png";
 import { supabase } from "./supabaseClient";
@@ -37,6 +37,7 @@ const [cargandoSesion, setCargandoSesion] = useState(false);
   const [showRegistrosModal, setShowRegistrosModal] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const userMenuRef = useRef(null);
 
   
  const cargarPlayers = async (mostrarCarga = false) => {
@@ -429,6 +430,24 @@ const { error } = await supabase
     if (!usuarioActivo) return "";
     return usuarioActivo.nickname || usuarioActivo.nombre;
   };
+
+  useEffect(() => {
+  const cerrarMenuFuera = (event) => {
+    if (
+      showUserMenu &&
+      userMenuRef.current &&
+      !userMenuRef.current.contains(event.target)
+    ) {
+      setShowUserMenu(false);
+    }
+  };
+
+  document.addEventListener("mousedown", cerrarMenuFuera);
+
+  return () => {
+    document.removeEventListener("mousedown", cerrarMenuFuera);
+  };
+}, [showUserMenu]);
 
   const isAdminUser = () => {
   return usuarioActivo?.role === "admin";
