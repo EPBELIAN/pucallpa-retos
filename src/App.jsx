@@ -118,13 +118,19 @@ const manejarUsuarioGoogle = async (googleUser) => {
 
   useEffect(() => {
   const init = async () => {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
 
-  if (session?.user) {
-    await manejarUsuarioGoogle(session.user);
-  } else {
+    if (session?.user) {
+      await manejarUsuarioGoogle(session.user);
+    } else {
+      setUsuarioActivo(null);
+      setCargandoSesion(false);
+    }
+  } catch (error) {
+    console.error("Error iniciando sesión:", error);
     setUsuarioActivo(null);
     setCargandoSesion(false);
   }
@@ -797,6 +803,8 @@ if (cargandoSesion) {
         justifyContent: "center",
         fontSize: "18px",
         fontWeight: "700",
+        background: "#020b08",
+        color: "#ffffff",
       }}
     >
       Cargando...
@@ -1612,9 +1620,10 @@ return (
       .single();
 
     if (error) {
-      alert("Error creando usuario: " + error.message);
-      return;
-    }
+  console.error("Error buscando usuario:", error.message);
+  setCargandoSesion(false);
+  return;
+}
 
     setUsuarioActivo(data);
     setUsuarioPendiente(null);
