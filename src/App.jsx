@@ -67,11 +67,12 @@ const [cargandoSesion, setCargandoSesion] = useState(true);
   }, []);
 
 
-  const manejarUsuarioGoogle = async (googleUser) => {
+const manejarUsuarioGoogle = async (googleUser) => {
   if (!googleUser) {
-  setCargandoSesion(false);
-  return;
-}
+    setUsuarioActivo(null);
+    setCargandoSesion(false);
+    return;
+  }
 
   const { data, error } = await supabase
     .from("players")
@@ -117,16 +118,17 @@ const [cargandoSesion, setCargandoSesion] = useState(true);
 
   useEffect(() => {
   const init = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
 
-    if (session?.user) {
-      await manejarUsuarioGoogle(session.user);
-    }
-
+  if (session?.user) {
+    await manejarUsuarioGoogle(session.user);
+  } else {
+    setUsuarioActivo(null);
     setCargandoSesion(false);
-  };
+  }
+};
 
   init();
 
