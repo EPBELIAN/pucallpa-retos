@@ -21,7 +21,7 @@ export default function App() {
   const [usuarios, setUsuarios] = useState([]);
   const [loadingPlayers, setLoadingPlayers] = useState(false);
 const [usuarioActivo, setUsuarioActivo] = useState(null);
-const [cargandoSesion, setCargandoSesion] = useState(true);
+const [cargandoSesion, setCargandoSesion] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [nuevoCelular, setNuevoCelular] = useState("");
@@ -791,24 +791,7 @@ const guardarCelular = async () => {
   setNicknameRegistro("");
   alert("WhatsApp y nickname registrados correctamente.");
 };
-if (cargandoSesion) {
-  return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "18px",
-        fontWeight: "700",
-        background: "#020b08",
-        color: "#ffffff",
-      }}
-    >
-      Cargando...
-    </div>
-  );
-}
+
 return (
     <div style={styles.page}>
       <div style={styles.pattern}>
