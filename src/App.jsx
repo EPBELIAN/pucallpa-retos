@@ -96,7 +96,7 @@ const manejarUsuarioGoogle = async (googleUser) => {
   return;
 }
 
-  const perfilPendiente = {
+    const perfilPendiente = {
     id: googleUser.id,
     nombre: googleUser.user_metadata?.full_name || googleUser.email || "Jugador",
     nickname: "",
