@@ -888,70 +888,62 @@ return (
 </div>
 )}
 {showUserMenu && usuarioActivo && (
-  <div style={styles.profileDropdown}>
-    <div style={styles.profileCardTop}>
-      <div style={styles.profileAvatarLarge}>
-        {(usuarioActivo.nickname || usuarioActivo.nombre || "P")[0]?.toUpperCase()}
+  <>
+    <div
+      style={styles.profileBackdrop}
+      onClick={() => setShowUserMenu(false)}
+    />
+
+    <div style={styles.profileDropdown}>
+      <div style={styles.profileCardTop}>
+        <div style={styles.profileAvatarLarge}>
+          {(usuarioActivo.nickname || usuarioActivo.nombre || "P")[0]?.toUpperCase()}
+        </div>
+
+        <strong style={styles.profileName}>
+          {usuarioActivo.nombre || "Usuario"}
+        </strong>
+
+        <span style={styles.profileEmail}>
+          {usuarioActivo.email || ""}
+        </span>
       </div>
 
-      <strong style={styles.profileName}>
-        {usuarioActivo.nombre || "Usuario"}
-      </strong>
+      <div style={styles.profileStatsGrid}>
+        <div style={styles.profileStatCard}>
+          <span style={styles.profileStatLabel}>Teléfono</span>
+          <strong style={styles.profileStatValue}>
+            {usuarioActivo.celular || "No registrado"}
+          </strong>
+        </div>
 
-      <span style={styles.profileEmail}>
-        {usuarioActivo.email || ""}
-      </span>
+        <div style={styles.profileStatCard}>
+          <span style={styles.profileStatLabel}>Puntos</span>
+          <strong style={styles.profileStatValue}>
+            {(usuarioActivo.puntos || 0).toLocaleString()}
+          </strong>
+        </div>
+
+        <div style={styles.profileStatCard}>
+          <span style={styles.profileStatLabel}>Victorias</span>
+          <strong style={styles.profileStatValue}>
+            {usuarioActivo.ganadas || 0}
+          </strong>
+        </div>
+
+        <div style={styles.profileStatCard}>
+          <span style={styles.profileStatLabel}>Derrotas</span>
+          <strong style={styles.profileStatValue}>
+            {usuarioActivo.perdidas || 0}
+          </strong>
+        </div>
+      </div>
+
+      <button style={styles.profileLogout} onClick={cerrarSesion}>
+        Cerrar sesión
+      </button>
     </div>
-
-   <div style={styles.profileStatsGrid}>
-  <div style={styles.profileStatCard}>
-    <span style={styles.profileStatLabel}>
-      Teléfono
-    </span>
-
-    <strong style={styles.profileStatValue}>
-      {usuarioActivo.celular || "No registrado"}
-    </strong>
-  </div>
-
-  <div style={styles.profileStatCard}>
-    <span style={styles.profileStatLabel}>
-      Puntos
-    </span>
-
-    <strong style={styles.profileStatValue}>
-      {(usuarioActivo.puntos || 0).toLocaleString()}
-    </strong>
-  </div>
-
-  <div style={styles.profileStatCard}>
-    <span style={styles.profileStatLabel}>
-      Victorias
-    </span>
-
-    <strong style={styles.profileStatValue}>
-      {usuarioActivo.ganadas || 0}
-    </strong>
-  </div>
-
-  <div style={styles.profileStatCard}>
-    <span style={styles.profileStatLabel}>
-      Derrotas
-    </span>
-
-    <strong style={styles.profileStatValue}>
-      {usuarioActivo.perdidas || 0}
-    </strong>
-  </div>
-</div>
-
-   <button
-  style={styles.profileLogout}
-  onClick={cerrarSesion}
->
-  Cerrar sesión
-</button>
-  </div>
+  </>
 )}
 
            <div style={styles.heroButtons}>
@@ -3191,6 +3183,14 @@ roomPhoneForm: {
   gap: "12px",
   alignItems: "center",
 },
+
+profileBackdrop: {
+  position: "fixed",
+  inset: 0,
+  background: "transparent",
+  zIndex: 9999,
+},
+
 profileDropdown: {
   position: "absolute",
   top: "70px",
