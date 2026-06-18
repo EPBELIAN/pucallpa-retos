@@ -2737,23 +2737,23 @@ rewardDeleteBtn: {
   },
 
   playersSection: {
-    marginTop: "30px",
-    background: "linear-gradient(145deg, rgba(2,44,34,0.96), rgba(15,23,42,0.94))",
-    border: "1px solid rgba(57,255,102,0.24)",
-    borderRadius: "30px",
-    padding: "34px",
-    boxShadow: "0 28px 80px rgba(0,0,0,0.35)",
-  },
+  marginTop: "30px",
+  background: "linear-gradient(145deg, #f8fff8, #eefcf1)",
+  border: "1px solid #bbf7d0",
+  borderRadius: "30px",
+  padding: "34px",
+  boxShadow: "0 15px 40px rgba(0,0,0,0.08)",
+},
 
   playersTitle: {
     margin: 0,
     fontSize: "34px",
     fontWeight: "950",
-    color: "#f4fff2",
+    color: "#064e3b",
   },
 
   playersText: {
-    color: "#d1fae5",
+    color: "#166534",
     lineHeight: "1.6",
   },
 
@@ -2765,8 +2765,8 @@ rewardDeleteBtn: {
   },
 
   playerCard: {
-    background: "rgba(255,255,255,0.08)",
-    border: "1px solid rgba(57,255,102,0.22)",
+    background: "#ffffff",
+    border: "1px solid #dcfce7",
     borderRadius: "24px",
     padding: "22px",
   },
