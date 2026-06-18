@@ -236,19 +236,20 @@ const signInWithGoogle = async () => {
 };
 
 const cerrarSesion = async () => {
+  setShowUserMenu(false);
+
   try {
-    setShowUserMenu(false);
-
-    await supabase.auth.signOut();
-
-    setUsuarioActivo(null);
-    setUsuarioPendiente(null);
-    setShowPhoneModal(false);
-    setShowRegistrosModal(false);
-
+    await supabase.auth.signOut({ scope: "local" });
   } catch (error) {
     console.error("Error cerrando sesión:", error);
   }
+
+  setUsuarioActivo(null);
+  setUsuarioPendiente(null);
+  setShowPhoneModal(false);
+  setShowRegistrosModal(false);
+
+  window.location.href = "/";
 };
   const updatePlayerStats = async (id, resultado) => {
     if (!isAdminUser()) {
