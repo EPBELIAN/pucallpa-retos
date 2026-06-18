@@ -2765,8 +2765,8 @@ rewardDeleteBtn: {
   },
 
   playerCard: {
-    background: "#ffffff",
-    border: "1px solid #dcfce7",
+    background: "#dcfce7",
+    border: "2px solid #16a34a",
     borderRadius: "24px",
     padding: "22px",
   },
