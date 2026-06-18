@@ -1278,24 +1278,24 @@ return (
                                    </div>
 
                       <div style={{ textAlign:"center", padding:"18px 0 10px", borderBottom:"1px solid rgba(57,255,102,0.15)" }}>
-  <div style={{ fontSize:"42px", fontWeight:"950", color:"#39ff66", lineHeight:1 }}>
+  <div style={{ fontSize:"42px", fontWeight:"950", color:"#064e3b", lineHeight:1 }}>
     {user.puntos || 0}
   </div>
-  <div style={{ color:"#d1fae5", fontWeight:"800", fontSize:"13px", marginTop:"4px" }}>
+  <div style={{ color:"#14532d", fontWeight:"800", fontSize:"13px", marginTop:"4px" }}>
     PUNTOS ACUMULADOS
   </div>
 </div>
 
 <div style={{ padding:"12px 0 4px" }}>
   <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"6px" }}>
-    <span style={{ color:"#d1fae5", fontSize:"12px", fontWeight:"800" }}>
+    <span style={{ color:"#14532d", fontSize:"12px", fontWeight:"800" }}>
       {(user.puntos || 0) < 500 ? `Faltan ${500 - (user.puntos || 0)} pts para canjear` : "🎁 Puede canjear premios"}
     </span>
-    <span style={{ color:"#39ff66", fontSize:"12px", fontWeight:"900" }}>
+    <span style={{ color:"#065f46", fontSize:"12px", fontWeight:"900" }}>
       {Math.min(Math.round(((user.puntos || 0) / 500) * 100), 100)}%
     </span>
   </div>
-  <div style={{ height:"8px", borderRadius:"99px", background:"rgba(255,255,255,0.1)" }}>
+  <div style={{ height:"8px", borderRadius:"99px", background:"#bbf7d0" }}>
     <div style={{
       height:"100%", borderRadius:"99px",
       width:`${Math.min(((user.puntos || 0) / 500) * 100, 100)}%`,
@@ -2831,19 +2831,18 @@ rewardDeleteBtn: {
   },
 
   deleteBtn: {
-    width: "100%",
-    marginTop: "12px",
-    padding: "11px",
-    borderRadius: "14px",
-    border: "1px solid rgba(248,113,113,0.4)",
-    background: "rgba(127,29,29,0.25)",
-    color: "#fca5a5",
-    fontWeight: "900",
-    cursor: "pointer",
-  },
-
-
-  modalOverlay: {
+  width: "100%",
+  marginTop: "12px",
+  padding: "11px",
+  borderRadius: "14px",
+  border: "1px solid #991b1b",
+  background: "#7f1d1d",
+  color: "#ffffff",
+  fontWeight: "900",
+  cursor: "pointer",
+},
+  
+modalOverlay: {
     position: "fixed",
     inset: 0,
     background: "rgba(255,255,255,0.92)",
