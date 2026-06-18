@@ -1208,8 +1208,9 @@ return (
 </motion.div>         
  </section>
 
-           
-          <section id="players" style={styles.playersSection}>
+
+ {isAdminUser() && (
+  <section id="players" style={styles.playersSection}>          
             <div style={styles.cardHeader}>
               <div>
                 <h2 style={styles.playersTitle}>Players registrados</h2>
@@ -1220,15 +1221,11 @@ return (
               <Users color="#39ff66" size={34} />
             </div>
 
-            {isAdminUser() ? (
-              <div style={styles.adminPanelNotice}>
-                👑 Modo administrador activo: puedes eliminar usuarios y registrar victorias o derrotas.
-              </div>
-            ) : (
-              <div style={styles.userPanelNotice}>
-                USUARIOS DE 
-              </div>
-            )}
+            
+
+          <div style={styles.adminPanelNotice}>
+  👑 Modo administrador activo: puedes eliminar usuarios y registrar victorias o derrotas.
+</div>
 
        {loadingPlayers ? (
   <p style={styles.playersText}>
@@ -1240,14 +1237,7 @@ return (
   </p>
 ) : (
               <div style={styles.playersGrid}>
-                {usuarios
-  .filter((user) =>
-    isAdminUser()
-      ? true
-      : user.id === usuarioActivo?.id
-  )
-  .map((user) => {
-                  const partidas = user.partidas || 0;
+              {usuarios.map((user) => {                 const partidas = user.partidas || 0;
                   const ganadas = user.ganadas || 0;
                   const perdidas = user.perdidas || 0;
                   const rendimiento = partidas > 0 ? Math.round((ganadas / partidas) * 100) : 0;
@@ -1360,7 +1350,8 @@ return (
                 })}
               </div>
             )}
-          </section>
+                   </section>
+)}
 
         </main>
       </div>
