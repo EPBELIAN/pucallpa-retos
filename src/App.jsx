@@ -233,7 +233,7 @@ const signInWithGoogle = async () => {
     options: {
       redirectTo: window.location.origin,
     },
-    
+
   });
 
   if (error) {
