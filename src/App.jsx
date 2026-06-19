@@ -21,7 +21,7 @@ export default function App() {
   const [usuarios, setUsuarios] = useState([]);
   const [loadingPlayers, setLoadingPlayers] = useState(false);
 const [usuarioActivo, setUsuarioActivo] = useState(null);
-const [cargandoSesion, setCargandoSesion] = useState(false);
+const [cargandoSesion, setCargandoSesion] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [nuevoCelular, setNuevoCelular] = useState("");
