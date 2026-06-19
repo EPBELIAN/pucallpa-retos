@@ -82,9 +82,11 @@ const manejarUsuarioGoogle = async (googleUser) => {
     .maybeSingle();
 
   if (error) {
-    console.error("Error buscando usuario:", error.message);
-    return;
-  }
+  console.error("Error buscando usuario:", error.message);
+  setUsuarioActivo(null);
+  setCargandoSesion(false);
+  return;
+}
 
 if (data) {
   setUsuarioActivo(data);
@@ -249,7 +251,6 @@ const cerrarSesion = async () => {
   setShowPhoneModal(false);
   setShowRegistrosModal(false);
 
-  window.location.href = "/";
 };
   const updatePlayerStats = async (id, resultado) => {
     if (!isAdminUser()) {
@@ -1368,14 +1369,7 @@ return (
               <X size={20} />
             </button>
 
-            <div style={styles.roomHeader}>
-              <div>
-               
-                <p>{selectedMatch.time}</p>
-              </div>
-
-              
-            </div>
+  
 
               <div style={styles.roomInfo}>
   <div>
@@ -3218,7 +3212,7 @@ profileBackdrop: {
   position: "fixed",
   inset: 0,
   background: "transparent",
-  zIndex: 9999,
+  zIndex: 9998,
 },
 
 profileDropdown: {
