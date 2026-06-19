@@ -837,18 +837,14 @@ return (
     Registros
   </button>
 )}
-  {cargandoSesion ? (
-  <button style={{ ...styles.navAuthBtn, opacity: 0.7 }} disabled>
-    Cargando...
-  </button>
-) : !usuarioActivo ? (
-  <button
-    style={styles.navAuthBtn}
-    onClick={() => setShowLoginModal(true)}
-  >
-    Entrar
-  </button>
-) : (
+  {!usuarioActivo ? (
+    <button
+  style={styles.navAuthBtn}
+  onClick={() => setShowLoginModal(true)}
+>
+  Entrar
+</button>
+  ) : (
     <div
   style={styles.googleUserChip}
   onClick={() => setShowUserMenu(!showUserMenu)}
