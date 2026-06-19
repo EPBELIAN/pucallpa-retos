@@ -1612,10 +1612,10 @@ return (
       .select()
       .single();
 
-  if (error) {
+ if (error) {
   console.error("Error creando usuario:", error.message);
-alert("Error creando usuario: " + error.message);
-return;
+  alert("Error creando usuario: " + error.message);
+  return;
 }
 
     setUsuarioActivo(data);
