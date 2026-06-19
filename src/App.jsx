@@ -68,25 +68,99 @@ const [cargandoSesion, setCargandoSesion] = useState(true);
   }, []);
 
 
+const prepararUsuarioGoogle = async (googleUser) => {
+  if (!googleUser) {
+    setUsuarioActivo(null);
+    return;
+  }
+
+  const { data: playerExistente, error } = await supabase
+    .from("players")
+    .select("*")
+    .eq("id", googleUser.id)
+    .maybeSingle();
+
+  if (error) {
+    alert("Error leyendo usuario: " + error.message);
+    setUsuarioActivo(null);
+    return;
+  }
+
+  if (playerExistente) {
+    setUsuarioActivo(playerExistente);
+    setUsuarioPendiente(null);
+    setShowLoginModal(false);
+
+    if (!playerExistente.celular || !playerExistente.nickname) {
+      setShowPhoneModal(true);
+    }
+
+    return;
+  }
+
+  const nuevoUsuarioGoogle = {
+    id: googleUser.id,
+    nombre: googleUser.user_metadata?.full_name || googleUser.email || "Jugador",
+    email: googleUser.email || "",
+    password: "google",
+    puntos: 0,
+    partidas: 0,
+    ganadas: 0,
+    perdidas: 0,
+    role: "user",
+  };
+
+  setUsuarioPendiente(nuevoUsuarioGoogle);
+  setUsuarioActivo(nuevoUsuarioGoogle);
+  setShowLoginModal(false);
+  setShowPhoneModal(true);
+};
+
 useEffect(() => {
   const cargarSesion = async () => {
     try {
+      setCargandoSesion(true);
+
       const { data, error } = await supabase.auth.getSession();
 
-      console.log("SESSION:", data);
-      console.log("ERROR:", error);
+      if (error) {
+        console.error(error);
+        setUsuarioActivo(null);
+        return;
+      }
 
       if (data?.session?.user) {
-        setUsuarioActivo(data.session.user);
+        await prepararUsuarioGoogle(data.session.user);
+      } else {
+        setUsuarioActivo(null);
       }
     } catch (err) {
       console.error(err);
+      setUsuarioActivo(null);
     } finally {
       setCargandoSesion(false);
     }
   };
 
   cargarSesion();
+
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    if (session?.user) {
+      await prepararUsuarioGoogle(session.user);
+    } else {
+      setUsuarioActivo(null);
+      setUsuarioPendiente(null);
+      setShowPhoneModal(false);
+    }
+
+    setCargandoSesion(false);
+  });
+
+  return () => {
+    subscription.unsubscribe();
+  };
 }, []);
 
   useEffect(() => {
@@ -158,13 +232,12 @@ const signInWithGoogle = async () => {
     provider: "google",
     options: {
       redirectTo: window.location.origin,
-      queryParams: {
-        prompt: "select_account",
-      },
     },
+    
   });
+
   if (error) {
-    alert("No se pudo iniciar sesión con Google. Revisa la configuración en Supabase.");
+    alert("No se pudo iniciar sesión con Google: " + error.message);
   }
 };
 
@@ -542,15 +615,17 @@ const editarPremio = (id, campo, valor) => {
   );
 };
 const cargarPremios = async () => {
-  const { data, error } = await supabase
-    .from("rewards")
-    .select("*")
-    .eq("activo", true)
-    .order("id");
+ const { data, error } = await supabase
+  .from("players")
+  .insert([nuevoUsuario])
+  .select()
+  .single();
 
-  if (!error && data) {
-    setPremios(data);
-  }
+if (error) {
+  console.error("Error creando usuario:", error.message);
+  alert("Error creando usuario: " + error.message);
+  return;
+}
 };
 const cargarCanjes = async () => {
   const { data } = await supabase
@@ -1538,9 +1613,9 @@ return (
       .single();
 
   if (error) {
-  console.error("Error buscando usuario:", error.message);
-  setCargandoSesion(false);
-  return;
+  console.error("Error creando usuario:", error.message);
+alert("Error creando usuario: " + error.message);
+return;
 }
 
     setUsuarioActivo(data);
