@@ -1370,7 +1370,7 @@ return (
 
             <div style={styles.roomHeader}>
               <div>
-                <h2>SALA DE RETO</h2>
+                <h2>Elige tu equipo</h2>
                 <p>{selectedMatch.time}</p>
               </div>
 
@@ -1380,7 +1380,7 @@ return (
             <div style={styles.roomInfo}>
               <div>
                 <strong>{selectedMatch.sport === "futbol" ? "⚽ Reto Fútbol" : "🏐 Reto Vóley Mixto"}</strong>
-                <p>Modo competitivo · Elige tu equipo antes del inicio</p>
+                <p>Selecciona un equipo disponible y asegura tu cupo.</p>
               </div>
 
               <div>
@@ -1449,7 +1449,7 @@ return (
                   disabled={getSelectedTeams().green.length >= getMaxPerTeam()}
                   onClick={() => joinTeam("green")}
                 >
-                  {getSelectedTeams().green.length >= getMaxPerTeam() ? "Equipo Verde lleno" : "Elegir Equipo Verde"}
+                 {getSelectedTeams().green.length >= getMaxPerTeam() ? "Equipo Verde lleno" : "Unirme al Equipo Verde"}
                 </button>
 
                 <div style={styles.playersList}>
@@ -1490,7 +1490,7 @@ return (
                   disabled={getSelectedTeams().red.length >= getMaxPerTeam()}
                   onClick={() => joinTeam("red")}
                 >
-                  {getSelectedTeams().red.length >= getMaxPerTeam() ? "Equipo Rojo lleno" : "Elegir Equipo Rojo"}
+                  {getSelectedTeams().red.length >= getMaxPerTeam() ? "Equipo Rojo lleno" : "Unirme al Equipo Rojo"}
                 </button>
 
                 <div style={styles.playersList}>
@@ -2844,31 +2844,31 @@ modalOverlay: {
     zIndex: 999,
   },
 
-  roomModal: {
-    width: "min(1050px, 94vw)",
-    maxHeight: "88vh",
-    overflowY: "auto",
-    background: "#ffffff",
-    border: "1px solid rgba(57,255,102,0.35)",
-    borderRadius: "28px",
-    padding: "30px",
-    color: "#0f172a",
-    boxShadow: "0 30px 100px rgba(0,0,0,0.18)",
-    position: "relative",
-  },
+ roomModal: {
+  width: "min(1050px, 94vw)",
+  maxHeight: "88vh",
+  overflowY: "auto",
+  background: "linear-gradient(145deg, #ffffff, #f8fff9)",
+  border: "1px solid #bbf7d0",
+  borderRadius: "32px",
+  padding: "34px",
+  color: "#0f172a",
+  boxShadow: "0 35px 110px rgba(0,0,0,0.22)",
+  position: "relative",
+},
 
   closeRoom: {
-    position: "absolute",
-    top: "18px",
-    right: "18px",
-    background: "rgba(255,255,255,0.12)",
-    color: "white",
-    border: "none",
-    borderRadius: "12px",
-    padding: "9px",
-    cursor: "pointer",
-    fontWeight: "900",
-  },
+  position: "absolute",
+  top: "18px",
+  right: "18px",
+  background: "#fee2e2",
+  color: "#991b1b",
+  border: "1px solid #fecaca",
+  borderRadius: "14px",
+  padding: "9px",
+  cursor: "pointer",
+  fontWeight: "900",
+},
 
   roomHeader: {
     display: "flex",
@@ -2930,52 +2930,55 @@ modalOverlay: {
   },
 
   emptyTeam: {
-    padding: "13px",
-    borderRadius: "14px",
-    background: "rgba(255,255,255,0.07)",
-    border: "1px dashed rgba(255,255,255,0.16)",
-    color: "rgba(255,255,255,0.70)",
-    fontWeight: "800",
-    textAlign: "center",
-  },
+  padding: "14px",
+  borderRadius: "14px",
+  background: "rgba(255,255,255,0.75)",
+  border: "1px dashed #94a3b8",
+  color: "#334155",
+  fontWeight: "800",
+  textAlign: "center",
+},
 
-  teamGreen: {
-    background: "#ecfdf5",
-    border: "1px solid rgba(57,255,102,0.35)",
-    borderRadius: "22px",
-    padding: "22px",
-  },
+ teamGreen: {
+  background: "linear-gradient(145deg, #ecfdf5, #dcfce7)",
+  border: "2px solid #22c55e",
+  borderRadius: "26px",
+  padding: "24px",
+  boxShadow: "0 18px 45px rgba(22,163,74,0.14)",
+},
 
-  teamRed: {
-    background: "#fff7ed",
-    border: "1px solid rgba(248,113,113,0.35)",
-    borderRadius: "22px",
-    padding: "22px",
-  },
-
+teamRed: {
+  background: "linear-gradient(145deg, #fff7ed, #fee2e2)",
+  border: "2px solid #ef4444",
+  borderRadius: "26px",
+  padding: "24px",
+  boxShadow: "0 18px 45px rgba(220,38,38,0.12)",
+},
   joinGreen: {
-    width: "100%",
-    padding: "14px",
-    borderRadius: "14px",
-    border: "none",
-    background: "linear-gradient(90deg, #15803d, #39ff66)",
-    color: "#022c22",
-    fontWeight: "950",
-    cursor: "pointer",
-    marginBottom: "16px",
-  },
+  width: "100%",
+  padding: "15px",
+  borderRadius: "16px",
+  border: "none",
+  background: "linear-gradient(90deg, #166534, #22c55e)",
+  color: "#ffffff",
+  fontWeight: "950",
+  cursor: "pointer",
+  marginBottom: "16px",
+  boxShadow: "0 10px 24px rgba(22,163,74,0.25)",
+},
 
   joinRed: {
-    width: "100%",
-    padding: "14px",
-    borderRadius: "14px",
-    border: "none",
-    background: "linear-gradient(90deg, #991b1b, #f97316)",
-    color: "white",
-    fontWeight: "950",
-    cursor: "pointer",
-    marginBottom: "16px",
-  },
+  width: "100%",
+  padding: "15px",
+  borderRadius: "16px",
+  border: "none",
+  background: "linear-gradient(90deg, #991b1b, #ef4444)",
+  color: "#ffffff",
+  fontWeight: "950",
+  cursor: "pointer",
+  marginBottom: "16px",
+  boxShadow: "0 10px 24px rgba(220,38,38,0.24)",
+},
 
   playersList: {
     display: "flex",
@@ -2983,15 +2986,18 @@ modalOverlay: {
     gap: "10px",
   },
 
-  playerItem: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "12px",
-    borderRadius: "12px",
-    background: "#ffffff",
-    fontWeight: "800",
-  },
+ playerItem: {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: "13px",
+  borderRadius: "14px",
+  background: "#ffffff",
+  border: "1px solid #e5e7eb",
+  color: "#0f172a",
+  fontWeight: "900",
+  boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
+},
 
   roomActions: {
   position: "sticky",
