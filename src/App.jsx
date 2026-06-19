@@ -1377,19 +1377,24 @@ return (
               <span style={styles.roomBadge}>ID SALA: 784512</span>
             </div>
 
-            <div style={styles.roomInfo}>
-              <div>
-                <strong>{selectedMatch.sport === "futbol" ? "⚽ Reto Fútbol" : "🏐 Reto Vóley Mixto"}</strong>
-                <p>Selecciona un equipo disponible y asegura tu cupo.</p>
-              </div>
+              <div style={styles.roomInfo}>
+  <div>
+    <strong style={styles.roomInfoTitle}>
+      {selectedMatch.sport === "futbol" ? "⚽ Fútbol" : "🏐 Vóley"} · {selectedMatch.time}
+    </strong>
 
-              <div>
-                <strong>
-                  {getSelectedTeams().green.length + getSelectedTeams().red.length}/{getMaxPlayers()}
-                </strong>
-                <p>jugadores en sala</p>
-              </div>
-                        </div>
+    <p style={styles.roomInfoText}>
+      Elige un equipo y asegura tu cupo.
+    </p>
+  </div>
+
+  <div style={styles.roomInfoCounter}>
+    <strong>
+      {getSelectedTeams().green.length + getSelectedTeams().red.length}/{getMaxPlayers()}
+    </strong>
+    <span>jugadores</span>
+  </div>
+</div>         
 
             {!usuarioActivo?.celular && (
               <div style={styles.roomPhoneBox}>
@@ -2885,16 +2890,44 @@ modalOverlay: {
     fontWeight: "900",
   },
 
-  roomInfo: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    background: "#f8fafc",
-    borderRadius: "18px",
-    padding: "16px",
-    marginBottom: "18px",
-  },
+ roomInfo: {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  gap: "14px",
+  background: "linear-gradient(135deg,#ecfdf5,#f8fff8)",
+  border: "1px solid #bbf7d0",
+  borderRadius: "18px",
+  padding: "14px 16px",
+  marginBottom: "14px",
+  boxShadow: "0 8px 24px rgba(22,163,74,0.08)",
+},
 
+roomInfoTitle: {
+  display: "block",
+  color: "#064e3b",
+  fontSize: "16px",
+  fontWeight: "900",
+},
+
+roomInfoText: {
+  color: "#166534",
+  fontSize: "13px",
+  margin: "4px 0 0",
+},
+
+roomInfoCounter: {
+  minWidth: "92px",
+  textAlign: "center",
+  background: "#ffffff",
+  border: "1px solid #dcfce7",
+  borderRadius: "14px",
+  padding: "9px 12px",
+  color: "#064e3b",
+  boxShadow: "0 6px 18px rgba(22,163,74,.08)",
+  display: "grid",
+  gap: "2px",
+},
 
   roomInput: {
     width: "100%",
