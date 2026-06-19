@@ -615,17 +615,19 @@ const editarPremio = (id, campo, valor) => {
   );
 };
 const cargarPremios = async () => {
- const { data, error } = await supabase
-  .from("players")
-  .insert([nuevoUsuario])
-  .select()
-  .single();
+  const { data, error } = await supabase
+    .from("rewards")
+    .select("*")
+    .order("id", { ascending: true });
 
-if (error) {
-  console.error("Error creando usuario:", error.message);
-  alert("Error creando usuario: " + error.message);
-  return;
-}
+  if (error) {
+    console.error("Error cargando premios:", error.message);
+    return;
+  }
+
+  if (data) {
+    setPremios(data);
+  }
 };
 const cargarCanjes = async () => {
   const { data } = await supabase
