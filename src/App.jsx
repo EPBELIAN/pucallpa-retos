@@ -68,94 +68,25 @@ const [cargandoSesion, setCargandoSesion] = useState(true);
   }, []);
 
 
-const manejarUsuarioGoogle = async (googleUser) => {
-  if (!googleUser) {
-    setUsuarioActivo(null);
-    setCargandoSesion(false);
-    return;
-  }
-
-  const { data, error } = await supabase
-    .from("players")
-    .select("*")
-    .eq("id", googleUser.id)
-    .maybeSingle();
-
-  if (error) {
-  console.error("Error buscando usuario:", error.message);
-  setUsuarioActivo(null);
-  setCargandoSesion(false);
-  return;
-}
-
-if (data) {
-  setUsuarioActivo(data);
-
-  if (!data.celular || !data.nickname) {
-    setShowPhoneModal(true);
-  }
-
-  return;
-}
-
-    const perfilPendiente = {
-    id: googleUser.id,
-    nombre: googleUser.user_metadata?.full_name || googleUser.email || "Jugador",
-    nickname: "",
-    celular: "",
-    email: googleUser.email || "",
-    password: "google",
-    puntos: 0,
-    partidas: 0,
-    ganadas: 0,
-    perdidas: 0,
-    role: "user",
-  };
-
-  setUsuarioPendiente(perfilPendiente);
-  setUsuarioActivo(perfilPendiente);
-  setShowPhoneModal(true);
-  };
-
-  useEffect(() => {
-  const init = async () => {
+useEffect(() => {
+  const cargarSesion = async () => {
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
 
-      if (session?.user) {
-        await manejarUsuarioGoogle(session.user);
-      } else {
-        setUsuarioActivo(null);
+      console.log("SESSION:", data);
+      console.log("ERROR:", error);
+
+      if (data?.session?.user) {
+        setUsuarioActivo(data.session.user);
       }
-    } catch (error) {
-      console.error("Error iniciando sesión:", error);
-      setUsuarioActivo(null);
+    } catch (err) {
+      console.error(err);
     } finally {
       setCargandoSesion(false);
     }
   };
 
-  init();
-
-  const {
-    data: { subscription },
-  } = supabase.auth.onAuthStateChange(async (event, session) => {
-    if (event === "SIGNED_OUT") {
-      setUsuarioActivo(null);
-      setShowUserMenu(false);
-      setCargandoSesion(false);
-      return;
-    }
-
-    if (session?.user) {
-      await manejarUsuarioGoogle(session.user);
-      setCargandoSesion(false);
-    }
-  });
-
-  return () => subscription.unsubscribe();
+  cargarSesion();
 }, []);
 
   useEffect(() => {
