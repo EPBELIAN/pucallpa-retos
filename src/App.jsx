@@ -1370,11 +1370,11 @@ return (
 
             <div style={styles.roomHeader}>
               <div>
-                <h2>Elige tu equipo</h2>
+               
                 <p>{selectedMatch.time}</p>
               </div>
 
-              <span style={styles.roomBadge}>ID SALA: 784512</span>
+              
             </div>
 
               <div style={styles.roomInfo}>
