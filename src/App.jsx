@@ -39,7 +39,33 @@ const [cargandoSesion, setCargandoSesion] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
 
-  
+  const AUTH_CACHE_KEY = "pucallpa_retos_usuario_activo";
+
+  const guardarUsuarioCache = (usuario) => {
+    try {
+      if (usuario) localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(usuario));
+    } catch (error) {
+      console.warn("No se pudo guardar usuario local:", error);
+    }
+  };
+
+  const leerUsuarioCache = () => {
+    try {
+      const raw = localStorage.getItem(AUTH_CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const limpiarUsuarioCache = () => {
+    try {
+      localStorage.removeItem(AUTH_CACHE_KEY);
+    } catch (error) {
+      console.warn("No se pudo limpiar usuario local:", error);
+    }
+  };
+
  const cargarPlayers = async (mostrarCarga = false) => {
   if (mostrarCarga) setLoadingPlayers(true);
 
@@ -104,6 +130,7 @@ const manejarUsuarioGoogle = async (googleUser) => {
   if (error) {
     console.error("Error leyendo perfil en players:", error.message);
     setUsuarioActivo(perfilPendiente);
+    guardarUsuarioCache(perfilPendiente);
     setUsuarioPendiente(perfilPendiente);
     setShowLoginModal(false);
     setShowPhoneModal(true);
@@ -112,6 +139,7 @@ const manejarUsuarioGoogle = async (googleUser) => {
 
   if (data) {
     setUsuarioActivo(data);
+    guardarUsuarioCache(data);
     setUsuarioPendiente(null);
     setShowLoginModal(false);
     setShowPhoneModal(!data.celular || !data.nickname);
@@ -119,6 +147,7 @@ const manejarUsuarioGoogle = async (googleUser) => {
   }
 
   setUsuarioActivo(perfilPendiente);
+  guardarUsuarioCache(perfilPendiente);
   setUsuarioPendiente(perfilPendiente);
   setShowLoginModal(false);
   setShowPhoneModal(true);
@@ -127,13 +156,22 @@ const manejarUsuarioGoogle = async (googleUser) => {
 
 useEffect(() => {
   let componenteActivo = true;
+  const usuarioCache = leerUsuarioCache();
 
-  const aplicarSesion = async (session) => {
+  if (usuarioCache) {
+    setUsuarioActivo(usuarioCache);
+    setShowLoginModal(false);
+  }
+
+  const aplicarSesion = async (session, limpiarSiNoHaySesion = false) => {
     if (!componenteActivo) return;
 
     if (session?.user) {
       await manejarUsuarioGoogle(session.user);
-    } else {
+      return;
+    }
+
+    if (limpiarSiNoHaySesion && !leerUsuarioCache()) {
       setUsuarioActivo(null);
       setUsuarioPendiente(null);
       setShowPhoneModal(false);
@@ -146,21 +184,25 @@ useEffect(() => {
     try {
       setCargandoSesion(true);
 
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
+      const resultadoSesion = await Promise.race([
+        supabase.auth.getSession(),
+        new Promise((resolve) =>
+          setTimeout(() =>
+            resolve({ data: { session: null }, error: new Error("Tiempo agotado leyendo sesión") }),
+          7000)
+        ),
+      ]);
 
-      if (error) {
+      const session = resultadoSesion?.data?.session || null;
+      const error = resultadoSesion?.error || null;
+
+      if (error && error.message !== "Tiempo agotado leyendo sesión") {
         console.error("Error obteniendo sesión:", error.message);
-        await aplicarSesion(null);
-        return;
       }
 
-      await aplicarSesion(session);
+      await aplicarSesion(session, true);
     } catch (error) {
       console.error("Error inicializando sesión:", error);
-      await aplicarSesion(null);
     } finally {
       if (componenteActivo) setCargandoSesion(false);
     }
@@ -175,12 +217,17 @@ useEffect(() => {
       if (!componenteActivo) return;
 
       if (event === "SIGNED_OUT") {
-        await aplicarSesion(null);
+        limpiarUsuarioCache();
+        setUsuarioActivo(null);
+        setUsuarioPendiente(null);
+        setShowPhoneModal(false);
+        setShowLoginModal(false);
+        setShowUserMenu(false);
         return;
       }
 
       if (session?.user) {
-        await aplicarSesion(session);
+        await manejarUsuarioGoogle(session.user);
       }
     } catch (error) {
       console.error("Error procesando cambio de sesión:", error);
@@ -300,6 +347,7 @@ const cerrarSesion = async () => {
   } catch (error) {
     console.error("Error cerrando sesión:", error);
   } finally {
+    limpiarUsuarioCache();
     limpiarSesionSupabaseLocal();
     setUsuarioActivo(null);
     setUsuarioPendiente(null);
@@ -859,11 +907,15 @@ const guardarCelular = async () => {
     return;
   }
 
-  setUsuarioActivo((prev) => ({
-    ...prev,
-    celular: celularLimpio,
-    nickname: nicknameLimpio,
-  }));
+  setUsuarioActivo((prev) => {
+    const actualizado = {
+      ...prev,
+      celular: celularLimpio,
+      nickname: nicknameLimpio,
+    };
+    guardarUsuarioCache(actualizado);
+    return actualizado;
+  });
 
   setNuevoCelular("");
   setNicknameRegistro("");
@@ -894,7 +946,11 @@ return (
     Registros
   </button>
 )}
-  {!usuarioActivo ? (
+  {cargandoSesion && !usuarioActivo ? (
+    <button style={{ ...styles.navAuthBtn, opacity: 0.7 }} disabled>
+      Cargando...
+    </button>
+  ) : !usuarioActivo ? (
     <button
   style={styles.navAuthBtn}
   onClick={() => setShowLoginModal(true)}
@@ -1660,12 +1716,13 @@ return (
       .single();
 
   if (error) {
-  console.error("Error buscando usuario:", error.message);
-  setCargandoSesion(false);
+  console.error("Error creando usuario:", error.message);
+  alert("Error creando usuario: " + error.message);
   return;
 }
 
     setUsuarioActivo(data);
+    guardarUsuarioCache(data);
     setUsuarioPendiente(null);
   } else {
     const { error } = await supabase
@@ -1681,11 +1738,15 @@ return (
       return;
     }
 
-    setUsuarioActivo((prev) => ({
-      ...prev,
-      celular: celularLimpio,
-      nickname: nicknameLimpio,
-    }));
+    setUsuarioActivo((prev) => {
+      const actualizado = {
+        ...prev,
+        celular: celularLimpio,
+        nickname: nicknameLimpio,
+      };
+      guardarUsuarioCache(actualizado);
+      return actualizado;
+    });
   }
 
   setLoginCelular("");
