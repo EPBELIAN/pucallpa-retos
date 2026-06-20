@@ -998,8 +998,7 @@ return (
             <span style={styles.badge}>Arena deportiva digital de Pucallpa</span>
 
             <h1 style={styles.title}>
-              Pucallpa Retos: fútbol y vóley competitivo
-            </h1>
+              Encuentra jugadores. Haz amigos. Vive el juego.</h1>
 
           {usuarioActivo && (
   <div
