@@ -62,32 +62,18 @@ const [cargandoSesion, setCargandoSesion] = useState(true);
   }
 };
   useEffect(() => {
+   cargarPlayers();
     cargarPremios();
     cargarCanjes();
   }, []);
 
-
-const limpiarSesionLocalCompleta = () => {
-  try {
-    Object.keys(localStorage).forEach((key) => {
-      if (
-        key.startsWith("sb-") ||
-        key.includes("supabase") ||
-        key === "pucallpa_usuario_activo"
-      ) {
-        localStorage.removeItem(key);
-      }
-    });
-  } catch (error) {
-    console.warn("No se pudo limpiar la sesión local:", error);
-  }
-};
 
 const manejarUsuarioGoogle = async (googleUser) => {
   if (!googleUser) {
     setUsuarioActivo(null);
     setUsuarioPendiente(null);
     setShowPhoneModal(false);
+    setShowLoginModal(false);
     return null;
   }
 
@@ -116,12 +102,12 @@ const manejarUsuarioGoogle = async (googleUser) => {
     .maybeSingle();
 
   if (error) {
-    console.error("Error buscando usuario en players:", error.message);
-    alert("No se pudo leer tu perfil en players: " + error.message);
-    setUsuarioActivo(null);
-    setUsuarioPendiente(null);
-    setShowPhoneModal(false);
-    return null;
+    console.error("Error leyendo perfil en players:", error.message);
+    setUsuarioActivo(perfilPendiente);
+    setUsuarioPendiente(perfilPendiente);
+    setShowLoginModal(false);
+    setShowPhoneModal(true);
+    return perfilPendiente;
   }
 
   if (data) {
@@ -132,17 +118,31 @@ const manejarUsuarioGoogle = async (googleUser) => {
     return data;
   }
 
-  setUsuarioPendiente(perfilPendiente);
   setUsuarioActivo(perfilPendiente);
+  setUsuarioPendiente(perfilPendiente);
   setShowLoginModal(false);
   setShowPhoneModal(true);
   return perfilPendiente;
 };
 
-  useEffect(() => {
+useEffect(() => {
   let componenteActivo = true;
 
-  const inicializarSesion = async () => {
+  const aplicarSesion = async (session) => {
+    if (!componenteActivo) return;
+
+    if (session?.user) {
+      await manejarUsuarioGoogle(session.user);
+    } else {
+      setUsuarioActivo(null);
+      setUsuarioPendiente(null);
+      setShowPhoneModal(false);
+      setShowLoginModal(false);
+      setShowUserMenu(false);
+    }
+  };
+
+  const iniciarSesionPersistida = async () => {
     try {
       setCargandoSesion(true);
 
@@ -151,59 +151,39 @@ const manejarUsuarioGoogle = async (googleUser) => {
         error,
       } = await supabase.auth.getSession();
 
-      if (!componenteActivo) return;
-
       if (error) {
         console.error("Error obteniendo sesión:", error.message);
-        setUsuarioActivo(null);
-        setUsuarioPendiente(null);
-        setShowPhoneModal(false);
+        await aplicarSesion(null);
         return;
       }
 
-      if (session?.user) {
-        await manejarUsuarioGoogle(session.user);
-      } else {
-        setUsuarioActivo(null);
-        setUsuarioPendiente(null);
-        setShowPhoneModal(false);
-        setShowUserMenu(false);
-      }
-
-      await cargarPlayers(false);
+      await aplicarSesion(session);
     } catch (error) {
-      console.error("Error iniciando sesión:", error);
-      setUsuarioActivo(null);
-      setUsuarioPendiente(null);
-      setShowPhoneModal(false);
+      console.error("Error inicializando sesión:", error);
+      await aplicarSesion(null);
     } finally {
       if (componenteActivo) setCargandoSesion(false);
     }
   };
 
-  inicializarSesion();
+  iniciarSesionPersistida();
 
   const {
     data: { subscription },
   } = supabase.auth.onAuthStateChange(async (event, session) => {
-    if (!componenteActivo) return;
-
     try {
-      setCargandoSesion(true);
+      if (!componenteActivo) return;
 
-      if (event === "SIGNED_OUT" || !session?.user) {
-        setUsuarioActivo(null);
-        setUsuarioPendiente(null);
-        setShowPhoneModal(false);
-        setShowUserMenu(false);
-        await cargarPlayers(false);
+      if (event === "SIGNED_OUT") {
+        await aplicarSesion(null);
         return;
       }
 
-      await manejarUsuarioGoogle(session.user);
-      await cargarPlayers(false);
+      if (session?.user) {
+        await aplicarSesion(session);
+      }
     } catch (error) {
-      console.error("Error en cambio de sesión:", error);
+      console.error("Error procesando cambio de sesión:", error);
     } finally {
       if (componenteActivo) setCargandoSesion(false);
     }
@@ -294,6 +274,18 @@ const signInWithGoogle = async () => {
   }
 };
 
+const limpiarSesionSupabaseLocal = () => {
+  try {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith("sb-") || key.includes("supabase")) {
+        localStorage.removeItem(key);
+      }
+    });
+  } catch (error) {
+    console.warn("No se pudo limpiar localStorage:", error);
+  }
+};
+
 const cerrarSesion = async () => {
   setShowUserMenu(false);
   setCargandoSesion(true);
@@ -304,14 +296,11 @@ const cerrarSesion = async () => {
     if (error) {
       console.error("Error cerrando sesión:", error.message);
       alert("No se pudo cerrar sesión: " + error.message);
-      return;
     }
   } catch (error) {
     console.error("Error cerrando sesión:", error);
-    alert("No se pudo cerrar sesión. Revisa la consola.");
-    return;
   } finally {
-    limpiarSesionLocalCompleta();
+    limpiarSesionSupabaseLocal();
     setUsuarioActivo(null);
     setUsuarioPendiente(null);
     setShowPhoneModal(false);
@@ -682,15 +671,12 @@ const cargarPremios = async () => {
   const { data, error } = await supabase
     .from("rewards")
     .select("*")
-    .order("id", { ascending: true });
+    .eq("activo", true)
+    .order("id");
 
-  if (error) {
-    console.error("Error cargando premios:", error.message);
-    setPremios([]);
-    return;
+  if (!error && data) {
+    setPremios(data);
   }
-
-  setPremios(data || []);
 };
 const cargarCanjes = async () => {
   const { data } = await supabase
@@ -1673,11 +1659,11 @@ return (
       .select()
       .single();
 
-    if (error) {
-      console.error("Error creando usuario:", error.message);
-      alert("Error creando usuario: " + error.message);
-      return;
-    }
+  if (error) {
+  console.error("Error buscando usuario:", error.message);
+  setCargandoSesion(false);
+  return;
+}
 
     setUsuarioActivo(data);
     setUsuarioPendiente(null);
