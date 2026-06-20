@@ -21,7 +21,7 @@ export default function App() {
   const [usuarios, setUsuarios] = useState([]);
   const [loadingPlayers, setLoadingPlayers] = useState(false);
 const [usuarioActivo, setUsuarioActivo] = useState(null);
-const [cargandoSesion, setCargandoSesion] = useState(false);
+const [cargandoSesion, setCargandoSesion] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [nuevoCelular, setNuevoCelular] = useState("");
@@ -62,33 +62,32 @@ const [cargandoSesion, setCargandoSesion] = useState(false);
   }
 };
   useEffect(() => {
-   cargarPlayers();
     cargarPremios();
     cargarCanjes();
   }, []);
 
 
-const guardarPerfilLocal = (perfil) => {
-  if (!perfil) return;
+const limpiarSesionLocalCompleta = () => {
   try {
-    localStorage.setItem("pucallpa_usuario_activo", JSON.stringify(perfil));
+    Object.keys(localStorage).forEach((key) => {
+      if (
+        key.startsWith("sb-") ||
+        key.includes("supabase") ||
+        key === "pucallpa_usuario_activo"
+      ) {
+        localStorage.removeItem(key);
+      }
+    });
   } catch (error) {
-    console.warn("No se pudo guardar perfil local:", error);
-  }
-};
-
-const limpiarPerfilLocal = () => {
-  try {
-    localStorage.removeItem("pucallpa_usuario_activo");
-  } catch (error) {
-    console.warn("No se pudo limpiar perfil local:", error);
+    console.warn("No se pudo limpiar la sesión local:", error);
   }
 };
 
 const manejarUsuarioGoogle = async (googleUser) => {
   if (!googleUser) {
     setUsuarioActivo(null);
-    limpiarPerfilLocal();
+    setUsuarioPendiente(null);
+    setShowPhoneModal(false);
     return null;
   }
 
@@ -118,26 +117,18 @@ const manejarUsuarioGoogle = async (googleUser) => {
 
   if (error) {
     console.error("Error buscando usuario en players:", error.message);
-    setUsuarioActivo(perfilPendiente);
-    setUsuarioPendiente(perfilPendiente);
-    setShowPhoneModal(true);
-    setShowLoginModal(false);
-    guardarPerfilLocal(perfilPendiente);
-    return perfilPendiente;
+    alert("No se pudo leer tu perfil en players: " + error.message);
+    setUsuarioActivo(null);
+    setUsuarioPendiente(null);
+    setShowPhoneModal(false);
+    return null;
   }
 
   if (data) {
     setUsuarioActivo(data);
     setUsuarioPendiente(null);
     setShowLoginModal(false);
-    guardarPerfilLocal(data);
-
-    if (!data.celular || !data.nickname) {
-      setShowPhoneModal(true);
-    } else {
-      setShowPhoneModal(false);
-    }
-
+    setShowPhoneModal(!data.celular || !data.nickname);
     return data;
   }
 
@@ -145,21 +136,15 @@ const manejarUsuarioGoogle = async (googleUser) => {
   setUsuarioActivo(perfilPendiente);
   setShowLoginModal(false);
   setShowPhoneModal(true);
-  guardarPerfilLocal(perfilPendiente);
   return perfilPendiente;
 };
 
   useEffect(() => {
   let componenteActivo = true;
 
-  const init = async () => {
+  const inicializarSesion = async () => {
     try {
       setCargandoSesion(true);
-
-      const usuarioGuardado = localStorage.getItem("pucallpa_usuario_activo");
-      if (usuarioGuardado && componenteActivo) {
-        setUsuarioActivo(JSON.parse(usuarioGuardado));
-      }
 
       const {
         data: { session },
@@ -171,7 +156,8 @@ const manejarUsuarioGoogle = async (googleUser) => {
       if (error) {
         console.error("Error obteniendo sesión:", error.message);
         setUsuarioActivo(null);
-        limpiarPerfilLocal();
+        setUsuarioPendiente(null);
+        setShowPhoneModal(false);
         return;
       }
 
@@ -181,34 +167,41 @@ const manejarUsuarioGoogle = async (googleUser) => {
         setUsuarioActivo(null);
         setUsuarioPendiente(null);
         setShowPhoneModal(false);
-        limpiarPerfilLocal();
+        setShowUserMenu(false);
       }
+
+      await cargarPlayers(false);
     } catch (error) {
       console.error("Error iniciando sesión:", error);
       setUsuarioActivo(null);
-      limpiarPerfilLocal();
+      setUsuarioPendiente(null);
+      setShowPhoneModal(false);
     } finally {
       if (componenteActivo) setCargandoSesion(false);
     }
   };
 
-  init();
+  inicializarSesion();
 
   const {
     data: { subscription },
-  } = supabase.auth.onAuthStateChange(async (_event, session) => {
+  } = supabase.auth.onAuthStateChange(async (event, session) => {
+    if (!componenteActivo) return;
+
     try {
       setCargandoSesion(true);
 
-      if (session?.user) {
-        await manejarUsuarioGoogle(session.user);
-      } else {
+      if (event === "SIGNED_OUT" || !session?.user) {
         setUsuarioActivo(null);
         setUsuarioPendiente(null);
         setShowPhoneModal(false);
         setShowUserMenu(false);
-        limpiarPerfilLocal();
+        await cargarPlayers(false);
+        return;
       }
+
+      await manejarUsuarioGoogle(session.user);
+      await cargarPlayers(false);
     } catch (error) {
       console.error("Error en cambio de sesión:", error);
     } finally {
@@ -303,19 +296,29 @@ const signInWithGoogle = async () => {
 
 const cerrarSesion = async () => {
   setShowUserMenu(false);
+  setCargandoSesion(true);
 
   try {
-    await supabase.auth.signOut({ scope: "local" });
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error("Error cerrando sesión:", error.message);
+      alert("No se pudo cerrar sesión: " + error.message);
+      return;
+    }
   } catch (error) {
     console.error("Error cerrando sesión:", error);
+    alert("No se pudo cerrar sesión. Revisa la consola.");
+    return;
+  } finally {
+    limpiarSesionLocalCompleta();
+    setUsuarioActivo(null);
+    setUsuarioPendiente(null);
+    setShowPhoneModal(false);
+    setShowRegistrosModal(false);
+    setShowLoginModal(false);
+    setCargandoSesion(false);
   }
-
-  setUsuarioActivo(null);
-  setUsuarioPendiente(null);
-  setShowPhoneModal(false);
-  setShowRegistrosModal(false);
-  limpiarPerfilLocal();
-
 };
   const updatePlayerStats = async (id, resultado) => {
     if (!isAdminUser()) {
@@ -1678,7 +1681,6 @@ return (
 
     setUsuarioActivo(data);
     setUsuarioPendiente(null);
-    guardarPerfilLocal(data);
   } else {
     const { error } = await supabase
       .from("players")
