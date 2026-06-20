@@ -998,7 +998,7 @@ return (
             <span style={styles.badge}>Arena deportiva digital de Pucallpa</span>
 
             <h1 style={styles.title}>
-              Encuentra jugadores. Haz amigos. Vive el juego.</h1>
+              Encuentra jugadores, Haz amigos y Vive el juego.</h1>
 
           {usuarioActivo && (
   <div
@@ -2152,15 +2152,32 @@ navLogoutBtn: {
   boxSizing: "border-box",
 },
 
- hero: {
+hero: {
   textAlign: "center",
-  padding: "0 0 65px",
+  padding: "80px 40px 120px",
+
+  backgroundImage: "url('/pucallpa-fondo.png')",
+  backgroundSize: "cover",
+  backgroundPosition: "center",
+  backgroundRepeat: "no-repeat",
+
+  borderRadius: "40px",
+
+  minHeight: "720px",
+
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+
+  position: "relative",
+  overflow: "hidden",
 },
 
   badge: {
   padding: "14px 24px",
   borderRadius: "999px",
-  background: "rgba(255,255,255,0.62)",
+  background: "rgba(255,255,255,0.88)",
   border: "1px solid rgba(6,95,70,0.16)",
   color: "#047857",
   fontWeight: "950",
@@ -2174,8 +2191,8 @@ navLogoutBtn: {
   maxWidth: "1160px",
   fontWeight: "950",
   letterSpacing: "-3px",
-  color: "#031f18",
-  textShadow: "0 14px 30px rgba(6,78,59,0.12)",
+  color: "#ffffff",
+ textShadow: "0 4px 20px rgba(0,0,0,.9)",
 },
 
   subtitle: {
