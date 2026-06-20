@@ -2023,7 +2023,7 @@ pattern: {
     "radial-gradient(circle at 12% 45%, rgba(57,255,102,0.18), transparent 22%), radial-gradient(circle at 88% 20%, rgba(6,95,70,0.10), transparent 26%), repeating-linear-gradient(45deg, rgba(6,78,59,0.05) 0 2px, transparent 2px 26px)",
 },
 
- navbar: {
+navbar: {
   width: "calc(100% - 34px)",
   maxWidth: "1500px",
   margin: "8px auto 0",
@@ -2034,16 +2034,12 @@ pattern: {
   justifyContent: "space-between",
   alignItems: "center",
   boxSizing: "border-box",
-
-  overflow: "visible",
-  position: "sticky",
+ position: "sticky",
   top: "8px",
   zIndex: 1000,
 
-  background: "rgba(255,255,255,0.78)",
-  backdropFilter: "blur(18px)",
-  WebkitBackdropFilter: "blur(18px)",
-  border: "1px solid rgba(255,255,255,0.45)",
+  background: "rgba(255,255,255,0.96)",
+  border: "1px solid rgba(255,255,255,0.75)",
   borderRadius: "30px",
   boxShadow: "0 18px 55px rgba(6,78,59,0.16)",
 },
@@ -2156,13 +2152,15 @@ navLogoutBtn: {
 hero: {
   textAlign: "center",
 
-  marginTop: "-118px",
-  padding: "150px 20px 80px",
+  marginTop: "0",
+  padding: "150px 20px 90px",
 
   width: "100%",
   minHeight: "820px",
 
-  backgroundImage: "url('/pucallpa-fondo.png')",
+  backgroundImage:
+    "linear-gradient(to bottom, rgba(238,247,235,0.95) 0%, rgba(238,247,235,0.65) 9%, rgba(238,247,235,0) 22%), url('/pucallpa-fondo.png')",
+
   backgroundSize: "cover",
   backgroundPosition: "center center",
   backgroundRepeat: "no-repeat",
