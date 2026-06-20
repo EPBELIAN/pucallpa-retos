@@ -2036,12 +2036,14 @@ pattern: {
   boxSizing: "border-box",
 
   overflow: "visible",
-  position: "relative",
+  position: "sticky",
+  top: "8px",
+  zIndex: 1000,
 
-  background: "rgba(255,255,255,0.82)",
+  background: "rgba(255,255,255,0.78)",
   backdropFilter: "blur(18px)",
   WebkitBackdropFilter: "blur(18px)",
-  border: "1px solid rgba(6,78,59,0.10)",
+  border: "1px solid rgba(255,255,255,0.45)",
   borderRadius: "30px",
   boxShadow: "0 18px 55px rgba(6,78,59,0.16)",
 },
@@ -2151,15 +2153,14 @@ navLogoutBtn: {
   padding: "0",
   boxSizing: "border-box",
 },
-
 hero: {
   textAlign: "center",
 
-  margin: "0",
-  padding: "0",
+  marginTop: "-118px",
+  padding: "150px 20px 80px",
 
   width: "100%",
-  minHeight: "760px",
+  minHeight: "820px",
 
   backgroundImage: "url('/pucallpa-fondo.png')",
   backgroundSize: "cover",
