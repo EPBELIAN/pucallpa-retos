@@ -21,7 +21,7 @@ export default function App() {
   const [usuarios, setUsuarios] = useState([]);
   const [loadingPlayers, setLoadingPlayers] = useState(false);
 const [usuarioActivo, setUsuarioActivo] = useState(null);
-const [cargandoSesion, setCargandoSesion] = useState(true);
+const [cargandoSesion, setCargandoSesion] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [nuevoCelular, setNuevoCelular] = useState("");
@@ -68,17 +68,37 @@ const [cargandoSesion, setCargandoSesion] = useState(true);
   }, []);
 
 
+const guardarPerfilLocal = (perfil) => {
+  if (!perfil) return;
+  try {
+    localStorage.setItem("pucallpa_usuario_activo", JSON.stringify(perfil));
+  } catch (error) {
+    console.warn("No se pudo guardar perfil local:", error);
+  }
+};
+
+const limpiarPerfilLocal = () => {
+  try {
+    localStorage.removeItem("pucallpa_usuario_activo");
+  } catch (error) {
+    console.warn("No se pudo limpiar perfil local:", error);
+  }
+};
+
 const manejarUsuarioGoogle = async (googleUser) => {
   if (!googleUser) {
     setUsuarioActivo(null);
-    setUsuarioPendiente(null);
-    setShowPhoneModal(false);
-    return;
+    limpiarPerfilLocal();
+    return null;
   }
 
   const perfilPendiente = {
     id: googleUser.id,
-    nombre: googleUser.user_metadata?.full_name || googleUser.email || "Jugador",
+    nombre:
+      googleUser.user_metadata?.full_name ||
+      googleUser.user_metadata?.name ||
+      googleUser.email ||
+      "Jugador",
     nickname: "",
     celular: "",
     email: googleUser.email || "",
@@ -97,62 +117,76 @@ const manejarUsuarioGoogle = async (googleUser) => {
     .maybeSingle();
 
   if (error) {
-    console.error("Error leyendo usuario en players:", error.message);
-    alert("Supabase no pudo leer la tabla players: " + error.message);
+    console.error("Error buscando usuario en players:", error.message);
     setUsuarioActivo(perfilPendiente);
     setUsuarioPendiente(perfilPendiente);
-    setShowLoginModal(false);
     setShowPhoneModal(true);
-    return;
+    setShowLoginModal(false);
+    guardarPerfilLocal(perfilPendiente);
+    return perfilPendiente;
   }
 
   if (data) {
     setUsuarioActivo(data);
     setUsuarioPendiente(null);
     setShowLoginModal(false);
-    setShowPhoneModal(!data.celular || !data.nickname);
-    return;
+    guardarPerfilLocal(data);
+
+    if (!data.celular || !data.nickname) {
+      setShowPhoneModal(true);
+    } else {
+      setShowPhoneModal(false);
+    }
+
+    return data;
   }
 
   setUsuarioPendiente(perfilPendiente);
   setUsuarioActivo(perfilPendiente);
   setShowLoginModal(false);
   setShowPhoneModal(true);
+  guardarPerfilLocal(perfilPendiente);
+  return perfilPendiente;
 };
 
-useEffect(() => {
+  useEffect(() => {
   let componenteActivo = true;
 
   const init = async () => {
-    setCargandoSesion(true);
-
     try {
-      const { data, error } = await supabase.auth.getSession();
+      setCargandoSesion(true);
+
+      const usuarioGuardado = localStorage.getItem("pucallpa_usuario_activo");
+      if (usuarioGuardado && componenteActivo) {
+        setUsuarioActivo(JSON.parse(usuarioGuardado));
+      }
+
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
 
       if (!componenteActivo) return;
 
       if (error) {
         console.error("Error obteniendo sesión:", error.message);
         setUsuarioActivo(null);
-        setUsuarioPendiente(null);
-        setShowPhoneModal(false);
+        limpiarPerfilLocal();
         return;
       }
 
-      if (data?.session?.user) {
-        await manejarUsuarioGoogle(data.session.user);
+      if (session?.user) {
+        await manejarUsuarioGoogle(session.user);
       } else {
         setUsuarioActivo(null);
         setUsuarioPendiente(null);
         setShowPhoneModal(false);
+        limpiarPerfilLocal();
       }
     } catch (error) {
       console.error("Error iniciando sesión:", error);
-      if (componenteActivo) {
-        setUsuarioActivo(null);
-        setUsuarioPendiente(null);
-        setShowPhoneModal(false);
-      }
+      setUsuarioActivo(null);
+      limpiarPerfilLocal();
     } finally {
       if (componenteActivo) setCargandoSesion(false);
     }
@@ -164,6 +198,8 @@ useEffect(() => {
     data: { subscription },
   } = supabase.auth.onAuthStateChange(async (_event, session) => {
     try {
+      setCargandoSesion(true);
+
       if (session?.user) {
         await manejarUsuarioGoogle(session.user);
       } else {
@@ -171,14 +207,12 @@ useEffect(() => {
         setUsuarioPendiente(null);
         setShowPhoneModal(false);
         setShowUserMenu(false);
+        limpiarPerfilLocal();
       }
     } catch (error) {
-      console.error("Error procesando cambio de sesión:", error);
-      setUsuarioActivo(null);
-      setUsuarioPendiente(null);
-      setShowPhoneModal(false);
+      console.error("Error en cambio de sesión:", error);
     } finally {
-      setCargandoSesion(false);
+      if (componenteActivo) setCargandoSesion(false);
     }
   });
 
@@ -257,12 +291,13 @@ const signInWithGoogle = async () => {
     provider: "google",
     options: {
       redirectTo: window.location.origin,
+      queryParams: {
+        prompt: "select_account",
+      },
     },
   });
-
   if (error) {
-    console.error("Error iniciando sesión con Google:", error.message);
-    alert("No se pudo iniciar sesión con Google: " + error.message);
+    alert("No se pudo iniciar sesión con Google. Revisa la configuración en Supabase.");
   }
 };
 
@@ -279,6 +314,7 @@ const cerrarSesion = async () => {
   setUsuarioPendiente(null);
   setShowPhoneModal(false);
   setShowRegistrosModal(false);
+  limpiarPerfilLocal();
 
 };
   const updatePlayerStats = async (id, resultado) => {
@@ -643,12 +679,15 @@ const cargarPremios = async () => {
   const { data, error } = await supabase
     .from("rewards")
     .select("*")
-    .eq("activo", true)
-    .order("id");
+    .order("id", { ascending: true });
 
-  if (!error && data) {
-    setPremios(data);
+  if (error) {
+    console.error("Error cargando premios:", error.message);
+    setPremios([]);
+    return;
   }
+
+  setPremios(data || []);
 };
 const cargarCanjes = async () => {
   const { data } = await supabase
@@ -1639,6 +1678,7 @@ return (
 
     setUsuarioActivo(data);
     setUsuarioPendiente(null);
+    guardarPerfilLocal(data);
   } else {
     const { error } = await supabase
       .from("players")
