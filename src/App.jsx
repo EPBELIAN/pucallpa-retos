@@ -2146,24 +2146,27 @@ navLogoutBtn: {
 
   container: {
   width: "100%",
-  maxWidth: "1500px",
-  margin: "0 auto",
-  padding: "65px 36px 70px",
+  maxWidth: "100%",
+  margin: "0",
+  padding: "0",
   boxSizing: "border-box",
 },
 
 hero: {
   textAlign: "center",
-  padding: "80px 40px 120px",
+
+  margin: "0",
+  padding: "0",
+
+  width: "100%",
+  minHeight: "760px",
 
   backgroundImage: "url('/pucallpa-fondo.png')",
   backgroundSize: "cover",
-  backgroundPosition: "center",
+  backgroundPosition: "center center",
   backgroundRepeat: "no-repeat",
 
-  borderRadius: "40px",
-
-  minHeight: "720px",
+  borderRadius: "0 0 40px 40px",
 
   display: "flex",
   flexDirection: "column",
