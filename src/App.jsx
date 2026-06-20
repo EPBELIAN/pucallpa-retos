@@ -2024,24 +2024,18 @@ pattern: {
 },
 
 navbar: {
-  width: "calc(100% - 34px)",
-  maxWidth: "1500px",
-  margin: "8px auto 0",
+  width: "calc(100% - 8px)",
+  maxWidth: "none",
+  margin: "8px 4px 0 4px",
   padding: "10px 44px",
   minHeight: "105px",
-
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
   boxSizing: "border-box",
- position: "sticky",
-  top: "8px",
-  zIndex: 1000,
-
   background: "rgba(255,255,255,0.96)",
-  border: "1px solid rgba(255,255,255,0.75)",
-  borderRadius: "30px",
-  boxShadow: "0 18px 55px rgba(6,78,59,0.16)",
+  borderRadius: "0 0 32px 32px",
+  boxShadow: "0 12px 40px rgba(0,0,0,.08)",
 },
 
 logoImage: {
