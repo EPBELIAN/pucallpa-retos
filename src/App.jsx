@@ -2185,6 +2185,7 @@ navLogoutBtn: {
   fontWeight: "950",
   boxShadow: "0 12px 30px rgba(6,78,59,0.10)",
 },
+
 title: {
   fontSize: "clamp(56px, 6vw, 96px)",
   lineHeight: "1.03",
@@ -2195,17 +2196,13 @@ title: {
 
   color: "#ffffff",
 
-  WebkitTextStroke: "4px #000",
+  WebkitTextStroke: "1.5px #000",
 
   textShadow: `
-    0 2px 0 #000,
-    0 4px 0 #000,
-    0 8px 16px rgba(0,0,0,.7),
-    0 16px 32px rgba(0,0,0,.45)
+    0 2px 6px rgba(0,0,0,.55),
+    0 4px 12px rgba(0,0,0,.25)
   `,
-  
-},
-  subtitle: {
+},  subtitle: {
   color: "#ffffff",
   textShadow: "0 2px 8px rgba(0,0,0,.8)",
 },
