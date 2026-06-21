@@ -2284,13 +2284,14 @@ rulesHeroBtn: {
   cursor: "pointer",
   boxShadow: "0 8px 18px rgba(22,163,74,.25)",
 },
-  gridPrincipal: {
-    display: "grid",
-    gridTemplateColumns: "1.4fr 0.8fr",
-    gap: "30px",
-    marginBottom: "30px",
-  },
 
+  gridPrincipal: {
+  display: "grid",
+  gridTemplateColumns: "1.4fr 0.8fr",
+  gap: "24px",
+  marginBottom: "24px",
+  alignItems: "start",
+},
   
 
   cardGrande: {
@@ -2302,11 +2303,13 @@ rulesHeroBtn: {
   },
 
   card: {
+    height: "auto",
     background: "rgba(255,255,255,0.96)",
     color: "#0f172a",
     borderRadius: "30px",
     padding: "30px",
     boxShadow: "0 28px 80px rgba(0,0,0,0.28)",
+
   },
 
   cardHeader: {
