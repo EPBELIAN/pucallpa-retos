@@ -2185,24 +2185,29 @@ navLogoutBtn: {
   fontWeight: "950",
   boxShadow: "0 12px 30px rgba(6,78,59,0.10)",
 },
-
-  title: {
+title: {
   fontSize: "clamp(56px, 6vw, 96px)",
   lineHeight: "1.03",
   margin: "38px auto 24px",
   maxWidth: "1160px",
   fontWeight: "950",
   letterSpacing: "-3px",
-  color: "#031f18",
-  textShadow: "0 14px 30px rgba(6,78,59,0.12)",
-},
 
+  color: "#ffffff",
+
+  WebkitTextStroke: "4px #000",
+
+  textShadow: `
+    0 2px 0 #000,
+    0 4px 0 #000,
+    0 8px 16px rgba(0,0,0,.7),
+    0 16px 32px rgba(0,0,0,.45)
+  `,
+  
+},
   subtitle: {
-  maxWidth: "900px",
-  margin: "0 auto",
-  color: "#334155",
-  fontSize: "clamp(20px, 2vw, 28px)",
-  lineHeight: "1.45",
+  color: "#ffffff",
+  textShadow: "0 2px 8px rgba(0,0,0,.8)",
 },
 
  noticeBox: {
