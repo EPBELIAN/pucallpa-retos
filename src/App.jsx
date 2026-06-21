@@ -1639,17 +1639,17 @@ return (
                 Cerrar ventana
               </button>
 
-              <button
-                style={{
-                  ...styles.leaveBtn,
-                  opacity: isCurrentUserInSelectedRoom() ? 1 : 0.5,
-                  cursor: isCurrentUserInSelectedRoom() ? "pointer" : "not-allowed",
-                }}
-                disabled={!isCurrentUserInSelectedRoom()}
-                onClick={leaveCurrentRoom}
-              >
-                Retirarme del equipo
-              </button>
+           <button
+  style={
+    isCurrentUserInSelectedRoom()
+      ? styles.leaveBtnActive
+      : styles.leaveBtnDisabled
+  }
+  disabled={!isCurrentUserInSelectedRoom()}
+  onClick={leaveCurrentRoom}
+>
+  Retirarme del equipo
+</button>
 
               <button style={styles.startBtn} onClick={confirmParticipation}>
                 Confirmar participación
@@ -3214,6 +3214,27 @@ teamRed: {
     fontWeight: "900",
     cursor: "pointer",
   },
+
+  leaveBtnDisabled: {
+  padding: "14px 22px",
+  borderRadius: "14px",
+  border: "1px solid #EFD8B4",
+  background: "#FFF8EC",
+  color: "#D7B98E",
+  fontWeight: "900",
+  cursor: "not-allowed",
+},
+
+leaveBtnActive: {
+  padding: "14px 22px",
+  borderRadius: "14px",
+  border: "1px solid #DC2626",
+  background: "#EF4444",
+  color: "#ffffff",
+  fontWeight: "900",
+  cursor: "pointer",
+  boxShadow: "0 10px 25px rgba(239,68,68,0.25)",
+},
 
   startBtn: {
   flex: 1.2,
