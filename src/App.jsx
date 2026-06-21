@@ -39,217 +39,55 @@ const [cargandoSesion, setCargandoSesion] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
 
-  const AUTH_CACHE_KEY = "pucallpa_retos_usuario_activo";
+  
+ const cargarPlayers = async (mostrarCarga = false) => {
+  if (mostrarCarga) setLoadingPlayers(true);
 
-  const guardarUsuarioCache = (usuario) => {
-    try {
-      if (usuario) localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(usuario));
-    } catch (error) {
-      console.warn("No se pudo guardar usuario local:", error);
+  try {
+    const { data, error } = await supabase
+      .from("players")
+      .select("*")
+      .order("puntos", { ascending: false });
+
+    if (error) {
+      console.error("Error cargando players:", error.message);
+      return;
     }
-  };
 
-  const leerUsuarioCache = () => {
-    try {
-      const raw = localStorage.getItem(AUTH_CACHE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  };
-
-  const limpiarUsuarioCache = () => {
-    try {
-      localStorage.removeItem(AUTH_CACHE_KEY);
-    } catch (error) {
-      console.warn("No se pudo limpiar usuario local:", error);
-    }
-  };
-
-  const promesaConTiempo = (promesa, ms, valorFallback) => {
-    return Promise.race([
-      promesa,
-      new Promise((resolve) => setTimeout(() => resolve(valorFallback), ms)),
-    ]);
-  };
-
-  const cargarPlayers = async (mostrarCarga = false) => {
-    if (mostrarCarga) setLoadingPlayers(true);
-
-    try {
-      const { data, error } = await supabase
-        .from("players")
-        .select("*")
-        .order("puntos", { ascending: false });
-
-      if (error) {
-        console.error("Error cargando players:", error.message);
-        return;
-      }
-
-      setUsuarios(data || []);
-    } catch (error) {
-      console.error("Error inesperado cargando players:", error);
-    } finally {
-      setLoadingPlayers(false);
-    }
-  };
-
+    setUsuarios(data || []);
+  } catch (error) {
+    console.error("Error inesperado cargando players:", error);
+  } finally {
+    setLoadingPlayers(false);
+  }
+};
   useEffect(() => {
-    cargarPlayers();
+   cargarPlayers();
     cargarPremios();
     cargarCanjes();
   }, []);
 
-  const manejarUsuarioGoogle = async (googleUser) => {
-    if (!googleUser) {
-      setUsuarioActivo(null);
-      setUsuarioPendiente(null);
-      setShowPhoneModal(false);
-      setShowLoginModal(false);
-      return null;
-    }
 
-    const perfilPendiente = {
-      id: googleUser.id,
-      nombre:
-        googleUser.user_metadata?.full_name ||
-        googleUser.user_metadata?.name ||
-        googleUser.email ||
-        "Jugador",
-      nickname: "",
-      celular: "",
-      email: googleUser.email || "",
-      password: "google",
-      puntos: 0,
-      partidas: 0,
-      ganadas: 0,
-      perdidas: 0,
-      role: "user",
-    };
+useEffect(() => {
+  const cargarSesion = async () => {
+    try {
+      const { data, error } = await supabase.auth.getSession();
 
-    // Respaldo inmediato: evita que F5 muestre "Entrar" mientras Supabase valida.
-    setUsuarioActivo((actual) => actual || perfilPendiente);
-    guardarUsuarioCache(perfilPendiente);
-    setShowLoginModal(false);
+      console.log("SESSION:", data);
+      console.log("ERROR:", error);
 
-    const resultado = await promesaConTiempo(
-      supabase
-        .from("players")
-        .select("*")
-        .eq("id", googleUser.id)
-        .maybeSingle(),
-      6000,
-      { data: null, error: { message: "Tiempo agotado leyendo players" } }
-    );
-
-    const { data, error } = resultado || {};
-
-    if (error) {
-      console.error("Error leyendo perfil en players:", error.message);
-      setUsuarioPendiente(perfilPendiente);
-      setShowPhoneModal(true);
-      return perfilPendiente;
-    }
-
-    if (data) {
-      setUsuarioActivo(data);
-      guardarUsuarioCache(data);
-      setUsuarioPendiente(null);
-      setShowLoginModal(false);
-      setShowPhoneModal(!data.celular || !data.nickname);
-      return data;
-    }
-
-    setUsuarioPendiente(perfilPendiente);
-    setShowPhoneModal(true);
-    return perfilPendiente;
-  };
-
-  useEffect(() => {
-    let componenteActivo = true;
-    const usuarioCache = leerUsuarioCache();
-
-    if (usuarioCache) {
-      setUsuarioActivo(usuarioCache);
-      setShowLoginModal(false);
+      if (data?.session?.user) {
+        setUsuarioActivo(data.session.user);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
       setCargandoSesion(false);
     }
+  };
 
-    const liberarCarga = setTimeout(() => {
-      if (componenteActivo) setCargandoSesion(false);
-    }, 2500);
-
-    const iniciarSesionPersistida = async () => {
-      try {
-        setCargandoSesion(!usuarioCache);
-
-        const resultadoSesion = await promesaConTiempo(
-          supabase.auth.getSession(),
-          6000,
-          { data: { session: null }, error: { message: "Tiempo agotado leyendo sesión" } }
-        );
-
-        if (!componenteActivo) return;
-
-        const session = resultadoSesion?.data?.session || null;
-        const error = resultadoSesion?.error || null;
-
-        if (error && error.message !== "Tiempo agotado leyendo sesión") {
-          console.error("Error obteniendo sesión:", error.message);
-        }
-
-        if (session?.user) {
-          await manejarUsuarioGoogle(session.user);
-        } else if (!usuarioCache) {
-          setUsuarioActivo(null);
-          setUsuarioPendiente(null);
-          setShowPhoneModal(false);
-          setShowLoginModal(false);
-          setShowUserMenu(false);
-        }
-      } catch (error) {
-        console.error("Error inicializando sesión:", error);
-      } finally {
-        if (componenteActivo) setCargandoSesion(false);
-      }
-    };
-
-    iniciarSesionPersistida();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!componenteActivo) return;
-
-      if (event === "SIGNED_OUT") {
-        limpiarUsuarioCache();
-        setUsuarioActivo(null);
-        setUsuarioPendiente(null);
-        setShowPhoneModal(false);
-        setShowLoginModal(false);
-        setShowUserMenu(false);
-        setCargandoSesion(false);
-        return;
-      }
-
-      if (session?.user) {
-        manejarUsuarioGoogle(session.user)
-          .catch((error) => console.error("Error procesando usuario Google:", error))
-          .finally(() => {
-            if (componenteActivo) setCargandoSesion(false);
-          });
-      } else {
-        setCargandoSesion(false);
-      }
-    });
-
-    return () => {
-      componenteActivo = false;
-      clearTimeout(liberarCarga);
-      subscription.unsubscribe();
-    };
-  }, []);
+  cargarSesion();
+}, []);
 
   useEffect(() => {
   const cargarRooms = async () => {
@@ -316,8 +154,6 @@ useEffect(() => {
 }, []);
 
 const signInWithGoogle = async () => {
-  setCargandoSesion(true);
-
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
@@ -327,48 +163,25 @@ const signInWithGoogle = async () => {
       },
     },
   });
-
   if (error) {
-    setCargandoSesion(false);
-    alert("No se pudo iniciar sesión con Google: " + error.message);
-  }
-};
-
-const limpiarSesionSupabaseLocal = () => {
-  try {
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith("sb-") || key.includes("supabase")) {
-        localStorage.removeItem(key);
-      }
-    });
-  } catch (error) {
-    console.warn("No se pudo limpiar localStorage:", error);
+    alert("No se pudo iniciar sesión con Google. Revisa la configuración en Supabase.");
   }
 };
 
 const cerrarSesion = async () => {
   setShowUserMenu(false);
-  setCargandoSesion(true);
 
   try {
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      console.error("Error cerrando sesión:", error.message);
-      alert("No se pudo cerrar sesión: " + error.message);
-    }
+    await supabase.auth.signOut({ scope: "local" });
   } catch (error) {
     console.error("Error cerrando sesión:", error);
-  } finally {
-    limpiarUsuarioCache();
-    limpiarSesionSupabaseLocal();
-    setUsuarioActivo(null);
-    setUsuarioPendiente(null);
-    setShowPhoneModal(false);
-    setShowRegistrosModal(false);
-    setShowLoginModal(false);
-    setCargandoSesion(false);
   }
+
+  setUsuarioActivo(null);
+  setUsuarioPendiente(null);
+  setShowPhoneModal(false);
+  setShowRegistrosModal(false);
+
 };
   const updatePlayerStats = async (id, resultado) => {
     if (!isAdminUser()) {
@@ -920,15 +733,11 @@ const guardarCelular = async () => {
     return;
   }
 
-  setUsuarioActivo((prev) => {
-    const actualizado = {
-      ...prev,
-      celular: celularLimpio,
-      nickname: nicknameLimpio,
-    };
-    guardarUsuarioCache(actualizado);
-    return actualizado;
-  });
+  setUsuarioActivo((prev) => ({
+    ...prev,
+    celular: celularLimpio,
+    nickname: nicknameLimpio,
+  }));
 
   setNuevoCelular("");
   setNicknameRegistro("");
@@ -959,18 +768,18 @@ return (
     Registros
   </button>
 )}
-  {cargandoSesion && !usuarioActivo ? (
-    <button style={{ ...styles.navAuthBtn, opacity: 0.7 }} disabled>
-      Cargando...
-    </button>
-  ) : !usuarioActivo ? (
-    <button
-  style={styles.navAuthBtn}
-  onClick={() => setShowLoginModal(true)}
->
-  Entrar
-</button>
-  ) : (
+  {cargandoSesion ? (
+  <button style={{ ...styles.navAuthBtn, opacity: 0.7 }} disabled>
+    Cargando...
+  </button>
+) : !usuarioActivo ? (
+  <button
+    style={styles.navAuthBtn}
+    onClick={() => setShowLoginModal(true)}
+  >
+    Entrar
+  </button>
+) : (
     <div
   style={styles.googleUserChip}
   onClick={() => setShowUserMenu(!showUserMenu)}
@@ -990,20 +799,19 @@ return (
 
         <main style={styles.container}>
           <motion.section
-            className="heroPrincipal"
             style={styles.hero}
             initial={{ opacity: 0, y: 35 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
           >
-            <span className="heroBadge" style={styles.badge}>Arena deportiva digital de Pucallpa</span>
+            <span style={styles.badge}>Arena deportiva digital de Pucallpa</span>
 
-            <h1 className="heroTitle" style={styles.title}>
-              Encuentra jugadores, Haz amigos y Vive el juego.</h1>
+            <h1 style={styles.title}>
+              Pucallpa Retos: fútbol y vóley competitivo
+            </h1>
 
           {usuarioActivo && (
   <div
-  className="sessionBannerHero"
   style={styles.sessionBanner}
   onClick={() => setShowUserMenu(!showUserMenu)}
 >
@@ -1075,7 +883,7 @@ return (
   </>
 )}
 
-           <div className="heroButtonsWrap" style={styles.heroButtons}>
+           <div style={styles.heroButtons}>
   <a style={styles.primaryBtn} href="#retos">
     Reservar slot
   </a>
@@ -1730,13 +1538,12 @@ return (
       .single();
 
   if (error) {
-  console.error("Error creando usuario:", error.message);
-  alert("Error creando usuario: " + error.message);
+  console.error("Error buscando usuario:", error.message);
+  setCargandoSesion(false);
   return;
 }
 
     setUsuarioActivo(data);
-    guardarUsuarioCache(data);
     setUsuarioPendiente(null);
   } else {
     const { error } = await supabase
@@ -1752,15 +1559,11 @@ return (
       return;
     }
 
-    setUsuarioActivo((prev) => {
-      const actualizado = {
-        ...prev,
-        celular: celularLimpio,
-        nickname: nicknameLimpio,
-      };
-      guardarUsuarioCache(actualizado);
-      return actualizado;
-    });
+    setUsuarioActivo((prev) => ({
+      ...prev,
+      celular: celularLimpio,
+      nickname: nicknameLimpio,
+    }));
   }
 
   setLoginCelular("");
@@ -1935,27 +1738,21 @@ return (
       }
 
       nav {
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 14px 12px 16px !important;
+        width: calc(100% - 12px) !important;
+        margin: 6px auto 0 !important;
+        padding: 12px 10px 14px !important;
         min-height: auto !important;
         flex-direction: column !important;
         align-items: center !important;
         justify-content: center !important;
-        gap: 10px !important;
+        gap: 12px !important;
         border-radius: 0 0 28px 28px !important;
       }
 
       nav img {
-        width: min(360px, 92vw) !important;
+        width: min(330px, 92vw) !important;
         height: auto !important;
-        max-width: 92vw !important;
-        object-fit: contain !important;
-      }
-
-      nav a,
-      nav button {
-        font-size: 16px !important;
+        max-width: 100% !important;
       }
 
       main {
@@ -1964,72 +1761,67 @@ return (
         overflow-x: hidden !important;
       }
 
-      .heroPrincipal {
+      main > section:first-child {
         width: 100% !important;
         min-height: 690px !important;
-        padding: 82px 16px 52px !important;
-        border-radius: 0 0 34px 34px !important;
-
-        background-size: auto 100% !important;
+        padding: 105px 16px 72px !important;
+        border-radius: 0 0 30px 30px !important;
+        background-size: cover !important;
         background-position: 50% top !important;
         background-repeat: no-repeat !important;
+        justify-content: center !important;
       }
 
-      .heroBadge {
-        max-width: calc(100vw - 44px) !important;
+      main > section:first-child > span:first-child {
+        max-width: calc(100vw - 34px) !important;
         padding: 11px 16px !important;
         font-size: 15px !important;
-        line-height: 1.25 !important;
-        background: rgba(255,255,255,0.76) !important;
-        backdrop-filter: blur(10px) !important;
+        line-height: 1.2 !important;
+        white-space: normal !important;
+        text-align: center !important;
+        background: rgba(255,255,255,.78) !important;
       }
 
-      .heroTitle {
-        width: min(92vw, 390px) !important;
-        max-width: 92vw !important;
-        margin: 42px auto 22px !important;
-
-        font-size: clamp(38px, 11vw, 48px) !important;
-        line-height: 1.05 !important;
-        letter-spacing: -1.2px !important;
-
+      h1 {
+        width: 100% !important;
+        max-width: calc(100vw - 32px) !important;
+        font-size: clamp(34px, 10.2vw, 44px) !important;
+        line-height: 1.08 !important;
+        letter-spacing: -1px !important;
+        margin: 28px auto 22px !important;
         color: #ffffff !important;
-        -webkit-text-stroke: 1.6px #000000 !important;
-        text-stroke: 1.6px #000000 !important;
-
+        -webkit-text-stroke: 1.7px #000000 !important;
         text-shadow:
           0 2px 0 #000,
-          0 5px 10px rgba(0,0,0,.65),
-          0 12px 24px rgba(0,0,0,.42) !important;
+          0 5px 12px rgba(0,0,0,.70),
+          0 12px 22px rgba(0,0,0,.42) !important;
       }
 
-      .sessionBannerHero {
+      main > section:first-child > div[style*="inline-flex"] {
         width: min(92vw, 420px) !important;
-        max-width: 92vw !important;
-        margin: 18px auto 0 !important;
-        padding: 14px 18px !important;
         display: flex !important;
         justify-content: space-between !important;
-        gap: 14px !important;
+        align-items: center !important;
+        gap: 10px !important;
+        padding: 12px 16px !important;
         border-radius: 18px !important;
-        font-size: 17px !important;
+        font-size: 15px !important;
       }
 
-      .heroButtonsWrap {
-        width: 100% !important;
+      main > section:first-child > div[style*="flex-wrap"] {
+        width: min(92vw, 420px) !important;
         margin-top: 28px !important;
-        display: flex !important;
-        justify-content: center !important;
-        gap: 14px !important;
-        flex-wrap: wrap !important;
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 12px !important;
       }
 
-      .heroButtonsWrap a,
-      .heroButtonsWrap button {
-        min-width: 142px !important;
-        padding: 15px 18px !important;
+      main > section:first-child > div[style*="flex-wrap"] button,
+      main > section:first-child > div[style*="flex-wrap"] a {
+        width: 100% !important;
+        padding: 15px 14px !important;
+        font-size: 15px !important;
         border-radius: 18px !important;
-        font-size: 16px !important;
       }
 
       section,
@@ -2041,28 +1833,13 @@ return (
         grid-template-columns: 1fr !important;
       }
 
+      div[style*="display: flex"] {
+        max-width: 100% !important;
+      }
+
       button,
       a {
         max-width: 100% !important;
-      }
-    }
-
-    @media (max-width: 420px) {
-      .heroPrincipal {
-        min-height: 665px !important;
-        padding-top: 72px !important;
-        background-size: auto 100% !important;
-        background-position: 48% top !important;
-      }
-
-      .heroTitle {
-        font-size: clamp(36px, 10.5vw, 44px) !important;
-        -webkit-text-stroke: 1.35px #000 !important;
-        text-stroke: 1.35px #000 !important;
-      }
-
-      .sessionBannerHero {
-        font-size: 16px !important;
       }
     }
   `}
