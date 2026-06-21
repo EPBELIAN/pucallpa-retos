@@ -2192,19 +2192,20 @@ title: {
   margin: "38px auto 24px",
   maxWidth: "1160px",
   fontWeight: "950",
-  letterSpacing: "-3px",
+  letterSpacing: "-2px",
 
   color: "#ffffff",
 
-  WebkitTextStroke: "1.5px #000",
+  WebkitTextStroke: "0px transparent",
 
   textShadow: `
-    0 2px 6px rgba(0,0,0,.55),
-    0 4px 12px rgba(0,0,0,.25)
+    2px 2px 0 #000,
+    -2px 2px 0 #000,
+    2px -2px 0 #000,
+    -2px -2px 0 #000,
+    0 4px 12px rgba(0,0,0,.45)
   `,
-},  subtitle: {
-  color: "#ffffff",
-  textShadow: "0 2px 8px rgba(0,0,0,.8)",
+  
 },
 
  noticeBox: {
