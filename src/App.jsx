@@ -2023,19 +2023,29 @@ pattern: {
     "radial-gradient(circle at 12% 45%, rgba(57,255,102,0.18), transparent 22%), radial-gradient(circle at 88% 20%, rgba(6,95,70,0.10), transparent 26%), repeating-linear-gradient(45deg, rgba(6,78,59,0.05) 0 2px, transparent 2px 26px)",
 },
 
-navbar: {
-  width: "calc(100% - 8px)",
+ navbar: {
+  width: "100%",
   maxWidth: "none",
-  margin: "8px 4px 0 4px",
-  padding: "10px 44px",
-  minHeight: "105px",
+  margin: "0",
+  padding: "10px 46px",
+  minHeight: "118px",
+
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
   boxSizing: "border-box",
-  background: "rgba(255,255,255,0.96)",
-  borderRadius: "0 0 32px 32px",
-  boxShadow: "0 12px 40px rgba(0,0,0,.08)",
+
+  overflow: "visible",
+  position: "relative",
+  zIndex: 1000,
+
+  background: "rgba(255,255,255,0.98)",
+  backdropFilter: "blur(18px)",
+  WebkitBackdropFilter: "blur(18px)",
+  border: "none",
+  borderBottom: "1px solid rgba(6,78,59,0.10)",
+  borderRadius: "0 0 34px 34px",
+  boxShadow: "0 18px 55px rgba(6,78,59,0.14)",
 },
 
 logoImage: {
@@ -2143,29 +2153,25 @@ navLogoutBtn: {
   padding: "0",
   boxSizing: "border-box",
 },
-hero: {
+
+ hero: {
   textAlign: "center",
-
-  marginTop: "0",
-  padding: "150px 20px 90px",
-
   width: "100%",
   minHeight: "820px",
+  padding: "130px 20px 95px",
+  boxSizing: "border-box",
 
   backgroundImage:
-    "linear-gradient(to bottom, rgba(238,247,235,0.95) 0%, rgba(238,247,235,0.65) 9%, rgba(238,247,235,0) 22%), url('/pucallpa-fondo.png')",
-
+    "linear-gradient(to bottom, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.56) 8%, rgba(255,255,255,0) 22%), url('/pucallpa-fondo.png')",
   backgroundSize: "cover",
   backgroundPosition: "center center",
   backgroundRepeat: "no-repeat",
 
-  borderRadius: "0 0 40px 40px",
-
+  borderRadius: "0 0 42px 42px",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
   justifyContent: "center",
-
   position: "relative",
   overflow: "hidden",
 },
@@ -2173,7 +2179,7 @@ hero: {
   badge: {
   padding: "14px 24px",
   borderRadius: "999px",
-  background: "rgba(255,255,255,0.88)",
+  background: "rgba(255,255,255,0.62)",
   border: "1px solid rgba(6,95,70,0.16)",
   color: "#047857",
   fontWeight: "950",
@@ -2187,8 +2193,8 @@ hero: {
   maxWidth: "1160px",
   fontWeight: "950",
   letterSpacing: "-3px",
-  color: "#ffffff",
- textShadow: "0 4px 20px rgba(0,0,0,.9)",
+  color: "#031f18",
+  textShadow: "0 14px 30px rgba(6,78,59,0.12)",
 },
 
   subtitle: {
