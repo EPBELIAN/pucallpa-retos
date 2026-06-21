@@ -39,55 +39,217 @@ const [cargandoSesion, setCargandoSesion] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
 
-  
- const cargarPlayers = async (mostrarCarga = false) => {
-  if (mostrarCarga) setLoadingPlayers(true);
+  const AUTH_CACHE_KEY = "pucallpa_retos_usuario_activo";
 
-  try {
-    const { data, error } = await supabase
-      .from("players")
-      .select("*")
-      .order("puntos", { ascending: false });
-
-    if (error) {
-      console.error("Error cargando players:", error.message);
-      return;
+  const guardarUsuarioCache = (usuario) => {
+    try {
+      if (usuario) localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(usuario));
+    } catch (error) {
+      console.warn("No se pudo guardar usuario local:", error);
     }
+  };
 
-    setUsuarios(data || []);
-  } catch (error) {
-    console.error("Error inesperado cargando players:", error);
-  } finally {
-    setLoadingPlayers(false);
-  }
-};
+  const leerUsuarioCache = () => {
+    try {
+      const raw = localStorage.getItem(AUTH_CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const limpiarUsuarioCache = () => {
+    try {
+      localStorage.removeItem(AUTH_CACHE_KEY);
+    } catch (error) {
+      console.warn("No se pudo limpiar usuario local:", error);
+    }
+  };
+
+  const promesaConTiempo = (promesa, ms, valorFallback) => {
+    return Promise.race([
+      promesa,
+      new Promise((resolve) => setTimeout(() => resolve(valorFallback), ms)),
+    ]);
+  };
+
+  const cargarPlayers = async (mostrarCarga = false) => {
+    if (mostrarCarga) setLoadingPlayers(true);
+
+    try {
+      const { data, error } = await supabase
+        .from("players")
+        .select("*")
+        .order("puntos", { ascending: false });
+
+      if (error) {
+        console.error("Error cargando players:", error.message);
+        return;
+      }
+
+      setUsuarios(data || []);
+    } catch (error) {
+      console.error("Error inesperado cargando players:", error);
+    } finally {
+      setLoadingPlayers(false);
+    }
+  };
+
   useEffect(() => {
-   cargarPlayers();
+    cargarPlayers();
     cargarPremios();
     cargarCanjes();
   }, []);
 
-
-useEffect(() => {
-  const cargarSesion = async () => {
-    try {
-      const { data, error } = await supabase.auth.getSession();
-
-      console.log("SESSION:", data);
-      console.log("ERROR:", error);
-
-      if (data?.session?.user) {
-        setUsuarioActivo(data.session.user);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setCargandoSesion(false);
+  const manejarUsuarioGoogle = async (googleUser) => {
+    if (!googleUser) {
+      setUsuarioActivo(null);
+      setUsuarioPendiente(null);
+      setShowPhoneModal(false);
+      setShowLoginModal(false);
+      return null;
     }
+
+    const perfilPendiente = {
+      id: googleUser.id,
+      nombre:
+        googleUser.user_metadata?.full_name ||
+        googleUser.user_metadata?.name ||
+        googleUser.email ||
+        "Jugador",
+      nickname: "",
+      celular: "",
+      email: googleUser.email || "",
+      password: "google",
+      puntos: 0,
+      partidas: 0,
+      ganadas: 0,
+      perdidas: 0,
+      role: "user",
+    };
+
+    // Respaldo inmediato: evita que F5 muestre "Entrar" mientras Supabase valida.
+    setUsuarioActivo((actual) => actual || perfilPendiente);
+    guardarUsuarioCache(perfilPendiente);
+    setShowLoginModal(false);
+
+    const resultado = await promesaConTiempo(
+      supabase
+        .from("players")
+        .select("*")
+        .eq("id", googleUser.id)
+        .maybeSingle(),
+      6000,
+      { data: null, error: { message: "Tiempo agotado leyendo players" } }
+    );
+
+    const { data, error } = resultado || {};
+
+    if (error) {
+      console.error("Error leyendo perfil en players:", error.message);
+      setUsuarioPendiente(perfilPendiente);
+      setShowPhoneModal(true);
+      return perfilPendiente;
+    }
+
+    if (data) {
+      setUsuarioActivo(data);
+      guardarUsuarioCache(data);
+      setUsuarioPendiente(null);
+      setShowLoginModal(false);
+      setShowPhoneModal(!data.celular || !data.nickname);
+      return data;
+    }
+
+    setUsuarioPendiente(perfilPendiente);
+    setShowPhoneModal(true);
+    return perfilPendiente;
   };
 
-  cargarSesion();
-}, []);
+  useEffect(() => {
+    let componenteActivo = true;
+    const usuarioCache = leerUsuarioCache();
+
+    if (usuarioCache) {
+      setUsuarioActivo(usuarioCache);
+      setShowLoginModal(false);
+      setCargandoSesion(false);
+    }
+
+    const liberarCarga = setTimeout(() => {
+      if (componenteActivo) setCargandoSesion(false);
+    }, 2500);
+
+    const iniciarSesionPersistida = async () => {
+      try {
+        setCargandoSesion(!usuarioCache);
+
+        const resultadoSesion = await promesaConTiempo(
+          supabase.auth.getSession(),
+          6000,
+          { data: { session: null }, error: { message: "Tiempo agotado leyendo sesión" } }
+        );
+
+        if (!componenteActivo) return;
+
+        const session = resultadoSesion?.data?.session || null;
+        const error = resultadoSesion?.error || null;
+
+        if (error && error.message !== "Tiempo agotado leyendo sesión") {
+          console.error("Error obteniendo sesión:", error.message);
+        }
+
+        if (session?.user) {
+          await manejarUsuarioGoogle(session.user);
+        } else if (!usuarioCache) {
+          setUsuarioActivo(null);
+          setUsuarioPendiente(null);
+          setShowPhoneModal(false);
+          setShowLoginModal(false);
+          setShowUserMenu(false);
+        }
+      } catch (error) {
+        console.error("Error inicializando sesión:", error);
+      } finally {
+        if (componenteActivo) setCargandoSesion(false);
+      }
+    };
+
+    iniciarSesionPersistida();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!componenteActivo) return;
+
+      if (event === "SIGNED_OUT") {
+        limpiarUsuarioCache();
+        setUsuarioActivo(null);
+        setUsuarioPendiente(null);
+        setShowPhoneModal(false);
+        setShowLoginModal(false);
+        setShowUserMenu(false);
+        setCargandoSesion(false);
+        return;
+      }
+
+      if (session?.user) {
+        manejarUsuarioGoogle(session.user)
+          .catch((error) => console.error("Error procesando usuario Google:", error))
+          .finally(() => {
+            if (componenteActivo) setCargandoSesion(false);
+          });
+      } else {
+        setCargandoSesion(false);
+      }
+    });
+
+    return () => {
+      componenteActivo = false;
+      clearTimeout(liberarCarga);
+      subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
   const cargarRooms = async () => {
@@ -154,6 +316,8 @@ useEffect(() => {
 }, []);
 
 const signInWithGoogle = async () => {
+  setCargandoSesion(true);
+
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
@@ -163,25 +327,48 @@ const signInWithGoogle = async () => {
       },
     },
   });
+
   if (error) {
-    alert("No se pudo iniciar sesión con Google. Revisa la configuración en Supabase.");
+    setCargandoSesion(false);
+    alert("No se pudo iniciar sesión con Google: " + error.message);
+  }
+};
+
+const limpiarSesionSupabaseLocal = () => {
+  try {
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith("sb-") || key.includes("supabase")) {
+        localStorage.removeItem(key);
+      }
+    });
+  } catch (error) {
+    console.warn("No se pudo limpiar localStorage:", error);
   }
 };
 
 const cerrarSesion = async () => {
   setShowUserMenu(false);
+  setCargandoSesion(true);
 
   try {
-    await supabase.auth.signOut({ scope: "local" });
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      console.error("Error cerrando sesión:", error.message);
+      alert("No se pudo cerrar sesión: " + error.message);
+    }
   } catch (error) {
     console.error("Error cerrando sesión:", error);
+  } finally {
+    limpiarUsuarioCache();
+    limpiarSesionSupabaseLocal();
+    setUsuarioActivo(null);
+    setUsuarioPendiente(null);
+    setShowPhoneModal(false);
+    setShowRegistrosModal(false);
+    setShowLoginModal(false);
+    setCargandoSesion(false);
   }
-
-  setUsuarioActivo(null);
-  setUsuarioPendiente(null);
-  setShowPhoneModal(false);
-  setShowRegistrosModal(false);
-
 };
   const updatePlayerStats = async (id, resultado) => {
     if (!isAdminUser()) {
@@ -733,11 +920,15 @@ const guardarCelular = async () => {
     return;
   }
 
-  setUsuarioActivo((prev) => ({
-    ...prev,
-    celular: celularLimpio,
-    nickname: nicknameLimpio,
-  }));
+  setUsuarioActivo((prev) => {
+    const actualizado = {
+      ...prev,
+      celular: celularLimpio,
+      nickname: nicknameLimpio,
+    };
+    guardarUsuarioCache(actualizado);
+    return actualizado;
+  });
 
   setNuevoCelular("");
   setNicknameRegistro("");
@@ -747,7 +938,7 @@ const guardarCelular = async () => {
 return (
     <div style={styles.page}>
       <div style={styles.pattern}>
-      <nav className="top-navbar" style={styles.navbar}>
+      <nav style={styles.navbar}>
   <div style={styles.logo}>
     <img
       src={logoPucallpa}
@@ -768,18 +959,18 @@ return (
     Registros
   </button>
 )}
-  {cargandoSesion ? (
-  <button style={{ ...styles.navAuthBtn, opacity: 0.7 }} disabled>
-    Cargando...
-  </button>
-) : !usuarioActivo ? (
-  <button
-    style={styles.navAuthBtn}
-    onClick={() => setShowLoginModal(true)}
-  >
-    Entrar
-  </button>
-) : (
+  {cargandoSesion && !usuarioActivo ? (
+    <button style={{ ...styles.navAuthBtn, opacity: 0.7 }} disabled>
+      Cargando...
+    </button>
+  ) : !usuarioActivo ? (
+    <button
+  style={styles.navAuthBtn}
+  onClick={() => setShowLoginModal(true)}
+>
+  Entrar
+</button>
+  ) : (
     <div
   style={styles.googleUserChip}
   onClick={() => setShowUserMenu(!showUserMenu)}
@@ -799,21 +990,18 @@ return (
 
         <main style={styles.container}>
           <motion.section
-            className="hero-section"
             style={styles.hero}
             initial={{ opacity: 0, y: 35 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
           >
-            <span className="hero-badge" style={styles.badge}>Arena deportiva digital de Pucallpa</span>
+            <span style={styles.badge}>Arena deportiva digital de Pucallpa</span>
 
-            <h1 className="hero-title" style={styles.title}>
-              Pucallpa Retos: fútbol y vóley competitivo
-            </h1>
+            <h1 style={styles.title}>
+              Encuentra jugadores, Haz amigos y Vive el juego.</h1>
 
           {usuarioActivo && (
   <div
-  className="session-banner"
   style={styles.sessionBanner}
   onClick={() => setShowUserMenu(!showUserMenu)}
 >
@@ -885,7 +1073,7 @@ return (
   </>
 )}
 
-           <div className="hero-buttons" style={styles.heroButtons}>
+           <div style={styles.heroButtons}>
   <a style={styles.primaryBtn} href="#retos">
     Reservar slot
   </a>
@@ -1540,12 +1728,13 @@ return (
       .single();
 
   if (error) {
-  console.error("Error buscando usuario:", error.message);
-  setCargandoSesion(false);
+  console.error("Error creando usuario:", error.message);
+  alert("Error creando usuario: " + error.message);
   return;
 }
 
     setUsuarioActivo(data);
+    guardarUsuarioCache(data);
     setUsuarioPendiente(null);
   } else {
     const { error } = await supabase
@@ -1561,11 +1750,15 @@ return (
       return;
     }
 
-    setUsuarioActivo((prev) => ({
-      ...prev,
-      celular: celularLimpio,
-      nickname: nicknameLimpio,
-    }));
+    setUsuarioActivo((prev) => {
+      const actualizado = {
+        ...prev,
+        celular: celularLimpio,
+        nickname: nicknameLimpio,
+      };
+      guardarUsuarioCache(actualizado);
+      return actualizado;
+    });
   }
 
   setLoginCelular("");
@@ -1739,100 +1932,31 @@ return (
         overflow-x: hidden !important;
       }
 
-      .top-navbar {
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 14px 14px 16px !important;
-        min-height: auto !important;
+      nav {
+        width: calc(100% - 18px) !important;
+        margin: 8px auto 0 !important;
+        padding: 12px !important;
         flex-direction: column !important;
         align-items: center !important;
-        justify-content: center !important;
-        gap: 10px !important;
-        border-radius: 0 0 28px 28px !important;
+        gap: 12px !important;
       }
 
-      .top-navbar img {
-        width: min(88vw, 430px) !important;
+      nav img {
+        width: 300px !important;
         height: auto !important;
         max-width: 100% !important;
       }
 
-      .top-navbar > div:first-child {
-        width: 100% !important;
-        justify-content: center !important;
-      }
-
-      .top-navbar > div:last-child {
-        width: 100% !important;
-        min-width: 0 !important;
-        justify-content: center !important;
-        gap: 18px !important;
-        flex-wrap: wrap !important;
-      }
-
       main {
         width: 100% !important;
-        padding: 0 !important;
+        padding: 18px 14px 50px !important;
         overflow-x: hidden !important;
       }
 
-      .hero-section {
-        width: 100% !important;
-        min-height: 760px !important;
-        padding: 210px 18px 72px !important;
-        border-radius: 0 0 34px 34px !important;
-        background-size: cover !important;
-        background-position: 50% top !important;
-      }
-
-      .hero-badge {
-        max-width: calc(100vw - 44px) !important;
-        padding: 12px 16px !important;
-        font-size: 15px !important;
-        line-height: 1.2 !important;
-        text-align: center !important;
-      }
-
-      .hero-title {
-        font-size: clamp(38px, 11vw, 54px) !important;
-        line-height: 1.08 !important;
-        letter-spacing: -1.2px !important;
-        max-width: 94vw !important;
-        margin: 26px auto 22px !important;
-        color: #fff !important;
-        -webkit-text-stroke: 1.8px #000 !important;
-        text-shadow:
-          0 2px 0 #000,
-          0 5px 10px rgba(0,0,0,.65),
-          0 10px 20px rgba(0,0,0,.45) !important;
-      }
-
-      .session-banner {
-        width: min(92vw, 480px) !important;
-        max-width: 92vw !important;
-        padding: 14px 16px !important;
-        margin: 10px auto 0 !important;
-        display: flex !important;
-        justify-content: space-between !important;
-        gap: 12px !important;
-        font-size: 17px !important;
-        line-height: 1.25 !important;
-        border-radius: 18px !important;
-      }
-
-      .hero-buttons {
-        width: 100% !important;
-        max-width: 94vw !important;
-        margin-top: 34px !important;
-        gap: 14px !important;
-        justify-content: center !important;
-      }
-
-      .hero-buttons a,
-      .hero-buttons button {
-        min-width: 150px !important;
-        padding: 15px 22px !important;
-        font-size: 16px !important;
+      h1 {
+        font-size: 42px !important;
+        line-height: 1.05 !important;
+        letter-spacing: -1px !important;
       }
 
       section,
@@ -1851,28 +1975,6 @@ return (
       button,
       a {
         max-width: 100% !important;
-      }
-    }
-
-    @media (max-width: 420px) {
-      .hero-section {
-        min-height: 720px !important;
-        padding-top: 190px !important;
-        background-position: 52% top !important;
-      }
-
-      .hero-title {
-        font-size: clamp(34px, 10.5vw, 46px) !important;
-        -webkit-text-stroke: 1.4px #000 !important;
-      }
-
-      .session-banner {
-        font-size: 15px !important;
-      }
-
-      .hero-buttons a,
-      .hero-buttons button {
-        min-width: 138px !important;
       }
     }
   `}
@@ -1922,11 +2024,11 @@ pattern: {
 },
 
  navbar: {
-  width: "calc(100% - 34px)",
-  maxWidth: "1500px",
-  margin: "8px auto 0",
-  padding: "10px 44px",
-  minHeight: "105px",
+  width: "100%",
+  maxWidth: "none",
+  margin: "0",
+  padding: "10px 46px",
+  minHeight: "118px",
 
   display: "flex",
   justifyContent: "space-between",
@@ -1935,13 +2037,15 @@ pattern: {
 
   overflow: "visible",
   position: "relative",
+  zIndex: 1000,
 
-  background: "rgba(255,255,255,0.82)",
+  background: "rgba(255,255,255,0.98)",
   backdropFilter: "blur(18px)",
   WebkitBackdropFilter: "blur(18px)",
-  border: "1px solid rgba(6,78,59,0.10)",
-  borderRadius: "30px",
-  boxShadow: "0 18px 55px rgba(6,78,59,0.16)",
+  border: "none",
+  borderBottom: "1px solid rgba(6,78,59,0.10)",
+  borderRadius: "0 0 34px 34px",
+  boxShadow: "0 18px 55px rgba(6,78,59,0.14)",
 },
 
 logoImage: {
@@ -2044,15 +2148,32 @@ navLogoutBtn: {
 
   container: {
   width: "100%",
-  maxWidth: "1500px",
-  margin: "0 auto",
-  padding: "65px 36px 70px",
+  maxWidth: "100%",
+  margin: "0",
+  padding: "0",
   boxSizing: "border-box",
 },
 
  hero: {
   textAlign: "center",
-  padding: "0 0 65px",
+  width: "100%",
+  minHeight: "820px",
+  padding: "130px 20px 95px",
+  boxSizing: "border-box",
+
+  backgroundImage:
+    "linear-gradient(to bottom, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.56) 8%, rgba(255,255,255,0) 22%), url('/pucallpa-fondo.png')",
+  backgroundSize: "cover",
+  backgroundPosition: "center center",
+  backgroundRepeat: "no-repeat",
+
+  borderRadius: "0 0 42px 42px",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  position: "relative",
+  overflow: "hidden",
 },
 
   badge: {
@@ -2064,24 +2185,29 @@ navLogoutBtn: {
   fontWeight: "950",
   boxShadow: "0 12px 30px rgba(6,78,59,0.10)",
 },
-
-  title: {
+title: {
   fontSize: "clamp(56px, 6vw, 96px)",
   lineHeight: "1.03",
   margin: "38px auto 24px",
   maxWidth: "1160px",
   fontWeight: "950",
   letterSpacing: "-3px",
-  color: "#031f18",
-  textShadow: "0 14px 30px rgba(6,78,59,0.12)",
-},
 
+  color: "#ffffff",
+
+  WebkitTextStroke: "4px #000",
+
+  textShadow: `
+    0 2px 0 #000,
+    0 4px 0 #000,
+    0 8px 16px rgba(0,0,0,.7),
+    0 16px 32px rgba(0,0,0,.45)
+  `,
+  
+},
   subtitle: {
-  maxWidth: "900px",
-  margin: "0 auto",
-  color: "#334155",
-  fontSize: "clamp(20px, 2vw, 28px)",
-  lineHeight: "1.45",
+  color: "#ffffff",
+  textShadow: "0 2px 8px rgba(0,0,0,.8)",
 },
 
  noticeBox: {
