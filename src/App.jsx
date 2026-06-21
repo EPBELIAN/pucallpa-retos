@@ -2288,7 +2288,7 @@ rulesHeroBtn: {
   gridPrincipal: {
   display: "grid",
   gridTemplateColumns: "1.4fr 0.8fr",
-  gap: "24px",
+  gap: "8px",
   marginBottom: "24px",
   alignItems: "start",
 },
@@ -2306,7 +2306,7 @@ rulesHeroBtn: {
     height: "auto",
     background: "rgba(255,255,255,0.96)",
     color: "#0f172a",
-    borderRadius: "30px",
+   borderRadius: "0px",
     padding: "30px",
     boxShadow: "0 28px 80px rgba(0,0,0,0.28)",
 
