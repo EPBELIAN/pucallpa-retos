@@ -1221,20 +1221,30 @@ return (
     ) : (
       canjes.filter(c => c.estado === "pendiente").map((canje) => (
         <div key={canje.id} style={{
-          background: "rgba(255,255,255,0.05)",
-          borderRadius: "12px",
-          padding: "12px",
-          marginBottom: "10px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "8px"
-        }}>
+  background: "#ffffff",
+  border: "1px solid #d1fae5",
+  borderRadius: "18px",
+  padding: "14px",
+  marginBottom: "12px",
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  flexWrap: "wrap",
+  gap: "10px",
+  boxShadow: "0 8px 20px rgba(0,0,0,0.08)",
+}}>
           <div>
-            <div style={{ color: "#fff", fontWeight: "800" }}>{canje.user_name}</div>
-            <div style={{ color: "#39ff66", fontSize: "13px" }}>{canje.rewards?.nombre} — {canje.puntos_usados} pts</div>
-            <div style={{ color: "#aaa", fontSize: "12px" }}>Cel: {canje.celular || "No registrado"}</div>
+            <div style={{ color: "#064e3b", fontWeight: "900", fontSize: "16px" }}>
+  {canje.user_name}
+</div>
+
+<div style={{ color: "#15803d", fontSize: "14px", fontWeight: "800" }}>
+  {canje.rewards?.nombre} — {canje.puntos_usados} pts
+</div>
+
+<div style={{ color: "#475569", fontSize: "13px", fontWeight: "700" }}>
+  Cel: {canje.celular || "No registrado"}
+</div>
           </div>
           <div style={{ display: "flex", gap: "8px" }}>
             <button onClick={() => aprobarCanje(canje.id)} style={{
