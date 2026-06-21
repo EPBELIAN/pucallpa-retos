@@ -990,18 +990,20 @@ return (
 
         <main style={styles.container}>
           <motion.section
+            className="heroPrincipal"
             style={styles.hero}
             initial={{ opacity: 0, y: 35 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7 }}
           >
-            <span style={styles.badge}>Arena deportiva digital de Pucallpa</span>
+            <span className="heroBadge" style={styles.badge}>Arena deportiva digital de Pucallpa</span>
 
-            <h1 style={styles.title}>
+            <h1 className="heroTitle" style={styles.title}>
               Encuentra jugadores, Haz amigos y Vive el juego.</h1>
 
           {usuarioActivo && (
   <div
+  className="sessionBannerHero"
   style={styles.sessionBanner}
   onClick={() => setShowUserMenu(!showUserMenu)}
 >
@@ -1073,7 +1075,7 @@ return (
   </>
 )}
 
-           <div style={styles.heroButtons}>
+           <div className="heroButtonsWrap" style={styles.heroButtons}>
   <a style={styles.primaryBtn} href="#retos">
     Reservar slot
   </a>
@@ -1933,30 +1935,101 @@ return (
       }
 
       nav {
-        width: calc(100% - 18px) !important;
-        margin: 8px auto 0 !important;
-        padding: 12px !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 14px 12px 16px !important;
+        min-height: auto !important;
         flex-direction: column !important;
         align-items: center !important;
-        gap: 12px !important;
+        justify-content: center !important;
+        gap: 10px !important;
+        border-radius: 0 0 28px 28px !important;
       }
 
       nav img {
-        width: 300px !important;
+        width: min(360px, 92vw) !important;
         height: auto !important;
-        max-width: 100% !important;
+        max-width: 92vw !important;
+        object-fit: contain !important;
+      }
+
+      nav a,
+      nav button {
+        font-size: 16px !important;
       }
 
       main {
         width: 100% !important;
-        padding: 18px 14px 50px !important;
+        padding: 0 !important;
         overflow-x: hidden !important;
       }
 
-      h1 {
-        font-size: 42px !important;
+      .heroPrincipal {
+        width: 100% !important;
+        min-height: 690px !important;
+        padding: 82px 16px 52px !important;
+        border-radius: 0 0 34px 34px !important;
+
+        background-size: auto 100% !important;
+        background-position: 50% top !important;
+        background-repeat: no-repeat !important;
+      }
+
+      .heroBadge {
+        max-width: calc(100vw - 44px) !important;
+        padding: 11px 16px !important;
+        font-size: 15px !important;
+        line-height: 1.25 !important;
+        background: rgba(255,255,255,0.76) !important;
+        backdrop-filter: blur(10px) !important;
+      }
+
+      .heroTitle {
+        width: min(92vw, 390px) !important;
+        max-width: 92vw !important;
+        margin: 42px auto 22px !important;
+
+        font-size: clamp(38px, 11vw, 48px) !important;
         line-height: 1.05 !important;
-        letter-spacing: -1px !important;
+        letter-spacing: -1.2px !important;
+
+        color: #ffffff !important;
+        -webkit-text-stroke: 1.6px #000000 !important;
+        text-stroke: 1.6px #000000 !important;
+
+        text-shadow:
+          0 2px 0 #000,
+          0 5px 10px rgba(0,0,0,.65),
+          0 12px 24px rgba(0,0,0,.42) !important;
+      }
+
+      .sessionBannerHero {
+        width: min(92vw, 420px) !important;
+        max-width: 92vw !important;
+        margin: 18px auto 0 !important;
+        padding: 14px 18px !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        gap: 14px !important;
+        border-radius: 18px !important;
+        font-size: 17px !important;
+      }
+
+      .heroButtonsWrap {
+        width: 100% !important;
+        margin-top: 28px !important;
+        display: flex !important;
+        justify-content: center !important;
+        gap: 14px !important;
+        flex-wrap: wrap !important;
+      }
+
+      .heroButtonsWrap a,
+      .heroButtonsWrap button {
+        min-width: 142px !important;
+        padding: 15px 18px !important;
+        border-radius: 18px !important;
+        font-size: 16px !important;
       }
 
       section,
@@ -1968,13 +2041,28 @@ return (
         grid-template-columns: 1fr !important;
       }
 
-      div[style*="display: flex"] {
-        max-width: 100% !important;
-      }
-
       button,
       a {
         max-width: 100% !important;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .heroPrincipal {
+        min-height: 665px !important;
+        padding-top: 72px !important;
+        background-size: auto 100% !important;
+        background-position: 48% top !important;
+      }
+
+      .heroTitle {
+        font-size: clamp(36px, 10.5vw, 44px) !important;
+        -webkit-text-stroke: 1.35px #000 !important;
+        text-stroke: 1.35px #000 !important;
+      }
+
+      .sessionBannerHero {
+        font-size: 16px !important;
       }
     }
   `}
@@ -2024,11 +2112,11 @@ pattern: {
 },
 
  navbar: {
-  width: "100%",
-  maxWidth: "none",
-  margin: "0",
-  padding: "10px 46px",
-  minHeight: "118px",
+  width: "calc(100% - 34px)",
+  maxWidth: "1500px",
+  margin: "8px auto 0",
+  padding: "10px 44px",
+  minHeight: "105px",
 
   display: "flex",
   justifyContent: "space-between",
@@ -2037,15 +2125,13 @@ pattern: {
 
   overflow: "visible",
   position: "relative",
-  zIndex: 1000,
 
-  background: "rgba(255,255,255,0.98)",
+  background: "rgba(255,255,255,0.82)",
   backdropFilter: "blur(18px)",
   WebkitBackdropFilter: "blur(18px)",
-  border: "none",
-  borderBottom: "1px solid rgba(6,78,59,0.10)",
-  borderRadius: "0 0 34px 34px",
-  boxShadow: "0 18px 55px rgba(6,78,59,0.14)",
+  border: "1px solid rgba(6,78,59,0.10)",
+  borderRadius: "30px",
+  boxShadow: "0 18px 55px rgba(6,78,59,0.16)",
 },
 
 logoImage: {
@@ -2148,32 +2234,15 @@ navLogoutBtn: {
 
   container: {
   width: "100%",
-  maxWidth: "100%",
-  margin: "0",
-  padding: "0",
+  maxWidth: "1500px",
+  margin: "0 auto",
+  padding: "65px 36px 70px",
   boxSizing: "border-box",
 },
 
  hero: {
   textAlign: "center",
-  width: "100%",
-  minHeight: "820px",
-  padding: "130px 20px 95px",
-  boxSizing: "border-box",
-
-  backgroundImage:
-    "linear-gradient(to bottom, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.56) 8%, rgba(255,255,255,0) 22%), url('/pucallpa-fondo.png')",
-  backgroundSize: "cover",
-  backgroundPosition: "center center",
-  backgroundRepeat: "no-repeat",
-
-  borderRadius: "0 0 42px 42px",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  position: "relative",
-  overflow: "hidden",
+  padding: "0 0 65px",
 },
 
   badge: {
@@ -2185,29 +2254,24 @@ navLogoutBtn: {
   fontWeight: "950",
   boxShadow: "0 12px 30px rgba(6,78,59,0.10)",
 },
-title: {
+
+  title: {
   fontSize: "clamp(56px, 6vw, 96px)",
   lineHeight: "1.03",
   margin: "38px auto 24px",
   maxWidth: "1160px",
   fontWeight: "950",
   letterSpacing: "-3px",
-
-  color: "#ffffff",
-
-  WebkitTextStroke: "4px #000",
-
-  textShadow: `
-    0 2px 0 #000,
-    0 4px 0 #000,
-    0 8px 16px rgba(0,0,0,.7),
-    0 16px 32px rgba(0,0,0,.45)
-  `,
-  
+  color: "#031f18",
+  textShadow: "0 14px 30px rgba(6,78,59,0.12)",
 },
+
   subtitle: {
-  color: "#ffffff",
-  textShadow: "0 2px 8px rgba(0,0,0,.8)",
+  maxWidth: "900px",
+  margin: "0 auto",
+  color: "#334155",
+  fontSize: "clamp(20px, 2vw, 28px)",
+  lineHeight: "1.45",
 },
 
  noticeBox: {
