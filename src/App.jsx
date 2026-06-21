@@ -2241,17 +2241,17 @@ title: {
     flexWrap: "wrap",
   },
 
-  primaryBtn: {
+primaryBtn: {
     padding: "16px 32px",
     borderRadius: "18px",
-    border: "none",
-    background: "linear-gradient(90deg, #39ff66, #f97316)",
-    color: "#022c22",
-    fontWeight: "950",
+    border: "1px solid #E8DDC4",
+    background: "#FFF8EC",
+    color: "#163D32",
+    fontWeight: "900",
     cursor: "pointer",
     textDecoration: "none",
-  },
-
+    boxShadow: "0 8px 18px rgba(0,0,0,.08)",
+},
   secondaryBtn: {
     padding: "16px 32px",
     borderRadius: "18px",
@@ -2262,27 +2262,27 @@ title: {
     cursor: "pointer",
     textDecoration: "none",
   },
-  adminBtn: {
-  background: "linear-gradient(135deg,#2563eb,#1d4ed8)",
-  color: "#fff",
-  border: "none",
+ adminBtn: {
+  background: "#FFF8EC",
+  color: "#163D32",
+  border: "1px solid #E8DDC4",
   borderRadius: "18px",
   padding: "14px 24px",
-  fontWeight: "700",
+  fontWeight: "800",
   textDecoration: "none",
-  boxShadow: "0 8px 18px rgba(37,99,235,.25)",
+  boxShadow: "0 8px 18px rgba(0,0,0,.08)",
   transition: "all .2s ease",
 },
 
 rulesHeroBtn: {
-  background: "linear-gradient(135deg,#16a34a,#22c55e)",
-  color: "#ffffff",
-  border: "none",
+  background: "#FFF8EC",
+  color: "#163D32",
+  border: "1px solid #E8DDC4",
   borderRadius: "18px",
   padding: "14px 24px",
   fontWeight: "800",
   cursor: "pointer",
-  boxShadow: "0 8px 18px rgba(22,163,74,.25)",
+  boxShadow: "0 8px 18px rgba(0,0,0,.08)",
 },
 
   gridPrincipal: {
