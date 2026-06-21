@@ -21,7 +21,7 @@ export default function App() {
   const [usuarios, setUsuarios] = useState([]);
   const [loadingPlayers, setLoadingPlayers] = useState(false);
 const [usuarioActivo, setUsuarioActivo] = useState(null);
-const [cargandoSesion, setCargandoSesion] = useState(true);
+const [cargandoSesion, setCargandoSesion] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [nuevoCelular, setNuevoCelular] = useState("");
@@ -39,217 +39,124 @@ const [cargandoSesion, setCargandoSesion] = useState(true);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
 
-  const AUTH_CACHE_KEY = "pucallpa_retos_usuario_activo";
+  
+ const cargarPlayers = async (mostrarCarga = false) => {
+  if (mostrarCarga) setLoadingPlayers(true);
 
-  const guardarUsuarioCache = (usuario) => {
-    try {
-      if (usuario) localStorage.setItem(AUTH_CACHE_KEY, JSON.stringify(usuario));
-    } catch (error) {
-      console.warn("No se pudo guardar usuario local:", error);
+  try {
+    const { data, error } = await supabase
+      .from("players")
+      .select("*")
+      .order("puntos", { ascending: false });
+
+    if (error) {
+      console.error("Error cargando players:", error.message);
+      return;
     }
-  };
 
-  const leerUsuarioCache = () => {
-    try {
-      const raw = localStorage.getItem(AUTH_CACHE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  };
-
-  const limpiarUsuarioCache = () => {
-    try {
-      localStorage.removeItem(AUTH_CACHE_KEY);
-    } catch (error) {
-      console.warn("No se pudo limpiar usuario local:", error);
-    }
-  };
-
-  const promesaConTiempo = (promesa, ms, valorFallback) => {
-    return Promise.race([
-      promesa,
-      new Promise((resolve) => setTimeout(() => resolve(valorFallback), ms)),
-    ]);
-  };
-
-  const cargarPlayers = async (mostrarCarga = false) => {
-    if (mostrarCarga) setLoadingPlayers(true);
-
-    try {
-      const { data, error } = await supabase
-        .from("players")
-        .select("*")
-        .order("puntos", { ascending: false });
-
-      if (error) {
-        console.error("Error cargando players:", error.message);
-        return;
-      }
-
-      setUsuarios(data || []);
-    } catch (error) {
-      console.error("Error inesperado cargando players:", error);
-    } finally {
-      setLoadingPlayers(false);
-    }
-  };
-
+    setUsuarios(data || []);
+  } catch (error) {
+    console.error("Error inesperado cargando players:", error);
+  } finally {
+    setLoadingPlayers(false);
+  }
+};
   useEffect(() => {
-    cargarPlayers();
+   cargarPlayers();
     cargarPremios();
     cargarCanjes();
   }, []);
 
-  const manejarUsuarioGoogle = async (googleUser) => {
-    if (!googleUser) {
-      setUsuarioActivo(null);
-      setUsuarioPendiente(null);
-      setShowPhoneModal(false);
-      setShowLoginModal(false);
-      return null;
-    }
+
+const manejarUsuarioGoogle = async (googleUser) => {
+  if (!googleUser) {
+    setUsuarioActivo(null);
+    setCargandoSesion(false);
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("players")
+    .select("*")
+    .eq("id", googleUser.id)
+    .maybeSingle();
+
+  if (error) {
+  console.error("Error buscando usuario:", error.message);
+  setUsuarioActivo(null);
+  setCargandoSesion(false);
+  return;
+}
+
+if (data) {
+  setUsuarioActivo(data);
+
+  if (!data.celular || !data.nickname) {
+    setShowPhoneModal(true);
+  }
+
+  return;
+}
 
     const perfilPendiente = {
-      id: googleUser.id,
-      nombre:
-        googleUser.user_metadata?.full_name ||
-        googleUser.user_metadata?.name ||
-        googleUser.email ||
-        "Jugador",
-      nickname: "",
-      celular: "",
-      email: googleUser.email || "",
-      password: "google",
-      puntos: 0,
-      partidas: 0,
-      ganadas: 0,
-      perdidas: 0,
-      role: "user",
-    };
+    id: googleUser.id,
+    nombre: googleUser.user_metadata?.full_name || googleUser.email || "Jugador",
+    nickname: "",
+    celular: "",
+    email: googleUser.email || "",
+    password: "google",
+    puntos: 0,
+    partidas: 0,
+    ganadas: 0,
+    perdidas: 0,
+    role: "user",
+  };
 
-    // Respaldo inmediato: evita que F5 muestre "Entrar" mientras Supabase valida.
-    setUsuarioActivo((actual) => actual || perfilPendiente);
-    guardarUsuarioCache(perfilPendiente);
-    setShowLoginModal(false);
-
-    const resultado = await promesaConTiempo(
-      supabase
-        .from("players")
-        .select("*")
-        .eq("id", googleUser.id)
-        .maybeSingle(),
-      6000,
-      { data: null, error: { message: "Tiempo agotado leyendo players" } }
-    );
-
-    const { data, error } = resultado || {};
-
-    if (error) {
-      console.error("Error leyendo perfil en players:", error.message);
-      setUsuarioPendiente(perfilPendiente);
-      setShowPhoneModal(true);
-      return perfilPendiente;
-    }
-
-    if (data) {
-      setUsuarioActivo(data);
-      guardarUsuarioCache(data);
-      setUsuarioPendiente(null);
-      setShowLoginModal(false);
-      setShowPhoneModal(!data.celular || !data.nickname);
-      return data;
-    }
-
-    setUsuarioPendiente(perfilPendiente);
-    setShowPhoneModal(true);
-    return perfilPendiente;
+  setUsuarioPendiente(perfilPendiente);
+  setUsuarioActivo(perfilPendiente);
+  setShowPhoneModal(true);
   };
 
   useEffect(() => {
-    let componenteActivo = true;
-    const usuarioCache = leerUsuarioCache();
-
-    if (usuarioCache) {
-      setUsuarioActivo(usuarioCache);
-      setShowLoginModal(false);
-      setCargandoSesion(false);
-    }
-
-    const liberarCarga = setTimeout(() => {
-      if (componenteActivo) setCargandoSesion(false);
-    }, 2500);
-
-    const iniciarSesionPersistida = async () => {
-      try {
-        setCargandoSesion(!usuarioCache);
-
-        const resultadoSesion = await promesaConTiempo(
-          supabase.auth.getSession(),
-          6000,
-          { data: { session: null }, error: { message: "Tiempo agotado leyendo sesión" } }
-        );
-
-        if (!componenteActivo) return;
-
-        const session = resultadoSesion?.data?.session || null;
-        const error = resultadoSesion?.error || null;
-
-        if (error && error.message !== "Tiempo agotado leyendo sesión") {
-          console.error("Error obteniendo sesión:", error.message);
-        }
-
-        if (session?.user) {
-          await manejarUsuarioGoogle(session.user);
-        } else if (!usuarioCache) {
-          setUsuarioActivo(null);
-          setUsuarioPendiente(null);
-          setShowPhoneModal(false);
-          setShowLoginModal(false);
-          setShowUserMenu(false);
-        }
-      } catch (error) {
-        console.error("Error inicializando sesión:", error);
-      } finally {
-        if (componenteActivo) setCargandoSesion(false);
-      }
-    };
-
-    iniciarSesionPersistida();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!componenteActivo) return;
-
-      if (event === "SIGNED_OUT") {
-        limpiarUsuarioCache();
-        setUsuarioActivo(null);
-        setUsuarioPendiente(null);
-        setShowPhoneModal(false);
-        setShowLoginModal(false);
-        setShowUserMenu(false);
-        setCargandoSesion(false);
-        return;
-      }
+  const init = async () => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       if (session?.user) {
-        manejarUsuarioGoogle(session.user)
-          .catch((error) => console.error("Error procesando usuario Google:", error))
-          .finally(() => {
-            if (componenteActivo) setCargandoSesion(false);
-          });
+        await manejarUsuarioGoogle(session.user);
       } else {
-        setCargandoSesion(false);
+        setUsuarioActivo(null);
       }
-    });
+    } catch (error) {
+      console.error("Error iniciando sesión:", error);
+      setUsuarioActivo(null);
+    } finally {
+      setCargandoSesion(false);
+    }
+  };
 
-    return () => {
-      componenteActivo = false;
-      clearTimeout(liberarCarga);
-      subscription.unsubscribe();
-    };
-  }, []);
+  init();
+
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange(async (event, session) => {
+    if (event === "SIGNED_OUT") {
+      setUsuarioActivo(null);
+      setShowUserMenu(false);
+      setCargandoSesion(false);
+      return;
+    }
+
+    if (session?.user) {
+      await manejarUsuarioGoogle(session.user);
+      setCargandoSesion(false);
+    }
+  });
+
+  return () => subscription.unsubscribe();
+}, []);
 
   useEffect(() => {
   const cargarRooms = async () => {
@@ -316,8 +223,6 @@ useEffect(() => {
 }, []);
 
 const signInWithGoogle = async () => {
-  setCargandoSesion(true);
-
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
@@ -327,48 +232,25 @@ const signInWithGoogle = async () => {
       },
     },
   });
-
   if (error) {
-    setCargandoSesion(false);
-    alert("No se pudo iniciar sesión con Google: " + error.message);
-  }
-};
-
-const limpiarSesionSupabaseLocal = () => {
-  try {
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith("sb-") || key.includes("supabase")) {
-        localStorage.removeItem(key);
-      }
-    });
-  } catch (error) {
-    console.warn("No se pudo limpiar localStorage:", error);
+    alert("No se pudo iniciar sesión con Google. Revisa la configuración en Supabase.");
   }
 };
 
 const cerrarSesion = async () => {
   setShowUserMenu(false);
-  setCargandoSesion(true);
 
   try {
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      console.error("Error cerrando sesión:", error.message);
-      alert("No se pudo cerrar sesión: " + error.message);
-    }
+    await supabase.auth.signOut({ scope: "local" });
   } catch (error) {
     console.error("Error cerrando sesión:", error);
-  } finally {
-    limpiarUsuarioCache();
-    limpiarSesionSupabaseLocal();
-    setUsuarioActivo(null);
-    setUsuarioPendiente(null);
-    setShowPhoneModal(false);
-    setShowRegistrosModal(false);
-    setShowLoginModal(false);
-    setCargandoSesion(false);
   }
+
+  setUsuarioActivo(null);
+  setUsuarioPendiente(null);
+  setShowPhoneModal(false);
+  setShowRegistrosModal(false);
+
 };
   const updatePlayerStats = async (id, resultado) => {
     if (!isAdminUser()) {
@@ -920,15 +802,11 @@ const guardarCelular = async () => {
     return;
   }
 
-  setUsuarioActivo((prev) => {
-    const actualizado = {
-      ...prev,
-      celular: celularLimpio,
-      nickname: nicknameLimpio,
-    };
-    guardarUsuarioCache(actualizado);
-    return actualizado;
-  });
+  setUsuarioActivo((prev) => ({
+    ...prev,
+    celular: celularLimpio,
+    nickname: nicknameLimpio,
+  }));
 
   setNuevoCelular("");
   setNicknameRegistro("");
@@ -959,11 +837,7 @@ return (
     Registros
   </button>
 )}
-  {cargandoSesion && !usuarioActivo ? (
-    <button style={{ ...styles.navAuthBtn, opacity: 0.7 }} disabled>
-      Cargando...
-    </button>
-  ) : !usuarioActivo ? (
+  {!usuarioActivo ? (
     <button
   style={styles.navAuthBtn}
   onClick={() => setShowLoginModal(true)}
@@ -998,7 +872,8 @@ return (
             <span style={styles.badge}>Arena deportiva digital de Pucallpa</span>
 
             <h1 style={styles.title}>
-              Encuentra jugadores, Haz amigos y Vive el juego.</h1>
+              Pucallpa Retos: fútbol y vóley competitivo
+            </h1>
 
           {usuarioActivo && (
   <div
@@ -1171,7 +1046,7 @@ return (
   <div>
     <h2 style={styles.sectionTitle}>Premios Canjeables</h2>
     <p style={styles.muted}>
-      canjea los puntos acumulados.
+      Canjea tus puntos acumulados por premios disponibles.
     </p>
   </div>
 
@@ -1728,13 +1603,12 @@ return (
       .single();
 
   if (error) {
-  console.error("Error creando usuario:", error.message);
-  alert("Error creando usuario: " + error.message);
+  console.error("Error buscando usuario:", error.message);
+  setCargandoSesion(false);
   return;
 }
 
     setUsuarioActivo(data);
-    guardarUsuarioCache(data);
     setUsuarioPendiente(null);
   } else {
     const { error } = await supabase
@@ -1750,15 +1624,11 @@ return (
       return;
     }
 
-    setUsuarioActivo((prev) => {
-      const actualizado = {
-        ...prev,
-        celular: celularLimpio,
-        nickname: nicknameLimpio,
-      };
-      guardarUsuarioCache(actualizado);
-      return actualizado;
-    });
+    setUsuarioActivo((prev) => ({
+      ...prev,
+      celular: celularLimpio,
+      nickname: nicknameLimpio,
+    }));
   }
 
   setLoginCelular("");
@@ -2024,11 +1894,11 @@ pattern: {
 },
 
  navbar: {
-  width: "100%",
-  maxWidth: "none",
-  margin: "0",
-  padding: "10px 46px",
-  minHeight: "118px",
+  width: "calc(100% - 34px)",
+  maxWidth: "1500px",
+  margin: "8px auto 0",
+  padding: "10px 44px",
+  minHeight: "105px",
 
   display: "flex",
   justifyContent: "space-between",
@@ -2037,15 +1907,13 @@ pattern: {
 
   overflow: "visible",
   position: "relative",
-  zIndex: 1000,
 
-  background: "rgba(255,255,255,0.98)",
+  background: "rgba(255,255,255,0.82)",
   backdropFilter: "blur(18px)",
   WebkitBackdropFilter: "blur(18px)",
-  border: "none",
-  borderBottom: "1px solid rgba(6,78,59,0.10)",
-  borderRadius: "0 0 34px 34px",
-  boxShadow: "0 18px 55px rgba(6,78,59,0.14)",
+  border: "1px solid rgba(6,78,59,0.10)",
+  borderRadius: "30px",
+  boxShadow: "0 18px 55px rgba(6,78,59,0.16)",
 },
 
 logoImage: {
@@ -2148,32 +2016,15 @@ navLogoutBtn: {
 
   container: {
   width: "100%",
-  maxWidth: "100%",
-  margin: "0",
-  padding: "0",
+  maxWidth: "1500px",
+  margin: "0 auto",
+  padding: "65px 36px 70px",
   boxSizing: "border-box",
 },
 
  hero: {
   textAlign: "center",
-  width: "100%",
-  minHeight: "820px",
-  padding: "130px 20px 95px",
-  boxSizing: "border-box",
-
-  backgroundImage:
-    "linear-gradient(to bottom, rgba(255,255,255,0.94) 0%, rgba(255,255,255,0.56) 8%, rgba(255,255,255,0) 22%), url('/pucallpa-fondo.png')",
-  backgroundSize: "cover",
-  backgroundPosition: "center center",
-  backgroundRepeat: "no-repeat",
-
-  borderRadius: "0 0 42px 42px",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  position: "relative",
-  overflow: "hidden",
+  padding: "0 0 65px",
 },
 
   badge: {
@@ -2186,26 +2037,23 @@ navLogoutBtn: {
   boxShadow: "0 12px 30px rgba(6,78,59,0.10)",
 },
 
-title: {
+  title: {
   fontSize: "clamp(56px, 6vw, 96px)",
   lineHeight: "1.03",
   margin: "38px auto 24px",
   maxWidth: "1160px",
   fontWeight: "950",
-  letterSpacing: "-2px",
+  letterSpacing: "-3px",
+  color: "#031f18",
+  textShadow: "0 14px 30px rgba(6,78,59,0.12)",
+},
 
-  color: "#ffffff",
-
-  WebkitTextStroke: "0px transparent",
-
-  textShadow: `
-    2px 2px 0 #000,
-    -2px 2px 0 #000,
-    2px -2px 0 #000,
-    -2px -2px 0 #000,
-    0 4px 12px rgba(0,0,0,.45)
-  `,
-  
+  subtitle: {
+  maxWidth: "900px",
+  margin: "0 auto",
+  color: "#334155",
+  fontSize: "clamp(20px, 2vw, 28px)",
+  lineHeight: "1.45",
 },
 
  noticeBox: {
@@ -2287,8 +2135,9 @@ rulesHeroBtn: {
   gridPrincipal: {
     display: "grid",
     gridTemplateColumns: "1.4fr 0.8fr",
-    gap: "30px",
-    marginBottom: "30px",
+    gap: "24px",
+    marginBottom: "24px",
+    alignItems: "start",
   },
 
   
@@ -2296,9 +2145,10 @@ rulesHeroBtn: {
   cardGrande: {
     background: "rgba(255,255,255,0.96)",
     color: "#0f172a",
-    borderRadius: "30px",
-    padding: "34px",
-    boxShadow: "0 28px 80px rgba(0,0,0,0.35)",
+    borderRadius: "28px",
+    padding: "28px",
+    boxShadow: "0 22px 58px rgba(0,0,0,0.24)",
+    alignSelf: "start",
   },
 
   card: {
@@ -2312,14 +2162,15 @@ rulesHeroBtn: {
   cardHeader: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: "16px",
-    marginBottom: "24px",
+    marginBottom: "16px",
   },
 
   sectionTitle: {
     margin: 0,
-    fontSize: "32px",
+    fontSize: "30px",
+    lineHeight: "1.08",
     fontWeight: "950",
     color: "#064e3b",
   },
@@ -2327,7 +2178,8 @@ rulesHeroBtn: {
   muted: {
     margin: "6px 0 0",
     color: "#64748b",
-    lineHeight: "1.5",
+    lineHeight: "1.45",
+    fontSize: "14px",
   },
 
   mutedLight: {
@@ -2571,11 +2423,12 @@ phoneBtn: {
     margin: "8px 0",
   },
  rewardsCard: {
-  background: "rgba(255,255,255,0.88)",
+  background: "rgba(255,255,255,0.92)",
   border: "1px solid rgba(6,78,59,0.10)",
-  borderRadius: "34px",
-  padding: "36px",
-  boxShadow: "0 28px 80px rgba(6,78,59,0.18)",
+  borderRadius: "28px",
+  padding: "28px",
+  boxShadow: "0 22px 58px rgba(6,78,59,0.14)",
+  alignSelf: "start",
 },
 rewardsTitle: {
   margin: 0,
